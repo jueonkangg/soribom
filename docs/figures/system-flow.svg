@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 952" font-family="Malgun Gothic, NanumGothic, sans-serif">
+<rect x="0" y="0" width="1180" height="952" fill="#FFFFFF"/>
+<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"/></marker><marker id="ahd" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/></marker></defs>
+<text x="40" y="34" font-size="20" font-weight="700" fill="#13315C" text-anchor="start">소리봄 — 전체 시스템 로직 (Flow)</text>
+<text x="40" y="54" font-size="12" fill="#64748B" text-anchor="start">실선 = 8월 예선 MVP, 점선 = 본선 확장</text>
+<rect x="420" y="66" width="340" height="42" rx="10" fill="#E8EDF4" stroke="#13315C" stroke-width="2"/>
+<text x="590.0" y="92.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">교실 발화, 소리</text>
+<rect x="300" y="128" width="580" height="54" rx="10" fill="#E8EDF4" stroke="#13315C" stroke-width="2"/>
+<text x="590.0" y="151.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">4채널 마이크 어레이 (ReSpeaker)</text>
+<text x="590.0" y="169.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">빔포밍 수음 강화 + 방향(DOA) 추정</text>
+<path d="M590,108 L590,128" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="40" y="210" width="1100" height="372" rx="14" fill="#FBFCFE" stroke="#13315C" stroke-width="2"/>
+<text x="590.0" y="401.0" text-anchor="middle" font-size="14" fill="#1F2937"></text>
+<text x="60" y="234" font-size="14" font-weight="700" fill="#13315C" text-anchor="start">Jetson Orin Nano — 완전 오프라인 처리</text>
+<path d="M590,182 L177.5,256" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M590,182 L452.5,256" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M590,182 L727.5,256" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M590,182 L1002.5,256" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="60" y="256" width="235" height="60" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="177.5" y="282.0" text-anchor="middle" font-size="14" fill="#1F2937">음성 구간 검출</text>
+<text x="177.5" y="300.0" text-anchor="middle" font-size="14" fill="#1F2937">(Silero VAD)</text>
+<rect x="60" y="344" width="235" height="60" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="177.5" y="370.0" text-anchor="middle" font-size="14" fill="#1F2937">faster-whisper 2-패스</text>
+<text x="177.5" y="388.0" text-anchor="middle" font-size="14" fill="#1F2937">(임시 → 교정)</text>
+<rect x="60" y="474" width="235" height="60" rx="10" fill="#E7F2EC" stroke="#1B6B4C" stroke-width="2"/>
+<text x="177.5" y="509.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">실시간 자막 + 화자 라벨</text>
+<path d="M177.5,316 L177.5,344" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M177.5,404 L177.5,474" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="335" y="256" width="235" height="60" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="452.5" y="291.0" text-anchor="middle" font-size="14" fill="#1F2937">화자 방향(DOA) 추정</text>
+<rect x="335" y="344" width="235" height="60" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="452.5" y="379.0" text-anchor="middle" font-size="14" fill="#1F2937">화자 위치 매핑</text>
+<rect x="335" y="474" width="235" height="60" rx="10" fill="#E7F2EC" stroke="#1B6B4C" stroke-width="2"/>
+<text x="452.5" y="509.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">화면: 누가, 어디서</text>
+<path d="M452.5,316 L452.5,344" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M452.5,404 L452.5,474" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="610" y="256" width="235" height="60" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="727.5" y="291.0" text-anchor="middle" font-size="14" fill="#1F2937">비음성 소리 이벤트 분류</text>
+<rect x="610" y="344" width="235" height="60" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="727.5" y="379.0" text-anchor="middle" font-size="14" fill="#1F2937">이름, 종, 경보, 질문 판별</text>
+<rect x="610" y="474" width="235" height="60" rx="10" fill="#FCEEE6" stroke="#C2410C" stroke-width="2"/>
+<text x="727.5" y="509.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">소리 알림 (시각, 진동)</text>
+<path d="M727.5,316 L727.5,344" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M727.5,404 L727.5,474" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="885" y="256" width="235" height="60" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="1002.5" y="291.0" text-anchor="middle" font-size="14" fill="#1F2937">근접 강화 오디오</text>
+<rect x="885" y="344" width="235" height="60" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="1002.5" y="379.0" text-anchor="middle" font-size="14" fill="#1F2937">AGC + 세이프티 리미터</text>
+<rect x="885" y="474" width="235" height="60" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="1002.5" y="509.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">블루투스 송출</text>
+<path d="M1002.5,316 L1002.5,344" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M1002.5,404 L1002.5,474" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="60" y="604" width="785" height="52" rx="10" fill="#E7F2EC" stroke="#1B6B4C" stroke-width="2"/>
+<text x="452.5" y="635.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">터치 화면 출력 :  실시간 자막, 화자 방향(누가, 어디서), 소리 알림</text>
+<rect x="885" y="604" width="235" height="52" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="1002.5" y="626.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">귀 : 깨끗한 소리</text>
+<text x="1002.5" y="644.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">(BT 스피커, 이어버드, 데모)</text>
+<path d="M177.5,534 L200,604" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M452.5,534 L430,604" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M727.5,534 L690,604" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M1002.5,534 L1002.5,604" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="885" y="690" width="235" height="50" rx="10" fill="#F1F5F9" stroke="#94A3B8" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="1002.5" y="711.0" text-anchor="middle" font-size="12" fill="#475569">보청기, 인공와우 직결</text>
+<text x="1002.5" y="729.0" text-anchor="middle" font-size="12" fill="#475569">(Auracast, 텔레코일)</text>
+<path d="M1002,656 L1002,690" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ahd)"/>
+<rect x="60" y="690" width="785" height="50" rx="10" fill="#EFF3F8" stroke="#13315C" stroke-width="2"/>
+<text x="452.5" y="720.0" text-anchor="middle" font-size="13" fill="#1F2937">수업 종료 후(배치) :  누적 전사, 화자 데이터 → 추출식 요약 → 화자별 요약 노트 저장</text>
+<path d="M452,656 L452,690" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<text x="60" y="776" font-size="13" font-weight="700" fill="#13315C" text-anchor="start">양방향 말하기 (텍스트 → 음성) — 예선 MVP</text>
+<rect x="60" y="790" width="300" height="52" rx="10" fill="#E7F2EC" stroke="#1B6B4C" stroke-width="2"/>
+<text x="210.0" y="821.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">학생 타이핑 입력</text>
+<rect x="440" y="790" width="300" height="52" rx="10" fill="#E7F2EC" stroke="#1B6B4C" stroke-width="2"/>
+<text x="590.0" y="821.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">TTS 음성합성 (오프라인)</text>
+<rect x="820" y="790" width="300" height="52" rx="10" fill="#E7F2EC" stroke="#1B6B4C" stroke-width="2"/>
+<text x="970.0" y="821.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">내장 스피커 (I2S, 발화)</text>
+<path d="M360,816 L440,816" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M740,816 L820,816" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="60" y="884" width="1060" height="46" rx="10" fill="#F1F5F9" stroke="#94A3B8" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="590.0" y="912.0" text-anchor="middle" font-size="13" fill="#475569">본선 확장(점선) :  영어 자막 옵션, 이해 보조(용어집, 질문 감지), 보청기 직결</text>
+</svg>

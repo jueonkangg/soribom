@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" font-family="Malgun Gothic, NanumGothic, sans-serif">
+<rect x="0" y="0" width="1000" height="620" fill="#FFFFFF"/>
+<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"/></marker><marker id="ahd" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/></marker></defs>
+<text x="34" y="36" font-size="20" font-weight="700" fill="#13315C">[그림 3] 화면(UI) 목업</text>
+<text x="34" y="58" font-size="13" fill="#64748B">자막 + 누가, 어디서(화자 방향) + 소리 알림 + 양방향 말하기를 한 화면에</text>
+<rect x="80" y="80" width="840" height="470" rx="22" fill="#0F172A" />
+<rect x="98" y="98" width="804" height="434" rx="12" fill="#F8FAFC" />
+<rect x="98" y="98" width="804" height="48" rx="12" fill="#13315C" />
+<text x="120" y="128" font-size="17" font-weight="700" fill="#FFFFFF">소리봄</text>
+<circle cx="250" cy="122" r="7" fill="#EF4444"/><text x="265" y="127" font-size="13" fill="#FFFFFF">녹음 중</text>
+<rect x="740" y="110" width="140" height="26" rx="13" fill="#BFE3D0"/><text x="810" y="128" text-anchor="middle" font-size="13" fill="#1B6B4C" font-weight="700">수업 요약 보기</text>
+<rect x="120" y="180" width="92" height="26" rx="13" fill="#2563A8"/>
+<text x="166" y="198" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="700">선생님</text>
+<text x="226" y="198" font-size="16" fill="#1F2937">오늘은 광합성의 과정을 배웁니다.</text>
+<rect x="120" y="224" width="92" height="26" rx="13" fill="#16A34A"/>
+<text x="166" y="242" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="700">학생 A</text>
+<text x="226" y="242" font-size="16" fill="#1F2937">엽록체가 어디에 있나요?</text>
+<rect x="120" y="268" width="92" height="26" rx="13" fill="#2563A8"/>
+<text x="166" y="286" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="700">선생님</text>
+<text x="226" y="286" font-size="16" fill="#1F2937">좋은 질문이에요. 잎의 세포 안에 있어요.</text>
+<text x="120" y="312" font-size="13" fill="#94A3B8">… 임시 자막(흐림)은 잠시 뒤 정확한 자막으로 교정됩니다 …</text>
+<rect x="640" y="170" width="240" height="150" rx="10" fill="#EFF3F8" stroke="#C9D6E5"/>
+<text x="760" y="194" text-anchor="middle" font-size="14" font-weight="700" fill="#13315C">화자 방향 (누가, 어디서)</text>
+<path d="M760,300 A70,70 0 0 1 690,230" fill="none" stroke="#94A3B8" stroke-width="2"/>
+<path d="M760,300 A70,70 0 0 1 830,230" fill="none" stroke="#94A3B8" stroke-width="2"/>
+<circle cx="760" cy="300" r="5" fill="#13315C"/>
+<line x1="760" y1="300" x2="720" y2="245" stroke="#2563A8" stroke-width="4" marker-end="url(#ah)"/>
+<text x="700" y="238" font-size="12" fill="#2563A8" font-weight="700">선생님</text>
+<rect x="120" y="455" width="360" height="60" rx="10" fill="#FCEEE6" stroke="#C2410C"/>
+<text x="138" y="480" font-size="15" font-weight="700" fill="#C2410C">🔔 소리 알림</text>
+<text x="138" y="503" font-size="14" fill="#1F2937">‘민준’ 이름이 불렸어요</text>
+<rect x="500" y="455" width="380" height="60" rx="10" fill="#FCEEE6" stroke="#C2410C"/>
+<text x="518" y="480" font-size="15" font-weight="700" fill="#C2410C">🔔 소리 알림</text>
+<text x="518" y="503" font-size="14" fill="#1F2937">질문이 나왔어요 / 수업 종이 울렸어요</text>
+<text x="120" y="356" font-size="13" font-weight="700" fill="#13315C">양방향 말하기 (입력 → 스피커)</text>
+<rect x="120" y="366" width="568" height="40" rx="8" fill="#FFFFFF" stroke="#C9D6E5"/>
+<text x="136" y="391" font-size="14" fill="#94A3B8">(예) 질문 있어요!  |</text>
+<rect x="700" y="366" width="142" height="40" rx="8" fill="#1B6B4C"/>
+<text x="771" y="391" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">말하기 ▶</text>
+</svg>

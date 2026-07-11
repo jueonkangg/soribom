@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="Malgun Gothic, NanumGothic, sans-serif">
+<rect x="0" y="0" width="1000" height="640" fill="#FFFFFF"/>
+<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"/></marker><marker id="ahd" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/></marker></defs>
+<text x="34" y="36" font-size="20" font-weight="700" fill="#13315C">[그림 2] 하드웨어 구성도</text>
+<text x="34" y="58" font-size="13" fill="#64748B">마이크로 들어온 소리를 두뇌(Jetson)가 처리해 화면, 소리(귀/스피커), 저장으로 내보낸다</text>
+<rect x="60" y="270" width="210" height="80" rx="10" fill="#E8EDF4" stroke="#13315C" stroke-width="2"/>
+<text x="165.0" y="306.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">4채널 마이크 어레이</text>
+<text x="165.0" y="324.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">(ReSpeaker)</text>
+<rect x="400" y="250" width="230" height="120" rx="10" fill="#E8EDF4" stroke="#13315C" stroke-width="2"/>
+<text x="515.0" y="297.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">Jetson Orin Nano</text>
+<text x="515.0" y="315.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">(두뇌, 모든 처리)</text>
+<text x="515.0" y="333.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">* 완전 오프라인</text>
+<rect x="760" y="70" width="210" height="64" rx="10" fill="#E7F2EC" stroke="#1B6B4C" stroke-width="2"/>
+<text x="865.0" y="98.0" text-anchor="middle" font-size="14" fill="#1F2937">터치 디스플레이</text>
+<text x="865.0" y="116.0" text-anchor="middle" font-size="14" fill="#1F2937">(자막, 알림 화면)</text>
+<rect x="760" y="168" width="210" height="64" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="865.0" y="196.0" text-anchor="middle" font-size="14" fill="#1F2937">저장장치 (SSD)</text>
+<text x="865.0" y="214.0" text-anchor="middle" font-size="14" fill="#1F2937">요약 노트 저장</text>
+<rect x="760" y="300" width="210" height="64" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="865.0" y="328.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">이어버드 / 보청기</text>
+<text x="865.0" y="346.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">(학생 귀: 깨끗한 소리)</text>
+<rect x="760" y="398" width="210" height="64" rx="10" fill="#E7F2EC" stroke="#1B6B4C" stroke-width="2"/>
+<text x="865.0" y="426.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">내장 스피커 (I2S 앰프 + 3W)</text>
+<text x="865.0" y="444.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">(TTS 발화, 학생 자리에서 들림)</text>
+<rect x="400" y="490" width="230" height="66" rx="10" fill="#F1F5F9" stroke="#94A3B8" stroke-width="2"/>
+<text x="515.0" y="528.0" text-anchor="middle" font-size="14" fill="#475569">전원 어댑터</text>
+<path d="M270,310 L400,310" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="309.0" y="299.0" width="52" height="18" rx="4" fill="#FFFFFF" opacity="0.9"/>
+<text x="335.0" y="313.0" text-anchor="middle" font-size="11" fill="#475569">USB</text>
+<path d="M630,290 L760,102" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="669.0" y="185.0" width="52" height="18" rx="4" fill="#FFFFFF" opacity="0.9"/>
+<text x="695.0" y="199.0" text-anchor="middle" font-size="11" fill="#475569">HDMI</text>
+<path d="M630,300 L760,200" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="669.0" y="239.0" width="52" height="18" rx="4" fill="#FFFFFF" opacity="0.9"/>
+<text x="695.0" y="253.0" text-anchor="middle" font-size="11" fill="#475569">내장</text>
+<path d="M630,330 L760,332" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="669.0" y="320.0" width="52" height="18" rx="4" fill="#FFFFFF" opacity="0.9"/>
+<text x="695.0" y="334.0" text-anchor="middle" font-size="11" fill="#475569">BT</text>
+<path d="M630,345 L760,430" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="669.0" y="376.5" width="52" height="18" rx="4" fill="#FFFFFF" opacity="0.9"/>
+<text x="695.0" y="390.5" text-anchor="middle" font-size="11" fill="#475569">I2S</text>
+<path d="M515,490 L515,370" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="489.0" y="419.0" width="52" height="18" rx="4" fill="#FFFFFF" opacity="0.9"/>
+<text x="515.0" y="433.0" text-anchor="middle" font-size="11" fill="#475569">전원</text>
+</svg>

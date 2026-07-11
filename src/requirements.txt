@@ -1,0 +1,21 @@
+# 오디오
+sounddevice>=0.4.6
+numpy>=1.24
+pyusb>=1.2.1          # ReSpeaker DOA 읽기 (USB HID)
+
+# 음성 인식
+faster-whisper>=1.0.0
+silero-vad>=5.1
+
+# 음성 합성
+piper-tts>=1.2.0
+
+# 소리 이벤트 분류
+torch>=2.1
+torchaudio>=2.1
+
+# UI
+PySide6>=6.6
+
+# 기타
+pyyaml>=6.0

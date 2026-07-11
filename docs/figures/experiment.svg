@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" font-family="Malgun Gothic, NanumGothic, sans-serif">
+<rect x="0" y="0" width="1000" height="560" fill="#FFFFFF"/>
+<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"/></marker><marker id="ahd" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/></marker></defs>
+<text x="34" y="36" font-size="20" font-weight="700" fill="#13315C">[그림 4] 이해도 실험 설계</text>
+<text x="34" y="58" font-size="13" fill="#64748B">같은 조건에서 ‘단말 사용’과 ‘미사용’의 수업 이해도(퀴즈 점수)를 비교</text>
+<rect x="360" y="80" width="280" height="64" rx="10" fill="#E8EDF4" stroke="#13315C" stroke-width="2"/>
+<text x="500.0" y="108.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">동급생 참가자 (예: 24명)</text>
+<text x="500.0" y="126.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">* 보호자 동의 후 참가</text>
+<rect x="360" y="190" width="280" height="52" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="500.0" y="221.0" text-anchor="middle" font-size="14" fill="#1F2937">무작위 배정 (제비뽑기)</text>
+<path d="M500,144 L500,190" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="120" y="290" width="330" height="64" rx="10" fill="#E7F2EC" stroke="#1B6B4C" stroke-width="2"/>
+<text x="285.0" y="318.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">실험군 : 소리봄 단말 사용</text>
+<text x="285.0" y="336.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">(모의 저청력 조건)</text>
+<rect x="550" y="290" width="330" height="64" rx="10" fill="#F1F5F9" stroke="#94A3B8" stroke-width="2"/>
+<text x="715.0" y="318.0" text-anchor="middle" font-size="14" font-weight="700" fill="#475569">대조군 : 단말 미사용</text>
+<text x="715.0" y="336.0" text-anchor="middle" font-size="14" font-weight="700" fill="#475569">(모의 저청력 조건)</text>
+<path d="M430,242 L285,290" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M570,242 L715,290" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="360" y="400" width="280" height="52" rx="10" fill="#EAF1F9" stroke="#2563A8" stroke-width="2"/>
+<text x="500.0" y="431.0" text-anchor="middle" font-size="14" fill="#1F2937">같은 난이도 수업 + 이해도 퀴즈</text>
+<path d="M285,354 L440,400" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M715,354 L560,400" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="300" y="485" width="400" height="52" rx="10" fill="#F1ECFB" stroke="#6D28D9" stroke-width="2"/>
+<text x="500.0" y="516.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">점수 비교 : t-검정, 신뢰구간, 효과크기</text>
+<path d="M500,452 L500,485" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+<text x="34" y="540" font-size="12" fill="#64748B">* 모의 저청력 조건 = 노이즈캔슬링/마스킹으로 ‘잘 안 들리는 상황’을 안전한 소리 크기, 짧은 시간으로 재현</text>
+</svg>

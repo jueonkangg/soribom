@@ -1,0 +1,45 @@
+audio:
+  device: "ReSpeaker"      # 부분 문자열로 매칭
+  sample_rate: 16000
+  channels: 4
+  block_ms: 30
+
+vad:
+  model: "silero"
+  threshold: 0.5
+  min_speech_ms: 250
+  min_silence_ms: 400
+
+stt:
+  # 2-패스: 빠른 임시 자막 → 정확한 교정 자막
+  pass1_model: "small"     # 임시 (~0.5s)
+  pass2_model: "medium"    # 교정 (~2s)
+  language: "ko"
+  compute_type: "int8_float16"
+  device: "cuda"
+
+doa:
+  enabled: true
+  smoothing: 0.3           # 지수이동평균 계수
+
+events:
+  enabled: true
+  labels: ["이름 호명", "종소리", "질문", "경보"]
+  threshold: 0.6
+
+tts:
+  engine: "piper"
+  voice: "ko_KR-<voice>"   # 다운로드한 음성 모델 이름
+  output_device: "plughw:2,0"   # I2S 사운드카드 (aplay -l 로 확인)
+  max_chars: 200
+
+relay:
+  # 깨끗한 소리 전달 (블루투스)
+  enabled: true
+  agc: true
+  safety_limiter_db: -6.0  # 출력 상한 (반드시 유지)
+
+summary:
+  method: "extractive"     # 생성식 아님 — 없는 말을 지어내지 않는다
+  top_k: 8
+  output_dir: "./notes"
