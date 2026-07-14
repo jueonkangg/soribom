@@ -35,3 +35,6 @@ models/
 Thumbs.db
 ~$*
 *.tmp
+
+# 대회 맥락 (내부용, 커밋 금지)
+CONTEXT.local.md
