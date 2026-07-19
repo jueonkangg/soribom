@@ -28,8 +28,12 @@ events:
   threshold: 0.6
 
 tts:
-  engine: "piper"
-  voice: "ko_KR-<voice>"   # 다운로드한 음성 모델 이름
+  # Piper 는 한국어를 지원하지 않아 MeloTTS 로 교체했다 (2026-07 확인)
+  # https://github.com/rhasspy/piper/discussions/680
+  engine: "melotts"
+  language: "KR"
+  speaker: "KR"
+  speed: 1.0
   output_device: "plughw:2,0"   # I2S 사운드카드 (aplay -l 로 확인)
   max_chars: 200
 

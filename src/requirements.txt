@@ -8,7 +8,9 @@ faster-whisper>=1.0.0
 silero-vad>=5.1
 
 # 음성 합성
-piper-tts>=1.2.0
+# Piper 는 한국어 미지원이라 MeloTTS 사용 (MIT 라이선스, CPU 실시간)
+# https://github.com/rhasspy/piper/discussions/680
+melotts @ git+https://github.com/myshell-ai/MeloTTS.git
 
 # 소리 이벤트 분류
 torch>=2.1
