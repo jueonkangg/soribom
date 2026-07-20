@@ -9,6 +9,7 @@ vad:
   threshold: 0.5
   min_speech_ms: 250
   min_silence_ms: 400
+  speech_pad_ms: 200       # 발화 앞에 붙일 여유 (첫 음절 잘림 방지)
 
 stt:
   # 2-패스: 빠른 임시 자막 → 정확한 교정 자막
