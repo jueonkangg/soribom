@@ -16,8 +16,12 @@ stt:
   pass1_model: "small"     # 임시 (~0.5s)
   pass2_model: "medium"    # 교정 (~2s)
   language: "ko"
-  compute_type: "int8_float16"
-  device: "cuda"
+  # 이 Jetson은 CTranslate2가 CUDA를 못 잡아 CPU로 돈다. int8이 CPU에서 가장 빠르다.
+  # (GPU가 잡히는 환경이면 device: cuda / compute_type: int8_float16 로 되돌린다)
+  compute_type: "int8"
+  device: "cpu"
+  beam_size: 1             # 1 = 가장 빠름. 정확도가 더 필요하면 올리되 CPU에선 느려진다
+  cpu_threads: 0           # 0 = 자동. Jetson 6코어 중 STT에 쓸 스레드 수 (다른 레인에 코어를 남기려면 줄인다)
 
 doa:
   enabled: true
