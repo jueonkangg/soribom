@@ -52,11 +52,14 @@
 | 수음 | ReSpeaker Mic Array v3.0 (XMOS XVF-3000) | 빔포밍·DOA·에코제거를 칩에서 처리 → Jetson 부담 경감 |
 | 음성 인식 | faster-whisper (CTranslate2, int8) | 오프라인 한국어 STT. 2-패스로 지연과 정확도를 동시에 해결 |
 | 음성 구간 검출 | Silero VAD | 말이 없는 구간을 걸러 연산 낭비 방지 |
-| 음성 합성 | Piper | 오프라인 한국어 TTS, Jetson에서 1초 이내 |
+| 음성 합성 | MeloTTS | 오프라인 한국어 TTS (MIT). Piper는 한국어 미지원이라 교체 |
 | 음성 출력 | MAX98357A (I2S) + 4Ω 스피커 | 단말 내장 스피커 구동 |
 
 ## 문서
 
+- **[Day 1 — 첫날 할 일](docs/Day1.md)** ← 팀원은 여기부터
+- [개발 환경 설치 — macOS](docs/00-setup-mac.md) / [Windows](docs/00-setup-windows.md)
+- [SSD 설정 (Jetson)](docs/11-ssd.md)
 - [문제 정의](docs/01-problem.md)
 - [시스템 설계](docs/02-system-design.md)
 - [하드웨어 구성과 배선](docs/03-hardware.md)

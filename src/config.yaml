@@ -1,10 +1,35 @@
+# 소리봄 설정
+#
+# 모든 설정값은 여기에 둔다. 코드에 숫자를 직접 박지 말 것.
+# 값을 바꿀 때는 왜 바꿨는지 주석으로 남긴다.
+#
+# 마지막 실측: 2026-07-19 (Jetson Orin Nano + ReSpeaker v3.0)
+
 audio:
+  # sounddevice(구현 capture.py)는 장치 '이름'으로 부분일치시켜 찾는다.
+  # 그래서 arecord의 "hw:2,0"이 아니라 이름 조각 "ReSpeaker"를 쓴다.
+  # (arecord의 카드번호와 sounddevice 인덱스는 서로 달라 "hw:2,0"이면 엉뚱한 장치를 잡는다)
   device: "ReSpeaker"      # 부분 문자열로 매칭
+
+  # ReSpeaker 는 6채널로 나온다 (--dump-hw-params 로 확인)
+  #   0    = 칩이 처리한 소리 (빔포밍·에코제거·잡음억제 완료)
+  #   1~4  = 마이크 4개의 원본
+  #   5    = 재생 참조음 (에코제거용)
+  channels: 6
+
+  # 음성인식에는 0번만 쓴다. 칩이 이미 깨끗하게 만들어놨다.
+  # 원본 1~4 는 나중에 실험할 때 쓴다.
+  use_channel: 0
+
+  # ReSpeaker 가 고정으로 내보내는 값이고,
+  # Whisper 가 요구하는 값과 같아서 변환이 필요 없다.
   sample_rate: 16000
-  channels: 4
+
   block_ms: 30
 
 vad:
+  # 말하는 구간만 골라낸다. 조용한 구간까지 인식하면
+  # 연산이 낭비되고 엉뚱한 글자가 나온다.
   model: "silero"
   threshold: 0.5
   min_speech_ms: 250
@@ -12,18 +37,23 @@ vad:
   speech_pad_ms: 200       # 발화 앞에 붙일 여유 (첫 음절 잘림 방지)
 
 stt:
-  # small 단일 패스. 원래 2-패스(small→medium) 설계였으나, 실측에서
-  #  (1) medium은 8GB 공유메모리에 앱과 함께 올리면 OOM 나고(예산 총 150만원 제약),
-  #  (2) 정확도도 small과 사실상 동일했다(둘 다 CER ~1%, 잡음에도 강함 — ReSpeaker
-  #      ch0의 하드웨어 빔포밍 덕분),
-  #  (3) 문맥 기반 2-패스 교정도 정확도를 못 올렸다.
-  # 그래서 small 하나로 확정. 발화당 ~0.5초, GPU 메모리 여유.
+  # small 단일 패스로 확정. 원래 2-패스(small→medium) 설계였으나 실측으로 폐기:
+  #  (1) medium은 8GB 공유메모리에 앱과 함께 올리면 OOM(예산 총 150만원 제약),
+  #  (2) 정확도도 small과 사실상 동일(둘 다 CER ~1%, 잡음에도 강함 — ReSpeaker ch0 빔포밍),
+  #  (3) 문맥 기반 2-패스 교정도 정확도를 못 올림.
+  # GPU에서 발화당 ~0.5초, 메모리 여유.
   model: "small"
   language: "ko"
-  # 수업에 나올 용어를 힌트로 주면 인식이 올바른 후보로 정렬돼 오인식이 준다(생성이 아니라
-  # 인식 편향). 실측: "광합성→광업성" 같은 오류가 교정돼 CER 1.4%→0.0%. 과목에 맞게 바꾼다.
-  prompt: "광합성, 이산화탄소, 포도당, 칠판, 수행평가, 교과서"
-  # CTranslate2를 CUDA로 소스빌드(v4.5.0)해 GPU로 돌린다. 순수 int8이 이 메모리에 맞는다.
+
+  # 교실 용어를 미리 알려주면 인식이 올바른 후보로 정렬돼 오인식이 준다(생성이 아니라 인식 편향).
+  # 두 사람이 독립적으로 같은 결론에 도달: "광합성"을 small은 "과막성/광업성", medium은
+  # "광학성"으로 잘못 듣던 것이, 아래 용어를 주니 정확히 인식됨(구현 실측 CER 1.4%→0.0%).
+  # 모델 크기가 아니라 어휘의 문제다. Whisper는 일반 한국어로 학습돼 교과 용어에 약하다.
+  # 수업 전에 그날 배울 단어를 여기에 넣는다. (transcriber.py 는 이 'prompt' 키를 읽는다)
+  prompt: "광합성, 엽록체, 이산화탄소, 포도당, 칠판, 수행평가, 교과서"
+
+  # CTranslate2를 CUDA로 소스빌드(v4.5.0)해 GPU로 돌린다(2026-07-21 cuDNN 확인 완료).
+  # 순수 int8이 이 공유메모리에 맞는다. (CUDA CT2가 없는 환경이면 device: cpu / compute_type int8)
   compute_type: "int8"
   device: "cuda"
   beam_size: 1             # 1 = 가장 빠름. 정확도가 더 필요하면 올리되 느려진다
@@ -31,26 +61,80 @@ stt:
 
 doa:
   enabled: true
-  smoothing: 0.3           # 지수이동평균 계수
+
+  # 방향을 계산하는 건 ReSpeaker 의 XMOS 칩이다.
+  # Jetson 은 USB 로 각도 값만 읽는다.
+  # 출처: https://github.com/respeaker/usb_4_mic_array (Apache-2.0)
+  vendor_id: 0x2886
+  product_id: 0x0018
+
+  # 실측 (2026-07-19) — 자세한 내용은 docs/13-doa-calibration.md
+  #   앞 90° · 왼쪽 172° · 뒤 272° · 오른쪽 346°
+  #   각도는 오른쪽이 0°, 반시계 방향으로 증가한다.
+  #
+  # 화면에는 앞이 0°, 시계 방향이 자연스럽다:
+  #   screen_angle = (front_offset - mic_angle) % 360
+  front_offset: 90
+
+  # ⚠️ 목소리가 감지될 때만 각도를 갱신한다.
+  #    조용할 때 값은 직전 방향이 남아 있는 것이라 믿을 수 없다.
+  #    이걸 끄면 화살표가 제멋대로 돈다.
+  require_voice: true
+
+  # 화살표가 덜덜 떨리지 않게 부드럽게 만든다 (지수이동평균)
+  smoothing: 0.3
+
+tts:
+  # Piper 는 한국어 음성 모델이 존재하지 않아 MeloTTS 로 교체했다.
+  # (2026-07 확인: https://github.com/rhasspy/piper/discussions/680)
+  engine: "melotts"
+  language: "KR"
+  speaker: "KR"
+  speed: 1.0
+
+  # ⚠️ 아직 정하지 못했다. I2S 스피커를 연결한 뒤 aplay -l 로 확인할 것.
+  #    card 2 는 이미 ReSpeaker 가 쓰고 있으므로 그 번호가 아니다.
+  output_device: null
+
+  # MeloTTS 설치가 막히면 임시로 쓴다. 음질은 나쁘지만 한국어가 나온다.
+  #   espeak-ng -v ko "문장" -w out.wav
+  fallback_engine: "espeak-ng"
+
+  max_chars: 200
+
+ui:
+  # 자막은 멀리서도 읽혀야 한다.
+  font_size: 36
+  max_lines: 3
+
+  # 1패스 임시 자막은 흐리게, 2패스 교정 자막은 선명하게.
+  # 사용자가 "아직 확정 아님"을 눈으로 알 수 있게 한다.
+  draft_opacity: 0.5
+
+metrics:
+  # 기능을 만들 때 측정 코드를 같이 만든다.
+  # 나중에 붙이려면 구조를 뜯어야 한다. (CLAUDE.md 8장)
+  enabled: true
+  output_dir: "../experiments/data"   # ⚠️ 커밋 금지 (.gitignore)
+
+# ─────────────────────────────────────────────
+# 아래는 이번 개발 범위가 아니다. (CLAUDE.md 3장)
+# 개발 기간이 2주뿐이라 ①②⑥ 세 기능으로 좁혔다.
+# 시간이 남으면 새 기능을 추가하는 대신 세 기능을 더 안정적으로 만든다.
+# ─────────────────────────────────────────────
 
 events:
-  enabled: true
+  enabled: false           # ③ 소리 이벤트 분류 — 다음 단계
   labels: ["이름 호명", "종소리", "질문", "경보"]
   threshold: 0.6
 
-tts:
-  engine: "piper"
-  voice: "ko_KR-<voice>"   # 다운로드한 음성 모델 이름
-  output_device: "plughw:2,0"   # I2S 사운드카드 (aplay -l 로 확인)
-  max_chars: 200
-
 relay:
-  # 깨끗한 소리 전달 (블루투스)
-  enabled: true
+  enabled: false           # ④ 블루투스 소리 전달 — 다음 단계
   agc: true
-  safety_limiter_db: -6.0  # 출력 상한 (반드시 유지)
+  safety_limiter_db: -6.0  # 출력 상한 (안전 — 반드시 유지)
 
 summary:
+  enabled: false           # ⑤ 수업 요약 노트 — 다음 단계
   method: "extractive"     # 생성식 아님 — 없는 말을 지어내지 않는다
   top_k: 8
   output_dir: "./notes"

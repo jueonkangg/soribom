@@ -1,0 +1,28 @@
+# 줄바꿈 문자 통일
+#
+# 윈도우는 줄바꿈을 CRLF, 맥/리눅스는 LF로 씁니다.
+# 이 설정이 없으면 파일을 열어보기만 해도 "전체가 수정됨"으로 잡혀서
+# 실제로 무엇이 바뀌었는지 알 수 없게 됩니다.
+#
+# 아래 설정은 저장소에 저장될 때는 항상 LF로 통일합니다.
+
+* text=auto eol=lf
+
+# 바이너리 파일은 건드리지 않는다
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.hwp binary
+*.onnx binary
+*.bin binary
+*.pt binary
+*.wav binary
+*.mp3 binary
+*.mp4 binary
+*.step binary
+*.stl binary
