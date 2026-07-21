@@ -16,7 +16,7 @@ from audio.capture import MicArray
 from audio.doa import DoaTracker
 from audio.vad import VoiceActivityDetector
 from events.sound_events import SoundEventClassifier
-from stt.transcriber import TwoPassTranscriber
+from stt.transcriber import Transcriber
 from summary.notes import NoteBuilder
 from tts.speaker import Speaker
 from ui.app import SoribomUI
@@ -35,7 +35,7 @@ def main() -> None:
 
     mic = MicArray(cfg["audio"], sink=audio_q)
     vad = VoiceActivityDetector(cfg["vad"])
-    stt = TwoPassTranscriber(cfg["stt"])
+    stt = Transcriber(cfg["stt"])
     doa = DoaTracker(cfg["doa"])
     events = SoundEventClassifier(cfg["events"])
     notes = NoteBuilder(cfg["summary"])
@@ -45,15 +45,16 @@ def main() -> None:
     ui.on_speak = speaker.say
 
     def lane_caption() -> None:
-        """레인 A — 음성 구간을 잘라 2-패스로 전사한다."""
+        """레인 A — 음성 구간을 잘라 medium 모델로 전사한다(단일 패스).
+
+        원래 2-패스(임시→교정) 설계였으나, 메모리 제약으로 medium 단일 패스로 간다.
+        (→ stt/transcriber.py 주석 참고) GPU라 발화당 ~0.4초로 충분히 빠르다.
+        """
         for chunk in vad.stream(audio_q):
             angle = doa.current()
-            # 1패스: 빠른 임시 자막 (흐리게 표시)
-            ui.show_caption(stt.draft(chunk), angle=angle, tentative=True)
-            # 2패스: 정확한 교정 자막으로 교체
-            final = stt.refine(chunk)
-            ui.show_caption(final, angle=angle, tentative=False)
-            notes.add(final, angle=angle)
+            text = stt.transcribe(chunk)
+            ui.show_caption(text, angle=angle, tentative=False)
+            notes.add(text, angle=angle)
 
     def lane_events() -> None:
         """레인 C — 말이 아닌 소리를 감지해 알린다."""

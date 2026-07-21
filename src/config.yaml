@@ -12,16 +12,22 @@ vad:
   speech_pad_ms: 200       # 발화 앞에 붙일 여유 (첫 음절 잘림 방지)
 
 stt:
-  # 2-패스: 빠른 임시 자막 → 정확한 교정 자막
-  pass1_model: "small"     # 임시 (~0.5s)
-  pass2_model: "medium"    # 교정 (~2s)
+  # small 단일 패스. 원래 2-패스(small→medium) 설계였으나, 실측에서
+  #  (1) medium은 8GB 공유메모리에 앱과 함께 올리면 OOM 나고(예산 총 150만원 제약),
+  #  (2) 정확도도 small과 사실상 동일했다(둘 다 CER ~1%, 잡음에도 강함 — ReSpeaker
+  #      ch0의 하드웨어 빔포밍 덕분),
+  #  (3) 문맥 기반 2-패스 교정도 정확도를 못 올렸다.
+  # 그래서 small 하나로 확정. 발화당 ~0.5초, GPU 메모리 여유.
+  model: "small"
   language: "ko"
-  # 이 Jetson은 CTranslate2가 CUDA를 못 잡아 CPU로 돈다. int8이 CPU에서 가장 빠르다.
-  # (GPU가 잡히는 환경이면 device: cuda / compute_type: int8_float16 로 되돌린다)
+  # 수업에 나올 용어를 힌트로 주면 인식이 올바른 후보로 정렬돼 오인식이 준다(생성이 아니라
+  # 인식 편향). 실측: "광합성→광업성" 같은 오류가 교정돼 CER 1.4%→0.0%. 과목에 맞게 바꾼다.
+  prompt: "광합성, 이산화탄소, 포도당, 칠판, 수행평가, 교과서"
+  # CTranslate2를 CUDA로 소스빌드(v4.5.0)해 GPU로 돌린다. 순수 int8이 이 메모리에 맞는다.
   compute_type: "int8"
-  device: "cpu"
-  beam_size: 1             # 1 = 가장 빠름. 정확도가 더 필요하면 올리되 CPU에선 느려진다
-  cpu_threads: 0           # 0 = 자동. Jetson 6코어 중 STT에 쓸 스레드 수 (다른 레인에 코어를 남기려면 줄인다)
+  device: "cuda"
+  beam_size: 1             # 1 = 가장 빠름. 정확도가 더 필요하면 올리되 느려진다
+  cpu_threads: 0           # 0 = 자동 (device: cpu 로 폴백할 때만 의미 있음)
 
 doa:
   enabled: true

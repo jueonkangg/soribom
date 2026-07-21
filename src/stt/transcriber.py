@@ -1,11 +1,12 @@
-"""2-패스 한국어 전사.
+"""한국어 전사 (단일 패스, GPU).
 
-큰 모델은 정확하지만 느리고, 작은 모델은 빠르지만 부정확하다.
-둘 중 하나를 고르는 대신 작은 모델이 먼저 임시 자막을 띄우고
-큰 모델이 뒤따라 교정한다.
+원래 설계는 2-패스(small 임시자막 → medium 교정)였다. 하지만 실측 결과
+medium은 8GB 공유메모리에 앱과 함께 올리면 OOM 나고, 정확도도 small과
+사실상 같았다(둘 다 CER ~1%). 문맥 기반 2-패스 교정도 정확도를 못 올렸다.
+그래서 small 단일 패스로 확정했다. (자세한 근거는 config.yaml 주석 참고)
 
-  draft(chunk)  → 1패스(small): 빠른 임시 자막
-  refine(chunk) → 2패스(medium): 정확한 교정 자막
+정확도 보강은 2-패스 대신 'initial_prompt(도메인 용어 힌트)'로 한다. 수업 용어를
+힌트로 주면 인식이 올바른 후보로 정렬돼, 없는 말을 지어내지 않고 오인식만 준다.
 
 입력 chunk 는 VAD가 잘라준 발화 한 덩어리(모노 float32, 16kHz)다.
 """
@@ -14,62 +15,45 @@ import time
 from faster_whisper import WhisperModel
 
 
-class TwoPassTranscriber:
+class Transcriber:
     def __init__(self, cfg: dict) -> None:
         self.cfg = cfg
         self.language = cfg["language"]
         self.beam_size = cfg.get("beam_size", 1)
+        # 수업 용어 힌트(선택). 비어 있으면 None으로 둔다.
+        self.prompt = cfg.get("prompt") or None
 
-        device = cfg["device"]
-        compute_type = cfg["compute_type"]
-        cpu_threads = cfg.get("cpu_threads", 0)   # 0 = 자동
-
-        # 모델 로드는 몇 초씩 걸린다. 호출마다 로드하면 매번 낭비이므로
-        # 시작할 때 딱 한 번만 두 모델을 올려둔다.
-        self.pass1 = WhisperModel(
-            cfg["pass1_model"], device=device,
-            compute_type=compute_type, cpu_threads=cpu_threads,
-        )
-        self.pass2 = WhisperModel(
-            cfg["pass2_model"], device=device,
-            compute_type=compute_type, cpu_threads=cpu_threads,
+        # 모델 로드는 몇 초 걸린다. 시작할 때 한 번만 올려둔다.
+        self.model = WhisperModel(
+            cfg["model"],
+            device=cfg["device"],
+            compute_type=cfg["compute_type"],
+            cpu_threads=cfg.get("cpu_threads", 0),
         )
 
         # 지표 측정(§8 자막 지연): 마지막 전사에 걸린 시간(초).
-        # 전체 지연(말 끝~자막)은 UI 통합 때 붙이고, 여기서는 STT 계산 시간을 남긴다.
-        self.last_draft_sec = 0.0
-        self.last_refine_sec = 0.0
+        self.last_sec = 0.0
 
-    def _transcribe(self, model, chunk) -> str:
-        segments, _ = model.transcribe(
+    def transcribe(self, chunk) -> str:
+        """발화 한 덩어리를 자막 문자열로 바꾼다."""
+        start = time.monotonic()
+        segments, _ = self.model.transcribe(
             chunk,
             language=self.language,
             beam_size=self.beam_size,
+            initial_prompt=self.prompt,        # 도메인 용어 힌트(오인식 교정)
             vad_filter=False,                  # 이미 VAD로 걸렀으니 중복하지 않는다
             condition_on_previous_text=False,  # 짧은 발화에서 반복/환각을 줄인다
         )
         # transcribe 는 지연 생성(generator)이라, 여기서 실제로 돌려 문장을 잇는다.
-        return " ".join(seg.text.strip() for seg in segments).strip()
-
-    def draft(self, chunk) -> str:
-        """1패스 — 빠른 임시 자막."""
-        start = time.monotonic()
-        text = self._transcribe(self.pass1, chunk)
-        self.last_draft_sec = time.monotonic() - start
-        return text
-
-    def refine(self, chunk) -> str:
-        """2패스 — 정확한 교정 자막."""
-        start = time.monotonic()
-        text = self._transcribe(self.pass2, chunk)
-        self.last_refine_sec = time.monotonic() - start
+        text = " ".join(seg.text.strip() for seg in segments).strip()
+        self.last_sec = time.monotonic() - start
         return text
 
 
 # ---------------------------------------------------------------------------
-# 자체 테스트: 저장된 발화 wav를 2-패스로 전사하고, 결과와 걸린 시간을 출력한다.
+# 자체 테스트: 저장된 발화 wav를 전사하고 결과와 걸린 시간을 출력한다.
 #   실행: python src/stt/transcriber.py [audio.wav]
-# 사람 음성이 없어도 검증할 수 있게 파일 입력을 받는다.
 # ---------------------------------------------------------------------------
 def _selftest() -> None:
     import sys
@@ -93,14 +77,14 @@ def _selftest() -> None:
     audio = pcm.astype(np.float32) / 32768.0
     print(f"입력: {wav_path} ({len(audio)/16000:.1f}초)")
 
-    print("모델 로딩 중... (small + medium, 처음엔 몇 초 걸림)")
-    stt = TwoPassTranscriber(cfg)
+    print(f"모델 로딩 중... ({cfg['model']}, {cfg['device']}/{cfg['compute_type']})")
+    stt = Transcriber(cfg)
 
-    draft = stt.draft(audio)
-    print(f"[1패스/{cfg['pass1_model']}] {stt.last_draft_sec:.1f}s → \"{draft}\"")
-
-    refine = stt.refine(audio)
-    print(f"[2패스/{cfg['pass2_model']}] {stt.last_refine_sec:.1f}s → \"{refine}\"")
+    # 첫 호출은 CUDA 커널 준비로 느리다(웜업). 그 다음이 실사용 속도.
+    warm = stt.transcribe(audio)
+    print(f"[웜업] {stt.last_sec:.2f}s")
+    text = stt.transcribe(audio)
+    print(f"[전사] {stt.last_sec:.2f}s → \"{text}\"")
 
 
 if __name__ == "__main__":
