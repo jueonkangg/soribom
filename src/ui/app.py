@@ -5,11 +5,12 @@ Qt(PySide6) 주의: GUI는 '메인 스레드'에서만 바꿀 수 있다. 그런
 고치면 안 되고, '시그널'로 안전하게 넘겨 메인 스레드의 슬롯이 대신 고치게 한다.
 """
 import math
+import threading
 
 from PySide6.QtCore import Qt, QObject, QPointF, QRectF, Signal, Slot
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import (
-    QApplication, QHBoxLayout, QLabel, QVBoxLayout, QWidget,
+    QApplication, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget,
 )
 
 
@@ -100,6 +101,16 @@ class SoribomUI(QObject):
         self.caption_label.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft)
         main.addWidget(self.caption_label)
 
+        # 맨 아래: 학생이 하고 싶은 말을 입력 → Enter → TTS로 발화(기능 ⑥)
+        self.input_box = QLineEdit()
+        self.input_box.setPlaceholderText("여기에 입력하고 Enter를 누르면 스피커가 대신 말합니다")
+        self.input_box.setStyleSheet(
+            "color: #f2f2f2; background: #1c1f27; border: 1px solid #3a3f4b; "
+            f"border-radius: 8px; padding: 12px; font-size: {int(self.font_size * 0.7)}px;"
+        )
+        self.input_box.returnPressed.connect(self._on_enter)
+        main.addWidget(self.input_box)
+
         # 전체화면에서 빠져나올 방법(ESC). 없으면 창을 못 닫고 갇힌다.
         QShortcut(QKeySequence("Escape"), self.window, activated=self.window.close)
 
@@ -126,6 +137,18 @@ class SoribomUI(QObject):
         # 비음성 소리 이벤트 알림 — 이번 개발 범위 밖(다음 단계). 자리만 둔다.
         pass
 
+    def _on_enter(self) -> None:
+        """입력칸에서 Enter: 내용을 on_speak 로 넘겨 발화하게 하고 칸을 비운다.
+
+        on_speak(=TTS)는 소리를 내는 동안 시간이 걸릴 수 있어 별도 스레드에서
+        부른다. 안 그러면 발화하는 동안 화면이 멈춘다.
+        """
+        text = self.input_box.text().strip()
+        if not text:
+            return
+        self.input_box.clear()
+        threading.Thread(target=self.on_speak, args=(text,), daemon=True).start()
+
     def run(self) -> None:
         """전체화면으로 띄우고 이벤트 루프를 돈다. (ESC로 종료)"""
         self.window.showFullScreen()
@@ -145,6 +168,9 @@ def _selftest() -> None:
 
     cfg = yaml.safe_load(open(Path(__file__).resolve().parents[1] / "config.yaml", encoding="utf-8"))
     ui = SoribomUI(cfg)
+
+    # 입력 테스트용: on_speak 이 불리면 콘솔에 찍는다(실제 TTS는 주언 speaker.py).
+    ui.on_speak = lambda text: print(f"[on_speak 호출됨] → TTS로 발화: {text}")
 
     # (자막, 방향각) — 앞0·오른90·뒤180·왼270 으로 돌려본다.
     samples = [
