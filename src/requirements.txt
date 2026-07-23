@@ -7,10 +7,16 @@ pyusb>=1.2.1          # ReSpeaker DOA 읽기 (USB HID)
 faster-whisper>=1.0.0
 silero-vad>=5.1
 
-# 음성 합성
-# Piper 는 한국어 미지원이라 MeloTTS 사용 (MIT 라이선스, CPU 실시간)
-# https://github.com/rhasspy/piper/discussions/680
-melotts @ git+https://github.com/myshell-ai/MeloTTS.git
+# 음성 합성 — sherpa-onnx + Supertonic v3 (한국 Supertone사, 한국어 네이티브, int8)
+#   MeloTTS·Kokoro·mimic3 는 폐기했다. 경위: docs/conversation_log.md
+#   ⚠️ GPU(CUDA) 실행은 pip 기본 휠(CPU)로는 안 된다. Jetson GPU 로 쓰려면 소스 빌드한 wheel 을 설치:
+#       git clone --depth 1 https://github.com/k2-fsa/sherpa-onnx   # 태그/버전 1.13.4
+#       cd sherpa-onnx
+#       SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_GPU=ON -DSHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.18.1" \
+#         CMAKE_BUILD_PARALLEL_LEVEL=2 pip wheel . --no-deps --no-build-isolation -w wheel/
+#       pip install wheel/sherpa_onnx-1.13.4+cuda-*.whl    # onnxruntime-gpu cuda12-1.18.1 자동 포함
+#   CPU 만 필요하면 아래 한 줄로 충분(느림): pip install sherpa-onnx==1.13.4
+sherpa-onnx==1.13.4   # GPU 는 위 주석대로 +cuda wheel 로 교체 설치
 
 # 소리 이벤트 분류
 torch>=2.1
