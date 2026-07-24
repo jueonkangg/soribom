@@ -56,18 +56,21 @@ def main() -> None:
             text = stt.transcribe(chunk)
             ui.show_caption(text, angle=angle, tentative=False)
             notes.add(text, angle=angle)
+            # ③(경량) 이름 호명 감지 — 오디오 모델 없이 방금 인식한 자막 텍스트에서 찾는다.
+            # config 의 events.enabled 일 때만 동작하고, 세 기능은 건드리지 않고 '읽기'만 한다.
+            if cfg["events"].get("enabled"):
+                for alert in events.detect_in_text(text):
+                    ui.show_alert(alert)
 
     def lane_events() -> None:
         """레인 C — 말이 아닌 소리를 감지해 알린다."""
         for label, conf in events.stream(audio_q):
             ui.show_alert(label, conf)
 
-    # 자막 레인은 항상 돈다. 이벤트 레인(기능 ③)은 이번 개발 범위 밖이라
-    # config 로 켤 때만 시작한다. events.stream() 은 아직 스텁(NotImplementedError)이라,
-    # 그냥 켜면 스레드가 죽으며 traceback 을 뱉는다. (범위: CLAUDE.md 3장)
+    # 자막 레인만 돈다. ③의 '이름 호명' 감지는 오디오 모델 없이 lane_caption 안에서
+    # 자막 텍스트로 처리한다(위 참고). 비음성 소리(종소리 등)를 다루는 오디오 레인
+    # lane_events 는 아직 스텁(NotImplementedError)이라 시작하지 않는다. (범위: CLAUDE.md 3장)
     lanes = [lane_caption]
-    if cfg["events"].get("enabled"):
-        lanes.append(lane_events)
     for target in lanes:
         threading.Thread(target=target, daemon=True).start()
 

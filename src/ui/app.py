@@ -7,7 +7,7 @@ Qt(PySide6) 주의: GUI는 '메인 스레드'에서만 바꿀 수 있다. 그런
 import math
 import threading
 
-from PySide6.QtCore import Qt, QObject, QPointF, QRectF, Signal, Slot
+from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget,
@@ -64,6 +64,7 @@ class DirectionDial(QWidget):
 class SoribomUI(QObject):
     # 워커 스레드 → 메인 스레드로 (자막, 방향)을 안전하게 넘기는 통로.
     _caption_arrived = Signal(str, object)   # (text, angle 또는 None)
+    _alert_arrived = Signal(str)             # 소리 이벤트 알림(이름 호명 등)
 
     def __init__(self, cfg: dict) -> None:
         super().__init__()
@@ -82,6 +83,16 @@ class SoribomUI(QObject):
         self.window.setStyleSheet("background-color: #101014;")
         main = QVBoxLayout(self.window)
         main.setContentsMargins(40, 40, 40, 40)
+
+        # 맨 위: 소리 이벤트 알림 배너(이름 호명 등). 평소엔 숨겨 두고, 이벤트 때만 잠깐 뜬다.
+        self.alert_label = QLabel("")
+        self.alert_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.alert_label.setStyleSheet(
+            "background: #e08a00; color: #ffffff; border-radius: 8px; padding: 10px; "
+            f"font-size: {int(self.font_size * 0.7)}px; font-weight: 700;"
+        )
+        self.alert_label.hide()
+        main.addWidget(self.alert_label)
 
         # 위쪽 오른쪽: 방향 화살표
         top = QHBoxLayout()
@@ -116,6 +127,12 @@ class SoribomUI(QObject):
 
         self._caption_arrived.connect(self._update)
 
+        # 알림 배너: 시그널로 받고, 4초 뒤 자동으로 숨긴다(타이머는 메인 스레드에서 만든다).
+        self._alert_arrived.connect(self._show_alert)
+        self._alert_timer = QTimer()
+        self._alert_timer.setSingleShot(True)
+        self._alert_timer.timeout.connect(self.alert_label.hide)
+
     @Slot(str, object)
     def _update(self, text: str, angle) -> None:
         """메인 스레드에서 실행: 자막과 방향을 화면에 반영한다."""
@@ -133,9 +150,19 @@ class SoribomUI(QObject):
         """
         self._caption_arrived.emit(text, angle)
 
-    def show_alert(self, label: str, confidence: float) -> None:
-        # 비음성 소리 이벤트 알림 — 이번 개발 범위 밖(다음 단계). 자리만 둔다.
-        pass
+    @Slot(str)
+    def _show_alert(self, text: str) -> None:
+        """메인 스레드에서 실행: 알림 배너를 띄우고 4초 뒤 자동으로 숨긴다."""
+        self.alert_label.setText(text)
+        self.alert_label.show()
+        self._alert_timer.start(4000)
+
+    def show_alert(self, label: str, confidence: float = 1.0) -> None:
+        """소리 이벤트 알림(이름 호명 등)을 화면 위 배너로 잠깐 띄운다.
+
+        어느 스레드에서 불려도 안전하도록 시그널로만 넘긴다(자막과 같은 방식).
+        """
+        self._alert_arrived.emit(label)
 
     def _on_enter(self) -> None:
         """입력칸에서 Enter: 내용을 on_speak 로 넘겨 발화하게 하고 칸을 비운다.
