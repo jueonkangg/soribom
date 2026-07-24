@@ -80,19 +80,80 @@ def _angle_diff(a: float, b: float) -> float:
     return abs(((a - b + 180) % 360) - 180)
 
 
+def _circular_mean(angles: list) -> float:
+    """각도(원형)의 평균. 0°/360° 경계에서 틀리지 않게 벡터로 바꿔 평균낸다.
+
+    예: 359° 와 1° 의 평균은 산술평균(180°)이 아니라 0° 여야 한다.
+    """
+    import math
+    x = sum(math.cos(math.radians(a)) for a in angles)
+    y = sum(math.sin(math.radians(a)) for a in angles)
+    if abs(x) < 1e-9 and abs(y) < 1e-9:
+        return angles[0]
+    return math.degrees(math.atan2(y, x)) % 360.0
+
+
+def _robust_center(angles: list, window: float = 30.0):
+    """반사음·순간 오검출에 흔들리지 않는 '중심 방향'을 찾는다.
+
+    왜 이렇게: 말하는 동안 진짜 방향은 한 곳에 몰리고(dominant cluster),
+    벽 반사음·조용한 순간의 잡값은 흩어진다. 그래서 흩어진 값을 버리고
+    가장 많이 몰린 곳만 평균낸다. (칩 음성감지를 USB로 읽는 건 장치 다운
+    위험이 있어 안 쓰고, 대신 이 통계적 방법으로 잡값을 거른다.)
+
+    방법:
+      1) 이웃(±window°)이 가장 많은 표본을 중심 후보로 고른다(최빈 방향).
+      2) 그 후보 근처 표본만 남겨 원형 평균 → 중심을 정하고 한 번 더 정제.
+      3) 남은 표본의 퍼짐(중심에서 최대로 벗어난 각)과 채택 비율을 함께 낸다.
+    반환: (중심각, 퍼짐°, 채택비율 0~1, 채택수, 전체수)
+    """
+    if not angles:
+        return 0.0, 999.0, 0.0, 0, 0
+    best_i, best_cnt = 0, -1
+    for i, a in enumerate(angles):
+        cnt = sum(1 for b in angles if _angle_diff(a, b) <= window)
+        if cnt > best_cnt:
+            best_cnt, best_i = cnt, i
+    center = _circular_mean([b for b in angles if _angle_diff(angles[best_i], b) <= window])
+    inliers = [b for b in angles if _angle_diff(center, b) <= window]
+    center = _circular_mean(inliers)                 # 한 번 더 정제
+    inliers = [b for b in angles if _angle_diff(center, b) <= window]
+    spread = max((_angle_diff(center, b) for b in inliers), default=0.0)
+    return center, spread, len(inliers) / len(angles), len(inliers), len(angles)
+
+
+def _measure_direction(doa, seconds: float, interval: float = 0.1) -> list:
+    """한 방향을 측정: 칩의 raw 각도를 촘촘히 모은다. (평활화 안 된 원본을 쓴다)
+
+    평활화된 current()는 관성이 있어 반사음에 끌려가면 회복이 느리다.
+    그래서 원본 raw 를 많이 모아 통계로 거르는 편이 더 정확하다.
+    """
+    import time
+    raws = []
+    end = time.time() + seconds
+    while time.time() < end:
+        try:
+            raws.append(doa.raw_angle() % 360)
+        except Exception:
+            pass                                     # 간헐적 USB 읽기 실패는 건너뛴다
+        time.sleep(interval)
+    return raws
+
+
 # ---------------------------------------------------------------------------
-# 자체 테스트(가이드형, Phase 2): 방향마다 raw 각도 · 화면 각도 · 흔들림 · 오차를 잰다.
-#   - 화면 각도 = front_offset로 변환 + 평활화한 값(실제 화살표가 가리킬 방향)
-#   - 흔들림   = 3초간 화면 각도가 움직인 폭(작을수록 평활화가 잘 됨)
-#   - 오차     = 화면 각도 vs 그 방향의 기대 각도(앞0·오른90·뒤180·왼270°)
-# 결과는 doyu/tests/<날짜>_doa-phase2.txt 로그로 남긴다.
-# 말하는 동안만 3초 측정하므로, 게이팅 없이도 값이 안정적으로 잡힌다.
+# 자체 테스트(Phase 8 — 케이스 고정 후 최종 보정/측정).
+#   개선점: 반사음·잡값을 통계로 제거(_robust_center)하고, 방향마다
+#   '안정/불안정'을 판정해 불안정하면 그 자리에서 다시 재게 한다.
+#   그래야 §8 DOA 오차를 믿을 수 있는 값으로 얻는다.
+#     - raw 중심 = 잡값 뺀 진짜 방향 / 퍼짐 = 남은 값이 얼마나 몰렸나(작을수록 좋음)
+#     - 채택% = 전체 중 몇 %가 한 곳에 몰렸나(높을수록 좋음)
+#     - 오차 = 화면각(= front_offset - raw) vs 기대각(앞0·오른90·뒤180·왼270°)
+#   front_offset 은 건드리지 않는다(앞·뒤가 맞으면 이미 정상). 여기선 '측정'만 한다.
 #   실행(반드시 진짜 터미널에서): python src/audio/doa.py
 # ---------------------------------------------------------------------------
 def _selftest() -> None:
     import os
     import statistics
-    import time
     from datetime import datetime
     from pathlib import Path
 
@@ -101,52 +162,62 @@ def _selftest() -> None:
     root = Path(__file__).resolve().parents[2]
     cfg = yaml.safe_load(open(root / "src" / "config.yaml", encoding="utf-8"))["doa"]
     doa = DoaTracker(cfg)
+    front_offset = cfg.get("front_offset", 0)
 
     # 물리 방향 → 화면에서 기대되는 각도(앞=0°, 시계방향).
     expected = {"앞": 0, "오른쪽": 90, "뒤": 180, "왼쪽": 270}
-    speak_seconds = 3
+    SECONDS = 4.0            # 표본을 넉넉히 모은다
+    STABLE_SPREAD = 25.0     # 남은 값의 퍼짐이 이 이내면 '안정'
+    MIN_KEEP = 0.60          # 표본의 60% 이상이 한 곳에 몰려야 신뢰
 
-    print("방향별 DOA 측정 (Phase 2: 화면각 + 평활화 + 오차)")
-    print("안내가 나오면 그 방향에서 Enter → 계속 말하세요.\n")
-    cased = input("마이크가 케이스에 고정돼 있나요? (y/n): ").strip().lower() or "n"
+    print("방향별 DOA 측정 (Phase 8: 잡값 제거 + 안정성 판정)")
+    print(f"각 방향에 정확히 서서, 끊지 말고 '크게 계속' 말하세요(약 {SECONDS:.0f}초).\n")
+    cased = (input("마이크가 케이스에 고정돼 있나요? (y/n): ").strip().lower() or "n")
 
     rows = []
     for name, want in expected.items():
-        input(f"\n[{name}] 에 서세요. 준비되면 Enter → {speak_seconds}초간 말하세요... ")
-        print("  측정 중 — 말하세요!", flush=True)
-        raws, screens = [], []
-        end = time.time() + speak_seconds
-        while time.time() < end:
-            raws.append(doa.raw_angle())
-            screens.append(doa.current())
-            time.sleep(0.15)
+        while True:
+            input(f"\n[{name}] 방향에 정확히 서세요. 준비되면 Enter → {SECONDS:.0f}초간 크게 말하세요... ")
+            print("  측정 중 — 계속 말하세요!", flush=True)
+            raws = _measure_direction(doa, SECONDS)
+            if not raws:
+                print("  ⚠️ USB에서 값을 못 읽었습니다. 연결 확인 후 다시.")
+                continue
+            raw_c, spread, keep, n_in, n_all = _robust_center(raws)
+            screen = (front_offset - raw_c) % 360.0
+            err = _angle_diff(screen, want)
+            stable = spread <= STABLE_SPREAD and keep >= MIN_KEEP
+            print(f"  → raw {raw_c:.0f}° | 화면 {screen:.0f}° | 퍼짐 {spread:.0f}° "
+                  f"| 채택 {n_in}/{n_all}({keep*100:.0f}%) | 오차 {err:.0f}° "
+                  f"| {'안정 ✅' if stable else '불안정 ⚠️'}")
+            if not stable:
+                retry = (input("  불안정합니다. 다시 잴까요? (Y/n): ").strip().lower() or "y")
+                if retry.startswith("y"):
+                    continue
+            rows.append((name, raw_c, screen, spread, keep, err, stable))
+            break
 
-        raw_med = statistics.median(raws)
-        screen = screens[-1]                 # 평활화된 최종값
-        # 흔들림: 첫 값 기준으로 펼쳐(원형 경계 문제 회피) 최대-최소 폭.
-        base = screens[0]
-        unwrapped = [base + (((s - base + 180) % 360) - 180) for s in screens]
-        spread = max(unwrapped) - min(unwrapped)
-        err = _angle_diff(screen, want)
-        rows.append((name, raw_med, screen, spread, err))
-        print(f"  → raw {raw_med:.0f}° | 화면 {screen:.0f}° | 흔들림 {spread:.0f}° | 오차 {err:.0f}°")
-
-    avg_err = statistics.mean(r[4] for r in rows)
+    stable_errs = [r[5] for r in rows if r[6]]
+    avg_err = statistics.mean(stable_errs) if stable_errs else float("nan")
 
     now = datetime.now()
     log_dir = root / "doyu" / "tests"
     os.makedirs(log_dir, exist_ok=True)
-    log_path = log_dir / f"{now:%Y-%m-%d}_doa-phase2.txt"
+    log_path = log_dir / f"{now:%Y-%m-%d}_doa-phase8.txt"
     lines = [
-        "=" * 52,
-        f"DOA Phase2 (화면각+평활화+오차)  |  {now:%Y-%m-%d %H:%M:%S}",
+        "=" * 60,
+        f"DOA Phase8 (잡값제거 robust + 안정성판정)  |  {now:%Y-%m-%d %H:%M:%S}",
         f"마이크 케이스 고정: {'예' if cased.startswith('y') else '아니오(잠정값)'}",
-        f"config front_offset={cfg.get('front_offset')}, smoothing={cfg.get('smoothing')}",
-        f"{'방향':<5}{'raw':>6}{'화면':>6}{'흔들림':>7}{'오차':>6}",
+        f"config front_offset={front_offset}",
+        f"{'방향':<5}{'raw':>6}{'화면':>6}{'퍼짐':>6}{'채택%':>7}{'오차':>6}  판정",
     ]
-    for name, raw_med, screen, spread, err in rows:
-        lines.append(f"{name:<5}{raw_med:6.0f}{screen:6.0f}{spread:7.0f}{err:6.0f}")
-    lines.append(f"평균 DOA 오차: {avg_err:.0f}°  (케이스 전이면 잠정)")
+    for name, raw_c, screen, spread, keep, err, stable in rows:
+        lines.append(f"{name:<5}{raw_c:6.0f}{screen:6.0f}{spread:6.0f}{keep*100:7.0f}{err:6.0f}  "
+                     f"{'안정' if stable else '불안정'}")
+    if stable_errs:
+        lines.append(f"평균 DOA 오차(안정 {len(stable_errs)}개 방향): {avg_err:.1f}°")
+    else:
+        lines.append("평균 DOA 오차: 측정 실패(안정된 방향 없음) — 환경 점검 후 재측정")
     text = "\n".join(lines) + "\n"
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(text)
@@ -154,7 +225,10 @@ def _selftest() -> None:
     print("\n═══ 요약 ═══")
     print(text)
     print(f"로그 저장: {log_path}")
-    print("흔들림이 Phase 1보다 작으면 평활화 성공. 오차 확정은 케이스 후 Phase 8.")
+    if len(stable_errs) == 4:
+        print(f"✅ 네 방향 모두 안정. 평균 오차 {avg_err:.1f}° — 이 값을 §8 지표로 씁니다.")
+    else:
+        print("⚠️ 불안정한 방향이 있습니다. 반사가 적은 곳에서 더 크게·가까이 다시 측정하세요.")
 
 
 if __name__ == "__main__":
