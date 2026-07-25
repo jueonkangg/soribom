@@ -9,6 +9,7 @@
 """
 import queue
 import threading
+from pathlib import Path
 
 import yaml
 
@@ -22,7 +23,11 @@ from tts.speaker import Speaker
 from ui.app import SoribomUI
 
 
-def load_config(path: str = "config.yaml") -> dict:
+def load_config(path: str = None) -> dict:
+    # config.yaml 은 이 파일(main.py) 옆에 있다. 실행 위치(cwd)에 상관없이 찾도록
+    # 파일 기준 절대경로로 푼다. (repo 루트에서 `python src/main.py` 로 실행해도 되게)
+    if path is None:
+        path = Path(__file__).resolve().parent / "config.yaml"
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
