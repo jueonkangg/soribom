@@ -1,11 +1,10 @@
 """소리봄 (SoundSight) — 진입점.
 
-교실 소리를 받아 4개 레인으로 병렬 처리한다.
-  A: VAD → 2-패스 STT → 자막
-  B: DOA → 화자 방향
-  C: 소리 이벤트 분류 → 알림
-  D: 근접 오디오 → AGC/리미터 → 블루투스
-그리고 학생의 타이핑 입력을 TTS로 발화한다.
+교실 소리를 받아 처리한다.
+  자막:   VAD → STT(단일 패스) → 자막 (+ 이름 호명 감지 = 기능 3, 수업 기록 = 기능 5)
+  방향:   DOA → 화자 방향 (기능 2)
+  말하기: 학생의 타이핑 입력을 TTS로 발화 (기능 6)
+비음성 소리 분류(종소리 등, 기능 3의 나머지)와 블루투스 소리 전달(기능 4)은 다음 단계다.
 """
 import queue
 import threading
@@ -49,9 +48,9 @@ def main() -> None:
     # 학생 이름을 STT hotwords 에도 넣어 이름을 더 잘 잡게 한다(이름 호명 감지의 정확도↑).
     stt.set_extra_terms(cfg["events"].get("student_names", []))
 
-    # 학생이 타이핑한 문장을 내장 스피커로 발화 (기능 ⑥)
+    # 학생이 타이핑한 문장을 내장 스피커로 발화 (기능 6)
     ui.on_speak = speaker.say
-    # '수업 기록 보기' 버튼 → 지금까지의 전체 발화 기록을 화면 패널로 (기능 ⑤)
+    # '수업 기록 보기' 버튼 → 지금까지의 전체 발화 기록을 화면 패널로 (기능 5)
     ui.on_summarize = notes.build_summary
     # 헤더 과목 드롭다운 → 그 과목 용어로 STT 편향 전환(다음 발화부터)
     ui.on_subject_change = stt.set_subject
@@ -68,20 +67,20 @@ def main() -> None:
             text = stt.transcribe(chunk)
             ui.show_caption(text, angle=angle, tentative=False)
             notes.add(text, angle=angle)
-            # ③(경량) 이름 호명 감지 — 오디오 모델 없이 방금 인식한 자막 텍스트에서 찾는다.
-            # config 의 events.enabled 일 때만 동작하고, 세 기능은 건드리지 않고 '읽기'만 한다.
+            # 기능 3(경량) 이름 호명 감지 — 오디오 모델 없이 방금 인식한 자막 텍스트에서 찾는다.
+            # config 의 events.enabled 일 때만 동작하고, 자막 텍스트를 '읽기'만 한다.
             if cfg["events"].get("enabled"):
                 for alert in events.detect_in_text(text):
                     ui.show_alert(alert)
 
     def lane_events() -> None:
-        """레인 C — 말이 아닌 소리를 감지해 알린다."""
+        """말이 아닌 소리(종소리 등)를 감지해 알린다. — 다음 단계(미구현 스텁)."""
         for label, conf in events.stream(audio_q):
             ui.show_alert(label, conf)
 
-    # 자막 레인만 돈다. ③의 '이름 호명' 감지는 오디오 모델 없이 lane_caption 안에서
+    # 자막 레인만 돈다. 기능 3의 '이름 호명' 감지는 오디오 모델 없이 lane_caption 안에서
     # 자막 텍스트로 처리한다(위 참고). 비음성 소리(종소리 등)를 다루는 오디오 레인
-    # lane_events 는 아직 스텁(NotImplementedError)이라 시작하지 않는다. (범위: CLAUDE.md 3장)
+    # lane_events 는 아직 스텁(NotImplementedError)이라 시작하지 않는다(다음 단계).
     lanes = [lane_caption]
     for target in lanes:
         threading.Thread(target=target, daemon=True).start()
@@ -91,10 +90,9 @@ def main() -> None:
         ui.run()
     finally:
         mic.stop()
-        # 요약 노트(기능 ⑤)도 이번 범위 밖. 켤 때만 저장한다.
-        # notes.save() 는 아직 스텁이라, 끄고 호출하면 종료 시 앱이 크래시한다.
+        # 기능 5 수업 기록: 켜져 있을 때만 종료 시 파일로 저장한다.
         if cfg["summary"].get("enabled"):
-            notes.save()   # 수업 종료 후 요약 노트 저장
+            notes.save()   # 수업 종료 후 전체 기록 저장
 
 
 if __name__ == "__main__":

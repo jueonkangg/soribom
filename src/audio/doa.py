@@ -144,7 +144,7 @@ def _measure_direction(doa, seconds: float, interval: float = 0.1) -> list:
 # 자체 테스트(Phase 8 — 케이스 고정 후 최종 보정/측정).
 #   개선점: 반사음·잡값을 통계로 제거(_robust_center)하고, 방향마다
 #   '안정/불안정'을 판정해 불안정하면 그 자리에서 다시 재게 한다.
-#   그래야 §8 DOA 오차를 믿을 수 있는 값으로 얻는다.
+#   그래야 DOA 오차를 믿을 수 있는 값으로 얻는다.
 #     - raw 중심 = 잡값 뺀 진짜 방향 / 퍼짐 = 남은 값이 얼마나 몰렸나(작을수록 좋음)
 #     - 채택% = 전체 중 몇 %가 한 곳에 몰렸나(높을수록 좋음)
 #     - 오차 = 화면각(= front_offset - raw) vs 기대각(앞0·오른90·뒤180·왼270°)
@@ -226,7 +226,7 @@ def _selftest() -> None:
     print(text)
     print(f"로그 저장: {log_path}")
     if len(stable_errs) == 4:
-        print(f"✅ 네 방향 모두 안정. 평균 오차 {avg_err:.1f}° — 이 값을 §8 지표로 씁니다.")
+        print(f"✅ 네 방향 모두 안정. 평균 오차 {avg_err:.1f}° — 이 값을 DOA 오차 지표로 씁니다.")
     else:
         print("⚠️ 불안정한 방향이 있습니다. 반사가 적은 곳에서 더 크게·가까이 다시 측정하세요.")
 

@@ -2,7 +2,7 @@
 
 큐로 들어오는 오디오를 창(window) 단위로 보며 '지금 말하는 중인지' 확률을
 매기고, 발화가 끝날 때(충분한 침묵이 이어질 때)마다 그 발화 한 덩어리를 yield 한다.
-다음 단계(2-패스 STT)는 이 덩어리를 받아 자막으로 만든다.
+STT(단일 패스)는 이 덩어리를 받아 자막으로 만든다.
 
 모델은 faster-whisper에 내장된 silero VAD(onnx)를 그대로 재사용한다.
 - silero_vad 파이썬 패키지는 최상단에서 torch를 import 하는데, Jetson에서 torch는

@@ -88,7 +88,7 @@ class Speaker:
 
         samples = np.array(audio.samples, dtype=np.float32)
 
-        # §8 TTS 지연 측정: 합성에 걸린 시간을 남긴다(타이핑 완료 → 소리까지).
+        # 지표 측정(TTS 지연): 합성에 걸린 시간을 남긴다(타이핑 완료 → 소리까지).
         dur = len(samples) / audio.sample_rate if len(samples) else 0.0
         print(f"[TTS] 합성 {synth_s:.2f}s (오디오 {dur:.1f}s, steps={self.num_steps}) : {text[:20]}")
 

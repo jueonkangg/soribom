@@ -38,7 +38,7 @@ class Transcriber:
             cpu_threads=cfg.get("cpu_threads", 0),
         )
 
-        # 지표 측정(§8 자막 지연): 마지막 전사에 걸린 시간(초).
+        # 지표 측정(자막 지연): 마지막 전사에 걸린 시간(초).
         self.last_sec = 0.0
 
     def _apply_vocab(self) -> None:
@@ -68,11 +68,11 @@ class Transcriber:
         if not self.keywords or not text:
             return False
         kw = set(self.keywords)
-        # ① 쉼표로 나뉜 항목이 대부분 '용어 그 자체'면 나열 환각.
+        # 1) 쉼표로 나뉜 항목이 대부분 '용어 그 자체'면 나열 환각.
         parts = [p.strip() for p in re.split(r"[,，]", text) if p.strip()]
         if len(parts) >= 2 and sum(p in kw for p in parts) >= max(2, 0.8 * len(parts)):
             return True
-        # ② 쉼표가 없어도, 토큰 대부분이 정확히 용어면 나열 환각.
+        # 2) 쉼표가 없어도, 토큰 대부분이 정확히 용어면 나열 환각.
         toks = [t for t in re.split(r"\s+", text.strip()) if t]
         if len(toks) >= 3 and sum(t in kw for t in toks) >= 0.8 * len(toks):
             return True

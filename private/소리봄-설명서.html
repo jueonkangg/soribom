@@ -808,13 +808,13 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
   </ul>
   <div class="box good"><span class="box-t">🟩 그래서 우리 선택이 잘 맞았다</span>
     이 어려움들을 <strong>단어 힌트</strong>(교과 용어 보강, 4.3)와 <strong>빔포밍</strong>(잡음 제거, 5.2)으로
-    정면 대응했습니다. 그 결과가 <strong>CER 0%대</strong>입니다. 한국어의 약점을 알고 <strong>그 지점을
-    콕 집어</strong> 보완한 것이 효과적이었습니다.</div>
+    정면 대응했습니다. 그 결과 <strong>또박또박 읽으면 CER 0%대</strong>가 됩니다. 한국어의 약점을 알고
+    <strong>그 지점을 콕 집어</strong> 보완한 것이 효과적이었습니다.</div>
 
-  <div class="box easy"><span class="box-t">🟦 이 숫자의 뜻</span>
-    <strong>CER</strong>은 ‘글자 단위로 몇 %를 틀렸나’입니다. 0.0%면 <strong>사실상 다 맞혔다</strong>는 뜻이고,
-    시끄러운 곳에서도 0.7%(1000글자 중 7글자)로 거의 완벽했습니다. 시끄러워도 정확한 비결은
-    마이크 칩의 ‘빔포밍’ 덕분인데, 그건 바로 다음 5부에서 설명합니다.</div>
+  <div class="box easy"><span class="box-t">🟦 이 숫자의 뜻(그리고 조건)</span>
+    <strong>CER</strong>은 ‘글자 단위로 몇 %를 틀렸나’입니다. <strong>또박또박 읽은 통제 조건</strong>에서 조용할 때
+    0.0%, 잡음에도 0.7%(1000글자 중 7글자)로 매우 낮았습니다. 다만 이건 <strong>맑게 읽었을 때</strong> 값이고,
+    <strong>빠르게 자연스럽게 말하면 더 올라갑니다</strong>(실사용·자연발화는 15부에서 정직하게 다룹니다).</div>
 </section>
 
 <!-- ==================== 5부 ==================== -->
@@ -1701,10 +1701,11 @@ tts:                     # 말하기(음성합성) 설정
       <tr><td>조용할 때</td><td><strong>0.0%</strong></td><td>16.7%</td></tr>
       <tr><td>시끄러울 때</td><td><strong>0.7%</strong></td><td>18.8%</td></tr>
     </tbody>
-    <caption>측정: 실제 파이프라인 그대로(구간 자르기 + 작은 모델 + 단어 힌트).</caption>
+    <caption>측정: 정해둔 6문장을 <strong>또박또박 읽어 녹음</strong>한 통제 조건(구간 자르기 + 작은 모델 + 용어 사전).
+      실제로 마이크에 대고 낭독한 5과목 <strong>실사용 값은 15부</strong>에 따로 있습니다.</caption>
   </table>
   <div class="box easy"><span class="box-t">🟦 CER과 WER, 왜 이렇게 차이 나나 (정직하게)</span>
-    <strong>CER(글자 오류율)이 진짜 실력을 보여줍니다</strong> — 조용할 때 오류 0.0%, 시끄러워도 0.7%로 거의 완벽했습니다.
+    이 표는 <strong>또박또박 읽은 통제 조건</strong>입니다. 그 조건에서 CER은 조용할 때 0.0%, 잡음에도 0.7%로 매우 낮았습니다.
     반면 <strong>WER(어절 단위) 16.7%는 대부분 ‘틀림’이 아니라 ‘띄어쓰기 차이’</strong>였습니다.
     예: 정답 “빛에너지” ↔ 인식 “빛 에너지”, 정답 “읽어 오세요” ↔ 인식 “읽어오세요”. 뜻은 똑같고
     사람이 읽는 데 아무 문제가 없습니다. <strong>실제 오인식은 잡음 조건에서 “칠판에→칠판이” 한 글자뿐</strong>이었습니다.</div>
@@ -1727,7 +1728,7 @@ tts:                     # 말하기(음성합성) 설정
   <div class="box easy"><span class="box-t">🟦 여기서 알 수 있는 것</span>
     같은 실수라도 <strong>어절(WER)로 세면 훨씬 크게</strong> 보입니다(한 어절 안의 한 글자만 틀려도
     그 어절 전체를 틀린 것으로 침). 그래서 <strong>글자 단위(CER)가 실제 정확도에 더 가깝습니다.</strong>
-    소리봄의 진짜 성적은 <strong>CER 0.0~0.7%</strong> — 사실상 다 맞혔다는 뜻입니다.</div>
+    <strong>또박또박 읽으면 CER 0.0~0.7%</strong>(통제 조건)이고, 실제 낭독은 15부에서 재본 값을 함께 봐 주세요.</div>
   <div class="box term"><span class="box-t">⬛ 용어 — 편집 거리</span>
     두 문장이 <strong>얼마나 다른지</strong>를, “몇 번 고치면 같아지나(글자를 바꾸기·넣기·빼기)”로
     재는 방법. WER·CER은 이 편집 횟수를 전체 길이로 나눠 %로 만든 것입니다.</div>
@@ -1802,16 +1803,17 @@ tts:                     # 말하기(음성합성) 설정
   <table>
     <thead><tr><th>지표</th><th>값</th><th>사람 말로</th></tr></thead>
     <tbody>
-      <tr><td>자막 오류율(CER)</td><td>0.0~0.7%</td><td>“말한 걸 <strong>사실상 다 맞게</strong> 글자로 옮긴다.”</td></tr>
+      <tr><td>자막 오류율(CER)</td><td>0.0~0.7% <span style="color:var(--muted)">(통제)</span> · 3.2% <span style="color:var(--muted)">(5과목 실사용)</span></td><td>“<strong>또박또박 말하면</strong> 사실상 다 맞고, 실제 낭독도 정확한 편이다.”</td></tr>
       <tr><td>자막 지연</td><td>~0.6초</td><td>“말이 끝나면 <strong>거의 바로</strong> 자막이 뜬다.”</td></tr>
       <tr><td>말하기 지연</td><td>~1.8초</td><td>“타이핑하면 <strong>약 1.8초 안에</strong> 스피커가 말한다.”</td></tr>
       <tr><td>방향(DOA) 오차</td><td>1.5°</td><td>“화살표가 <strong>말하는 사람 쪽</strong>을 거의 정확히 가리킨다.”</td></tr>
     </tbody>
   </table>
   <div class="box good"><span class="box-t">🟩 종합하면</span>
-    <strong>정확하고(0%대) · 빠르고(약 1초) · 방향까지 맞다(1.5°).</strong> 세 기능이 “그냥 되는” 게
-    아니라 <strong>쓸 만한 수준으로 된다</strong>는 것을 숫자가 말해 줍니다. 그리고 이 모든 게
-    <strong>인터넷 없이</strong> 이뤄집니다 — 그것이 소리봄의 자부심입니다.</div>
+    <strong>또박또박 말하면 정확하고 · 빠르고(약 1초) · 방향까지 맞다(1.5°).</strong> 세 기능이 “그냥 되는” 게
+    아니라 <strong>쓸 만한 수준으로 된다</strong>는 것을 숫자가 말해 줍니다. 다만 <strong>빠른 자연발화에선
+    자막 정확도가 떨어진다</strong>는 한계도 함께 잽니다(15부). 그리고 이 모든 게 <strong>인터넷 없이</strong>
+    이뤄집니다 — 그것이 소리봄의 자부심입니다.</div>
   <div class="box easy"><span class="box-t">🟦 숫자를 볼 때의 태도</span>
     숫자는 <strong>자랑</strong>이 아니라 <strong>약속</strong>입니다. “이만큼 된다”를 재서 보여 주면,
     보는 사람이 <strong>믿을 수 있습니다.</strong> 그래서 우리는 잘 나온 값도, 아쉬운 값도(WER의 띄어쓰기,
@@ -2637,8 +2639,9 @@ tts:                     # 말하기(음성합성) 설정
     다르며, 이는 당사자 자문에서 나온 실제 필요를 반영한 것입니다.</p>
 
   <h4>Q. 자막이 얼마나 정확한가요?</h4>
-  <p>조용할 때 <strong>글자 오류 0.0%</strong>, 시끄러울 때도 <strong>0.7%</strong>였습니다(11.2).
-    시끄러워도 정확한 건 마이크의 <strong>빔포밍</strong> 덕분입니다.</p>
+  <p><strong>또박또박 읽은 통제 조건</strong>에서 조용할 때 글자 오류 <strong>0.0%</strong>, 잡음에도 <strong>0.7%</strong>였습니다(11.2).
+    실제로 마이크에 대고 낭독한 <strong>5과목 실사용은 평균 3.2%</strong>였고, <strong>매우 빠른 자연발화에선 약 15%</strong>로
+    올라갑니다(15부). 즉 “적당히 또박또박”이면 매우 정확하고, 빠른 자연발화가 한계입니다.</p>
 
   <h4>Q. 학생들의 목소리(개인정보)는 안전한가요?</h4>
   <p>안전합니다. 음성이 <strong>기기 밖으로 나가지 않습니다</strong>(완전 오프라인). 저장소에도
@@ -2965,11 +2968,12 @@ integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도�
   <table>
     <thead><tr><th>지표</th><th>값</th><th>조건</th><th>본문</th></tr></thead>
     <tbody>
-      <tr><td>자막 오류율 (CER)</td><td>0.0%</td><td>조용할 때</td><td>11.2</td></tr>
-      <tr><td>자막 오류율 (CER)</td><td>0.7%</td><td>시끄러울 때</td><td>11.2</td></tr>
+      <tr><td>자막 오류율 (CER)</td><td>0.0% / 0.7%</td><td><strong>통제 녹음</strong>(또박또박) 조용/잡음</td><td>11.2</td></tr>
+      <tr><td>자막 오류율 (CER)</td><td>평균 3.2%</td><td><strong>5과목 실사용</strong> 낭독(표기·띄어쓰기 제외 시 ~1.5%)</td><td>15부</td></tr>
+      <tr><td>자막 오류율 (CER)</td><td>~15%</td><td><strong>빠른 자연발화</strong>(정확도 하락, 작은 모델 한계)</td><td>15부</td></tr>
       <tr><td>자막 지연</td><td>~0.6초</td><td>말 끝난 뒤 전사 시간(중앙값)</td><td>11.3</td></tr>
       <tr><td>말하기(TTS) 지연</td><td>~1.8초</td><td>타이핑 완료→소리(문장 길이 무관)</td><td>11.4</td></tr>
-      <tr><td>방향(DOA) 오차</td><td>1.5°</td><td>케이스 후, 마이크 면 노출, 4방향 평균</td><td>11.6</td></tr>
+      <tr><td>방향(DOA) 오차</td><td>1.5°</td><td>케이스 후, LED로 정확히 서서 보정, 4방향 평균</td><td>11.6</td></tr>
       <tr><td>STT+TTS 동시 상주 여유메모리</td><td>≥3,666MB</td><td>둘 다 GPU, OOM 없음</td><td>11.5</td></tr>
     </tbody>
   </table>
@@ -3001,8 +3005,8 @@ integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도�
     </tbody>
   </table>
   <div class="box good"><span class="box-t">🟩 한 줄로</span>
-    <strong>정확(0%대)·빠름(~1초)·방향(1.5°), 전부 인터넷 없이.</strong> 이 표 하나면 소리봄의
-    ‘실력’을 숫자로 설명할 수 있습니다.</div>
+    <strong>또박또박이면 정확(통제 0%대·실사용 3.2%)·빠름(~1초)·방향(1.5°), 전부 인터넷 없이.</strong>
+    빠른 자연발화 한계(~15%)까지 재서 아는 것이 이 표의 정직함입니다.</div>
 </section>
 
 <!-- ==================== 부록 J ==================== -->
