@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=소리봄
+Comment=소리봄 통합 앱 실행 (자막·방향·말하기)
+Exec=gnome-terminal --title=소리봄 -- bash /data2/code/soribom/scripts/소리봄-실행.sh
+Icon=audio-input-microphone
+Terminal=false
+Categories=Education;
