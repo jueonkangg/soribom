@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>소리봄 발표 — 화자 배분 및 슬라이드 구성 (검토용)</title>
+<style>
+  :root{--jueon:#1F6FEB;--guhyeon:#1F9E5A;--doyu:#C2410C;--line:#E3E8EF;--muted:#64748B;--ink:#0F172A;}
+  *{box-sizing:border-box;}
+  body{font-family:'Malgun Gothic','맑은 고딕',system-ui,sans-serif;color:var(--ink);background:#F7F9FC;margin:0;padding:28px;line-height:1.5;}
+  .wrap{max-width:960px;margin:0 auto;}
+  h1{font-size:24px;margin:0 0 4px;}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:14px;}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 22px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;padding:5px 12px;border-radius:999px;color:#fff;}
+  .c-jueon{background:var(--jueon);} .c-guhyeon{background:var(--guhyeon);} .c-doyu{background:var(--doyu);}
+  .timeline{display:flex;border-radius:10px;overflow:hidden;margin:0 0 26px;border:1px solid var(--line);font-size:12px;font-weight:700;color:#fff;}
+  .timeline div{padding:9px 8px;text-align:center;}
+  .seg-j{background:var(--jueon);} .seg-g{background:var(--guhyeon);} .seg-d{background:var(--doyu);}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:0;margin:0 0 16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .card-h{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:#FBFCFE;}
+  .snum{font-weight:800;font-size:13px;color:#fff;background:var(--ink);border-radius:7px;padding:4px 9px;min-width:34px;text-align:center;}
+  .sec{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.5px;}
+  .stitle{font-weight:800;font-size:16px;flex:1;}
+  .time{font-size:12px;color:var(--muted);font-weight:700;}
+  .card-b{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  .col{padding:13px 16px;}
+  .col:first-child{border-right:1px dashed var(--line);}
+  .lbl{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.4px;margin:0 0 6px;text-transform:uppercase;}
+  ul{margin:0;padding-left:18px;} li{margin:0 0 5px;font-size:13.5px;}
+  .say li{margin-bottom:7px;}
+  .demo{display:inline-block;font-size:11px;font-weight:800;color:#B45309;background:#FEF3C7;border-radius:6px;padding:2px 8px;margin-top:4px;}
+  .note{background:#EFF6FF;border-left:4px solid var(--jueon);border-radius:6px;padding:12px 14px;font-size:13px;margin:22px 0;}
+  .foot{color:var(--muted);font-size:12px;margin-top:24px;border-top:1px solid var(--line);padding-top:14px;}
+  b.red{color:#C0392B;}
+</style></head><body><div class="wrap">
+
+<h1>소리봄 — 발표 화자 배분 &amp; 슬라이드 구성 <span style="font-size:15px;color:var(--muted)">(검토용)</span></h1>
+<p class="sub">팀 제주 BTS · 2026 제8회 한국코드페어 2차 예선 · 발표 4분 + 질의응답 4분 · 공식 양식(표지·CONTENTS·내용·감사) 구성 반영</p>
+
+<div class="legend">
+  <span class="chip c-jueon">강주언 · 도입/문제 + 그 외 기능/마무리</span>
+  <span class="chip c-guhyeon">강구현 · 실시간 자막</span>
+  <span class="chip c-doyu">함도유 · 방향/UI</span>
+</div>
+
+<div class="timeline">
+  <div class="seg-j" style="flex:1.0">강주언 0:00–1:00<br>도입·문제·소개</div>
+  <div class="seg-g" style="flex:1.0">강구현 1:00–2:00<br>실시간 자막</div>
+  <div class="seg-d" style="flex:1.0">함도유 2:00–3:00<br>방향·UI</div>
+  <div class="seg-j" style="flex:1.0">강주언 3:00–4:00<br>그 외 기능·마무리</div>
+</div>
+
+<!-- S1 -->
+<div class="card"><div class="card-h"><span class="snum">1</span><span class="sec">표지</span><span class="stitle">소리봄 (SoundSight)</span><span class="time">~0:05 · 강주언</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>작품명 <b>소리봄 (SoundSight)</b>, 한 줄 정의</li>
+<li>팀명 <b>제주 BTS (Beyond the Sound)</b> · 강주언·강구현·함도유</li>
+<li>대회 제목(양식 상단 문구 유지)</li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 강주언</div><ul>
+<li>“안녕하세요, 팀 제주 BTS입니다. 소리가 잘 들리지 않는 친구도 수업에 함께하도록 돕는 <b>소리봄</b>을 소개하겠습니다.”</li></ul></div></div></div>
+
+<!-- S2 -->
+<div class="card"><div class="card-h"><span class="snum">2</span><span class="sec">CONTENTS</span><span class="stitle">발표 순서</span><span class="time">~0:05 · 강주언</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>01. 문제와 소리봄 소개</li><li>02. 실시간 자막</li><li>03. 화자 방향과 화면</li><li>04. 그 외 기능·성능·마무리</li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 강주언</div><ul>
+<li>“오늘 네 부분으로 말씀드립니다.” (빠르게 넘어감)</li></ul></div></div></div>
+
+<!-- S3 -->
+<div class="card"><div class="card-h"><span class="snum">3</span><span class="sec">01 · 문제</span><span class="stitle">교실은 소리로 굴러간다</span><span class="time">~0:30 · 강주언</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>교실 그림 위 놓치는 소리들(설명·질문·이름·종)</li>
+<li>당사자 자문 인용구 강조</li>
+<li>기존 제품 한계(클라우드) 아이콘 3개</li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 강주언</div><ul>
+<li>청각장애·난청 학생은 <b>누가·어디서</b> 말하는지, 이름 호명·종소리를 놓치고, 발화가 어려워 참여도 막힌다.</li>
+<li>인공와우 <b>당사자 자문</b>: “<b class="red">자막보다 누가 말하는지가 더 급하다</b>” → 방향을 핵심 기능으로.</li>
+<li>기존 자막 안경·앱은 <b>클라우드 의존</b> — 교실 음성이 밖으로 나가고, 인터넷 끊기면 멈춘다.</li></ul></div></div></div>
+
+<!-- S4 -->
+<div class="card"><div class="card-h"><span class="snum">4</span><span class="sec">01 · 소개</span><span class="stitle">소리봄 — 인터넷 없이 동작하는 교실 단말</span><span class="time">~0:25 · 강주언</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>단말 사진/도식 + “완전 오프라인” 배지</li>
+<li>다섯 기능 아이콘(자막·방향·말하기·이름알림·기록)</li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 강주언</div><ul>
+<li>모든 처리를 작은 컴퓨터(Jetson) 안에서 — <b>음성이 기기 밖으로 나가지 않는다.</b></li>
+<li>다섯 기능이 <b>한 화면</b>에서 동시에 동작.</li>
+<li>“이 다섯 기능을 지금부터 하나씩 보여드리겠습니다.”</li></ul></div></div></div>
+
+<!-- S5 -->
+<div class="card"><div class="card-h"><span class="snum">5</span><span class="sec">02 · 자막</span><span class="stitle">실시간 자막 — 어떻게 만드나</span><span class="time">~0:30 · 강구현</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>파이프라인: 마이크 → 구간검출(VAD) → 음성인식 → 자막</li>
+<li>‘모델보다 단어’ 비교(과막성/광학성 → 광합성)</li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 강구현</div><ul>
+<li><b>자막 기능을 맡은 강구현입니다. 말을 실시간으로 글자로 바꾸는 부분을 설명드리겠습니다.</b></li>
+<li>말하는 구간만 잘라(VAD) 음성인식(faster-whisper, 작은 모델)에 넣어 <b>기기에서 실시간</b>으로 글자화.</li>
+<li>발견: <b class="red">모델을 키우기보다 단어를 알려 주는 것</b>이 나았다. 큰 모델은 메모리만 쓰고 정확도 이득이 없어, <b>작은 모델 + 과목 용어 사전</b>으로 해결.</li></ul></div></div></div>
+
+<!-- S6 -->
+<div class="card"><div class="card-h"><span class="snum">6</span><span class="sec">02 · 자막</span><span class="stitle">자막 정확도 — 숫자로</span><span class="time">~0:30 · 강구현</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>CER 표(실사용 3.2% 강조, 통제 0.0~0.7%, 빠른발화 15%)</li>
+<li>지연 ~0.6초</li>
+<li><span class="demo">▶ 시연영상: 자막이 뜨는 장면</span></li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 강구현</div><ul>
+<li>실제 낭독 <b>5과목 평균 글자오류 3.2%</b>, 교과 용어도 정확. 말이 끝나면 <b>약 0.6초</b> 뒤 자막.</li>
+<li>정직하게: 이상적 조건은 0%대지만 <b>빠른 자연발화에선 약 15%</b>로 오른다 — 작은 모델의 한계.</li>
+</ul></div></div></div>
+
+<!-- S7 -->
+<div class="card"><div class="card-h"><span class="snum">7</span><span class="sec">03 · 방향</span><span class="stitle">누가·어디서 — 화자 방향(DOA)</span><span class="time">~0:30 · 함도유</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>4채널 마이크 + 도착 시간차 그림</li>
+<li>방향 화살표, 오차 1.5°</li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 함도유</div><ul>
+<li><b>소리의 방향과 화면을 맡았습니다. 먼저 화자 방향부터 설명드리겠습니다.</b></li>
+<li>당사자가 가장 원한 기능. 같은 소리도 <b>가까운 마이크에 먼저 도착</b> — 그 시간차로 방향 계산.</li>
+<li>이 계산은 <b>마이크 전용 칩</b>이 맡고 우리는 각도만 읽어 연산을 아낀다(<b>분업</b>).</li>
+<li>오차 <b class="red">평균 1.5°</b>. 처음엔 컸는데 원인은 기계가 아니라 <b>서는 위치</b> — LED로 정확히 서서 보정.</li></ul></div></div></div>
+
+<!-- S8 -->
+<div class="card"><div class="card-h"><span class="snum">8</span><span class="sec">03 · UI</span><span class="stitle">한 화면에 모으다</span><span class="time">~0:30 · 함도유</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>실제 UI 스크린샷(자막·화살표·입력창·이름알림·과목)</li>
+<li><span class="demo">▶ 시연영상: 화살표가 방향 따라 도는 장면</span></li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 함도유</div><ul>
+<li>자막·방향·입력창·이름 알림·과목 선택을 <b>한 화면</b>에. 말하면 자막과 함께 화살표가 그 방향을 가리킨다.</li>
+</ul></div></div></div>
+
+<!-- S9 -->
+<div class="card"><div class="card-h"><span class="snum">9</span><span class="sec">04 · 그 외 기능</span><span class="stitle">말하기 · 이름 알림 · 수업 기록</span><span class="time">~0:30 · 강주언</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>타이핑→스피커 발화 그림(책상 위 블루투스 스피커)</li>
+<li>이름 알림 · 수업 기록 아이콘</li>
+<li><span class="demo">▶ 시연영상: 타이핑→발화 장면</span></li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 강주언</div><ul>
+<li><b>남은 기능들과 전체 성과를 정리하겠습니다.</b></li>
+<li><b>양방향 말하기</b>: 말이 어려운 학생이 타이핑하면 <b>책상 위 스피커</b>가 대신 발화 — 소리가 학생 자리에서 나 <b>방향으로 화자를 인식</b>. 약 1.8초.</li>
+<li><b>이름 호명 알림</b>과, 수업을 있는 그대로 남기는 <b>전체 기록</b>(지어내지 않음)도 추가.</li></ul></div></div></div>
+
+<!-- S10 -->
+<div class="card"><div class="card-h"><span class="snum">10</span><span class="sec">04 · 마무리</span><span class="stitle">차별성과 다음 단계</span><span class="time">~0:25 · 강주언</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>차별성 4가지 · 4지표 요약</li>
+<li>향후 로드맵(비음성 소리·화자 구분·휴대형 제작)</li></ul></div>
+<div class="col say"><div class="lbl">말할 요지 — 강주언</div><ul>
+<li>차별성: <b>완전 오프라인 · 방향 · 양방향 · ‘모델보다 단어’.</b> 세 기능이 한 화면에서 돌고, 네 지표를 실측했다.</li>
+<li>다음 단계: 종소리·경보 같은 <b>비음성 소리 감지</b>, 여러 명이 동시에 말할 때 <b>화자 구분</b>, 그리고 지금은 분리된 부품을 <b>케이스에 하나로 합치고 배터리를 넣어 책상에 올려 두는 손바닥 크기</b>로 만드는 것.</li>
+<li>마무리: “<b>소리가 보이면, 수업에 함께할 수 있습니다.</b> 감사합니다.”</li></ul></div></div></div>
+
+<!-- S11 -->
+<div class="card"><div class="card-h"><span class="snum">11</span><span class="sec">마무리</span><span class="stitle">감사합니다</span><span class="time">~0:05 · 강주언</span></div>
+<div class="card-b"><div class="col"><div class="lbl">화면 구성</div><ul>
+<li>감사합니다 + 팀명·팀원</li></ul></div>
+<div class="col say"><div class="lbl">비고</div><ul>
+<li>질의응답 4분 — <b>예상질문-답변</b> 자료로 리허설. 각자 자기 파트 질문 담당.</li></ul></div></div></div>
+
+<div class="note"><b>시간 배분</b> — 4명이 각 1분씩. 표지·목차·감사는 거의 시간 안 씀. 시연 영상은 6·8·9 슬라이드에 짧게(각 ~5초) 끼워 말과 겹치지 않게. <b>목요일부터 타이머로 연습</b>해 4분을 넘기지 않도록.</div>
+
+<div class="foot">
+<b>검토 포인트</b> — ① 화자 배분이 맞는지, ② 각 슬라이드 ‘말할 요지’에서 빼거나 더할 것, ③ 시연 영상 삽입 위치, ④ 마무리 멘트 문구. 확정되면 이 구성 그대로 발표 pptx를 만들고, 이 파일을 private 폴더에 커밋·푸시합니다.
+</div>
+
+</div></body></html>
