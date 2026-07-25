@@ -46,11 +46,12 @@ stt:
   language: "ko"
 
   # 교실 용어를 미리 알려주면 인식이 올바른 후보로 정렬돼 오인식이 준다(생성이 아니라 인식 편향).
-  # 두 사람이 독립적으로 같은 결론에 도달: "광합성"을 small은 "과막성/광업성", medium은
-  # "광학성"으로 잘못 듣던 것이, 아래 용어를 주니 정확히 인식됨(구현 실측 CER 1.4%→0.0%).
-  # 모델 크기가 아니라 어휘의 문제다. Whisper는 일반 한국어로 학습돼 교과 용어에 약하다.
-  # 수업 전에 그날 배울 단어를 여기에 넣는다. (transcriber.py 는 이 'prompt' 키를 읽는다)
-  prompt: "광합성, 엽록체, 이산화탄소, 포도당, 칠판, 수행평가, 교과서, 함도유, 도유"
+  # "광합성"을 small은 "과막성/광업성"으로 잘못 듣던 것이, 용어를 주니 정확히 인식됨.
+  # 용어는 코드에 박지 않고 과목별 사전 파일(src/vocab/)에 둔다:
+  #   hotwords = common.txt(공통) + <subject>.txt(과목) + 학생 이름(events.student_names).
+  #   ⚠️ initial_prompt 가 아니라 hotwords 로 쓴다(불분명할 때 용어를 그대로 뱉는 에코 방지).
+  # 아래 subject 로 시작 과목을 정하고, 실행 중에는 UI 헤더 드롭다운으로 바꾼다.
+  subject: "science"       # korean | math | science | english | economics
 
   # CTranslate2를 CUDA로 소스빌드(v4.5.0)해 GPU로 돌린다(2026-07-21 cuDNN 확인 완료).
   # 순수 int8이 이 공유메모리에 맞는다. (CUDA CT2가 없는 환경이면 device: cpu / compute_type int8)
@@ -153,10 +154,8 @@ relay:
   safety_limiter_db: -6.0  # 출력 상한 (안전 — 반드시 유지)
 
 summary:
-  # ⑤ 수업 요약 노트. 화면 '수업 요약 보기' 버튼 + 수업 종료(ESC) 시 파일 저장.
-  #   추출식: 발화 자막을 규칙으로 정리(중복·군더더기 제거)한 뒤 TextRank 로 핵심 문장만 뽑는다.
-  #   생성(재작성) 아님 — 없는 말을 지어내지 않는다.
+  # ⑤ 수업 기록(전체 스크립트). 화면 '수업 기록 보기' 버튼 + 수업 종료(ESC) 시 파일 저장.
+  #   모든 발화를 그대로 기록한다(가벼운 정리만: 공백·마침표 보정, 직전과 똑같은 줄만 제거).
+  #   요약(추출)이 아니라 전체 기록 — 없는 말을 지어내지 않는다.
   enabled: true            # 버튼은 항상 동작. enabled 는 '종료 시 파일 저장' 여부.
-  method: "extractive"
-  top_k: 8
   output_dir: "./notes"    # repo 루트 기준. 실제 수업 내용이라 커밋하지 않는다(.gitignore)

@@ -95,7 +95,7 @@ def main():
     wavs = sys.argv[1:] or ["test_clean.wav", "test_noisy.wav"]
 
     print(f"모델 로드: {cfg['stt']['model']} ({cfg['stt']['device']}/{cfg['stt']['compute_type']}), "
-          f"prompt={'있음' if cfg['stt'].get('prompt') else '없음'}")
+          f"hotwords 과목={cfg['stt'].get('subject', '-')}")
     stt = Transcriber(cfg["stt"])
 
     # 웜업 1회(CUDA 커널 준비) — 측정에서 제외한다.

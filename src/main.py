@@ -44,14 +44,17 @@ def main() -> None:
     doa = DoaTracker(cfg["doa"])
     events = SoundEventClassifier(cfg["events"])
     notes = NoteBuilder(cfg["summary"])
-    # 요약의 핵심어 가중에 STT 수업 용어(stt.prompt)를 재사용한다(따로 관리 안 하도록).
-    notes.keywords = [w.strip() for w in (cfg["stt"].get("prompt") or "").split(",") if w.strip()]
     speaker = Speaker(cfg["tts"])
+
+    # 학생 이름을 STT hotwords 에도 넣어 이름을 더 잘 잡게 한다(이름 호명 감지의 정확도↑).
+    stt.set_extra_terms(cfg["events"].get("student_names", []))
 
     # 학생이 타이핑한 문장을 내장 스피커로 발화 (기능 ⑥)
     ui.on_speak = speaker.say
-    # '수업 요약 보기' 버튼 → 지금까지 자막을 정리·추출 요약해 화면 패널로 (기능 ⑤)
+    # '수업 기록 보기' 버튼 → 지금까지의 전체 발화 기록을 화면 패널로 (기능 ⑤)
     ui.on_summarize = notes.build_summary
+    # 헤더 과목 드롭다운 → 그 과목 용어로 STT 편향 전환(다음 발화부터)
+    ui.on_subject_change = stt.set_subject
 
     def lane_caption() -> None:
         """레인 A — 음성 구간을 잘라 small 모델로 전사한다(단일 패스).

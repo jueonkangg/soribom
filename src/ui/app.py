@@ -17,8 +17,8 @@ import threading
 from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import (
-    QApplication, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-    QTextEdit, QVBoxLayout, QWidget,
+    QApplication, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QTextEdit, QVBoxLayout, QWidget,
 )
 
 # 목업 색 팔레트(밝은 테마)
@@ -92,6 +92,8 @@ class SoribomUI(QObject):
         self.on_speak = lambda text: None   # main 에서 Speaker.say 로 연결
         # '수업 요약 보기' 버튼이 부를 콜백. main 에서 NoteBuilder.build_summary 로 연결.
         self.on_summarize = lambda: "요약 기능이 연결되지 않았습니다."
+        # 과목 드롭다운이 부를 콜백. main 에서 Transcriber.set_subject 로 연결.
+        self.on_subject_change = lambda subject: None
 
         ui = cfg.get("ui", {})
         self.font_size = ui.get("font_size", 36)
@@ -119,7 +121,38 @@ class SoribomUI(QObject):
         )
         header_row.addWidget(title)
         header_row.addStretch()
-        self.summary_button = QPushButton("수업 요약 보기")
+
+        # 과목 선택 드롭다운 — 바꾸면 그 과목 용어로 STT 편향 전환.
+        from stt.vocab import SUBJECTS, SUBJECT_LABELS
+        subj_label = QLabel("과목")
+        subj_label.setStyleSheet(
+            f"color: #CBD5E1; font-size: {int(self.font_size * 0.4)}px; font-weight: 600;"
+        )
+        header_row.addWidget(subj_label)
+        self.subject_box = QComboBox()
+        self._subject_keys = SUBJECTS
+        for key in SUBJECTS:
+            self.subject_box.addItem(SUBJECT_LABELS[key], key)
+        # 시작 과목을 config 값에 맞춘다.
+        start_subject = cfg.get("stt", {}).get("subject", "science")
+        if start_subject in SUBJECTS:
+            self.subject_box.setCurrentIndex(SUBJECTS.index(start_subject))
+        # 글자가 '...'로 잘리지 않게 최소 폭을 넉넉히 주고, 내용에 맞춰 넓힌다.
+        self.subject_box.setMinimumWidth(int(self.font_size * 3.6))
+        self.subject_box.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.subject_box.setStyleSheet(
+            f"QComboBox {{ background: #FFFFFF; color: {INK}; border: 1px solid {LINE}; "
+            f"border-radius: 8px; padding: 6px 32px 6px 12px; min-width: {int(self.font_size * 2.6)}px; "
+            f"font-size: {int(self.font_size * 0.42)}px; }}"
+            f"QComboBox::drop-down {{ width: 26px; border: none; }}"
+            f"QComboBox QAbstractItemView {{ background: #FFFFFF; color: {INK}; "
+            f"selection-background-color: #BFE3D0; selection-color: {NAVY}; "
+            f"font-size: {int(self.font_size * 0.42)}px; outline: none; }}"
+        )
+        self.subject_box.currentIndexChanged.connect(self._on_subject_changed)
+        header_row.addWidget(self.subject_box)
+
+        self.summary_button = QPushButton("수업 기록 보기")
         self.summary_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.summary_button.setStyleSheet(
             "background: #BFE3D0; color: #1B6B4C; border: none; border-radius: 13px; "
@@ -255,26 +288,28 @@ class SoribomUI(QObject):
         """
         self._alert_arrived.emit(label)
 
-    def _show_summary(self) -> None:
-        """'수업 요약 보기' 버튼: 요약을 만들어 화면 내 팝업 패널로 보여준다.
+    def _on_subject_changed(self, index: int) -> None:
+        """과목 드롭다운 변경: 선택 과목 키를 콜백으로 넘겨 STT 용어를 바꾼다."""
+        key = self.subject_box.itemData(index)
+        if key:
+            self.on_subject_change(key)
 
-        요약 계산(정리+TextRank)은 잠깐 걸릴 수 있으나 발화량이 적어 즉시 수준이다.
-        메인 스레드(버튼 클릭)에서 바로 부른다.
-        """
+    def _show_summary(self) -> None:
+        """'수업 기록 보기' 버튼: 지금까지의 전체 발화 기록을 팝업 패널로 보여준다."""
         try:
             text = self.on_summarize()
-        except Exception as e:                     # 요약 실패해도 앱은 죽지 않게
-            text = f"요약을 만들지 못했습니다: {e}"
+        except Exception as e:                     # 기록 생성 실패해도 앱은 죽지 않게
+            text = f"수업 기록을 만들지 못했습니다: {e}"
 
         dlg = QDialog(self.window)
-        dlg.setWindowTitle("수업 요약")
+        dlg.setWindowTitle("수업 기록")
         dlg.setMinimumSize(760, 520)
         dlg.setStyleSheet(f"background: {PAGE_BG};")
         lay = QVBoxLayout(dlg)
         lay.setContentsMargins(24, 20, 24, 20)
         lay.setSpacing(14)
 
-        head = QLabel("📄 수업 요약")
+        head = QLabel("📄 수업 기록")
         head.setStyleSheet(
             f"color: {NAVY}; font-weight: 800; font-size: {int(self.font_size * 0.6)}px;"
         )
@@ -327,12 +362,18 @@ class SoribomUI(QObject):
 #   실행(모니터가 연결된 데스크톱에서): python src/ui/app.py
 # ---------------------------------------------------------------------------
 def _selftest() -> None:
+    import sys
     from pathlib import Path
+
+    # 단독 실행(python ui/app.py) 시에도 stt.vocab 등을 찾도록 src 를 경로에 넣는다.
+    #   (main.py 로 통합 실행할 땐 이미 src 가 경로에 있다.)
+    src_dir = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(src_dir))
 
     import yaml
     from PySide6.QtCore import QTimer
 
-    cfg = yaml.safe_load(open(Path(__file__).resolve().parents[1] / "config.yaml", encoding="utf-8"))
+    cfg = yaml.safe_load(open(src_dir / "config.yaml", encoding="utf-8"))
     ui = SoribomUI(cfg)
 
     # 입력 테스트용: on_speak 이 불리면 콘솔에 찍는다(실제 TTS는 주언 speaker.py).
