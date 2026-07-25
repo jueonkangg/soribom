@@ -11,6 +11,7 @@ set -u
 REPO="/data2/code/soribom"
 export DISPLAY="${DISPLAY:-:1}"
 export QT_QPA_PLATFORM=xcb
+export PYTHONUNBUFFERED=1   # 진행 메시지가 즉시 보이게(버퍼링 방지)
 
 echo "======================================"
 echo "        소리봄 (SoundSight)           "
@@ -28,6 +29,7 @@ echo "[2/3] 준비 확인 — 마이크(ReSpeaker USB)와 블루투스 스피커
 echo "                마이크 윗면(LED·구멍)이 케이스 밖으로 보이게 두세요(방향 정확도)."
 
 echo "[3/3] 소리봄을 시작합니다. 종료하려면 앱 화면에서 ESC 를 누르세요."
+echo "      (자막·말하기 모델을 올리는 동안 5~10초쯤 화면이 안 보일 수 있습니다. 기다리세요.)"
 echo "--------------------------------------"
 
 cd "$REPO" || { echo "[오류] 저장소를 찾을 수 없습니다: $REPO"; read -r -p "엔터로 닫기..."; exit 1; }

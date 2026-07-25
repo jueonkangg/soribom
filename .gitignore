@@ -61,3 +61,4 @@ mainTest.txt
 # ── 내부 산출물은 private/ 폴더에 두고 커밋한다(본선 공유 전 삭제 예정) ──
 #   (설명서·콘티 등: private/ — GitHub에는 올라가되, 본선에서 리포 공유할 때 제거)
 possibleQuestions.txt
+exeError.txt

@@ -32,18 +32,29 @@ def load_config(path: str = None) -> dict:
 
 
 def main() -> None:
+    # 모델 로딩은 몇 초 걸린다. 그동안 화면(전체화면 창)이 아직 안 떠서 멈춘 것처럼
+    # 보이므로, 어디까지 됐는지 단계별로 찍어 준다(flush=True 로 즉시 출력).
+    def step(msg: str) -> None:
+        print(f"[준비] {msg}", flush=True)
+
     cfg = load_config()
 
     audio_q: queue.Queue = queue.Queue()
+    step("화면 초기화...")
     ui = SoribomUI(cfg)
 
+    step("마이크 연결...")
     mic = MicArray(cfg["audio"], sink=audio_q)
+    step("자막 모델 로딩... (수 초 걸립니다)")
     vad = VoiceActivityDetector(cfg["vad"])
     stt = Transcriber(cfg["stt"])
+    step("방향 장치 연결...")
     doa = DoaTracker(cfg["doa"])
     events = SoundEventClassifier(cfg["events"])
     notes = NoteBuilder(cfg["summary"])
+    step("말하기 모델 로딩... (수 초 걸립니다)")
     speaker = Speaker(cfg["tts"])
+    step("완료 — 잠시 후 화면이 뜹니다.")
 
     # 학생 이름을 STT hotwords 에도 넣어 이름을 더 잘 잡게 한다(이름 호명 감지의 정확도↑).
     stt.set_extra_terms(cfg["events"].get("student_names", []))
