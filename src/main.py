@@ -44,10 +44,14 @@ def main() -> None:
     doa = DoaTracker(cfg["doa"])
     events = SoundEventClassifier(cfg["events"])
     notes = NoteBuilder(cfg["summary"])
+    # 요약의 핵심어 가중에 STT 수업 용어(stt.prompt)를 재사용한다(따로 관리 안 하도록).
+    notes.keywords = [w.strip() for w in (cfg["stt"].get("prompt") or "").split(",") if w.strip()]
     speaker = Speaker(cfg["tts"])
 
     # 학생이 타이핑한 문장을 내장 스피커로 발화 (기능 ⑥)
     ui.on_speak = speaker.say
+    # '수업 요약 보기' 버튼 → 지금까지 자막을 정리·추출 요약해 화면 패널로 (기능 ⑤)
+    ui.on_summarize = notes.build_summary
 
     def lane_caption() -> None:
         """레인 A — 음성 구간을 잘라 small 모델로 전사한다(단일 패스).

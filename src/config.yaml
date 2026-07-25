@@ -153,7 +153,10 @@ relay:
   safety_limiter_db: -6.0  # 출력 상한 (안전 — 반드시 유지)
 
 summary:
-  enabled: false           # ⑤ 수업 요약 노트 — 다음 단계
-  method: "extractive"     # 생성식 아님 — 없는 말을 지어내지 않는다
+  # ⑤ 수업 요약 노트. 화면 '수업 요약 보기' 버튼 + 수업 종료(ESC) 시 파일 저장.
+  #   추출식: 발화 자막을 규칙으로 정리(중복·군더더기 제거)한 뒤 TextRank 로 핵심 문장만 뽑는다.
+  #   생성(재작성) 아님 — 없는 말을 지어내지 않는다.
+  enabled: true            # 버튼은 항상 동작. enabled 는 '종료 시 파일 저장' 여부.
+  method: "extractive"
   top_k: 8
-  output_dir: "./notes"
+  output_dir: "./notes"    # repo 루트 기준. 실제 수업 내용이라 커밋하지 않는다(.gitignore)

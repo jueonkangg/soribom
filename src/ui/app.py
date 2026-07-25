@@ -17,8 +17,8 @@ import threading
 from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import (
-    QApplication, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-    QVBoxLayout, QWidget,
+    QApplication, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QTextEdit, QVBoxLayout, QWidget,
 )
 
 # 목업 색 팔레트(밝은 테마)
@@ -90,6 +90,8 @@ class SoribomUI(QObject):
         super().__init__()
         self.cfg = cfg
         self.on_speak = lambda text: None   # main 에서 Speaker.say 로 연결
+        # '수업 요약 보기' 버튼이 부를 콜백. main 에서 NoteBuilder.build_summary 로 연결.
+        self.on_summarize = lambda: "요약 기능이 연결되지 않았습니다."
 
         ui = cfg.get("ui", {})
         self.font_size = ui.get("font_size", 36)
@@ -106,12 +108,25 @@ class SoribomUI(QObject):
         root.setContentsMargins(0, 0, 0, 0)   # 헤더가 화면 끝까지 닿게
         root.setSpacing(0)
 
-        # ── 헤더(네이비): 제목 '소리봄' ──
-        header = QLabel("소리봄")
-        header.setStyleSheet(
-            f"background: {NAVY}; color: #FFFFFF; font-weight: 800; "
-            f"font-size: {int(self.font_size * 0.7)}px; padding: 14px 28px;"
+        # ── 헤더(네이비): 왼쪽 제목 '소리봄' + 오른쪽 '수업 요약 보기' 버튼 ──
+        header = QWidget()
+        header.setStyleSheet(f"background: {NAVY};")
+        header_row = QHBoxLayout(header)
+        header_row.setContentsMargins(28, 12, 20, 12)
+        title = QLabel("소리봄")
+        title.setStyleSheet(
+            f"color: #FFFFFF; font-weight: 800; font-size: {int(self.font_size * 0.7)}px;"
         )
+        header_row.addWidget(title)
+        header_row.addStretch()
+        self.summary_button = QPushButton("수업 요약 보기")
+        self.summary_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.summary_button.setStyleSheet(
+            "background: #BFE3D0; color: #1B6B4C; border: none; border-radius: 13px; "
+            f"padding: 8px 18px; font-size: {int(self.font_size * 0.42)}px; font-weight: 700;"
+        )
+        self.summary_button.clicked.connect(self._show_summary)
+        header_row.addWidget(self.summary_button)
         root.addWidget(header)
 
         # ── 본문: 왼쪽 자막 + 오른쪽 방향 박스 ──
@@ -239,6 +254,54 @@ class SoribomUI(QObject):
         어느 스레드에서 불려도 안전하도록 시그널로만 넘긴다(자막과 같은 방식).
         """
         self._alert_arrived.emit(label)
+
+    def _show_summary(self) -> None:
+        """'수업 요약 보기' 버튼: 요약을 만들어 화면 내 팝업 패널로 보여준다.
+
+        요약 계산(정리+TextRank)은 잠깐 걸릴 수 있으나 발화량이 적어 즉시 수준이다.
+        메인 스레드(버튼 클릭)에서 바로 부른다.
+        """
+        try:
+            text = self.on_summarize()
+        except Exception as e:                     # 요약 실패해도 앱은 죽지 않게
+            text = f"요약을 만들지 못했습니다: {e}"
+
+        dlg = QDialog(self.window)
+        dlg.setWindowTitle("수업 요약")
+        dlg.setMinimumSize(760, 520)
+        dlg.setStyleSheet(f"background: {PAGE_BG};")
+        lay = QVBoxLayout(dlg)
+        lay.setContentsMargins(24, 20, 24, 20)
+        lay.setSpacing(14)
+
+        head = QLabel("📄 수업 요약")
+        head.setStyleSheet(
+            f"color: {NAVY}; font-weight: 800; font-size: {int(self.font_size * 0.6)}px;"
+        )
+        lay.addWidget(head)
+
+        view = QTextEdit()
+        view.setReadOnly(True)
+        view.setPlainText(text)
+        view.setStyleSheet(
+            f"color: {INK}; background: #FFFFFF; border: 1px solid {LINE}; "
+            f"border-radius: 10px; padding: 14px; font-size: {int(self.font_size * 0.5)}px;"
+        )
+        lay.addWidget(view, stretch=1)
+
+        close_btn = QPushButton("닫기")
+        close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_btn.setStyleSheet(
+            f"background: {NAVY}; color: #FFFFFF; border: none; border-radius: 8px; "
+            f"padding: 10px 24px; font-size: {int(self.font_size * 0.45)}px; font-weight: 700;"
+        )
+        close_btn.clicked.connect(dlg.accept)
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        btn_row.addWidget(close_btn)
+        lay.addLayout(btn_row)
+
+        dlg.exec()
 
     def _on_enter(self) -> None:
         """입력칸 Enter / '말하기' 버튼: 내용을 on_speak 로 넘겨 발화하고 칸을 비운다.
