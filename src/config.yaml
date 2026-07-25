@@ -3,7 +3,7 @@
 # 모든 설정값은 여기에 둔다. 코드에 숫자를 직접 박지 말 것.
 # 값을 바꿀 때는 왜 바꿨는지 주석으로 남긴다.
 #
-# 마지막 실측: 2026-07-19 (Jetson Orin Nano + ReSpeaker v3.0)
+# 마지막 실측: 2026-07-25 (Jetson Orin Nano + ReSpeaker v3.0)
 
 audio:
   # sounddevice(구현 capture.py)는 장치 '이름'으로 부분일치시켜 찾는다.
@@ -49,7 +49,7 @@ stt:
   # "광합성"을 small은 "과막성/광업성"으로 잘못 듣던 것이, 용어를 주니 정확히 인식됨.
   # 용어는 코드에 박지 않고 과목별 사전 파일(src/vocab/)에 둔다:
   #   hotwords = common.txt(공통) + <subject>.txt(과목) + 학생 이름(events.student_names).
-  #   ⚠️ initial_prompt 가 아니라 hotwords 로 쓴다(불분명할 때 용어를 그대로 뱉는 에코 방지).
+  #   initial_prompt 가 아니라 hotwords 로 쓴다(불분명할 때 용어를 그대로 뱉는 에코 방지).
   # 아래 subject 로 시작 과목을 정하고, 실행 중에는 UI 헤더 드롭다운으로 바꾼다.
   subject: "science"       # korean | math | science | english | economics
 
@@ -77,7 +77,7 @@ doa:
   #   screen_angle = (front_offset - mic_angle) % 360
   front_offset: 90
 
-  # ⚠️ 목소리가 감지될 때만 각도를 갱신한다.
+  # 목소리가 감지될 때만 각도를 갱신한다.
   #    조용할 때 값은 직전 방향이 남아 있는 것이라 믿을 수 없다.
   #    이걸 끄면 화살표가 제멋대로 돈다.
   require_voice: true
@@ -132,7 +132,7 @@ metrics:
   # 기능을 만들 때 측정 코드를 같이 만든다.
   # 나중에 붙이려면 구조를 뜯어야 한다.
   enabled: true
-  output_dir: "../experiments/data"   # ⚠️ 커밋 금지 (.gitignore)
+  output_dir: "../experiments/data"   # 커밋 금지 (.gitignore)
 
 # ─────────────────────────────────────────────
 # 핵심 세 기능(기능 1·2·6)을 먼저 만든 뒤, 기능 3(이름 호명)·기능 5(수업 기록)를 추가로 구현했다.
