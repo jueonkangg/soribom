@@ -753,6 +753,16 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     정밀도를 <strong>적당히 낮춰 가볍게</strong> 만드는 기술을 씁니다. 이걸 <strong>양자화(int8)</strong>라고
     합니다. 사진을 화질 조금 낮춰 용량을 크게 줄이는 것과 비슷합니다.
   </p>
+  <div class="box term"><span class="box-t">⬛ 용어 — 양자화 / int8</span>
+    컴퓨터는 숫자를 <strong>정해진 칸(비트) 수</strong>로 표현합니다. AI 모델은 보통 아주 촘촘한
+    숫자(32비트, 소수점 이하까지)로 계산하는데, 이걸 <strong>8비트 정수(int8)</strong>로 바꾸면 표현할
+    수 있는 값이 <strong>256단계</strong>로 줄어듭니다. 대신 계산이 <strong>몇 배 빨라지고 메모리도 크게
+    줄죠.</strong> 이렇게 정밀도를 낮춰 가볍게 만드는 것을 <strong>양자화(quantization)</strong>, 그중 8비트로
+    낮추는 것을 <strong>int8</strong>이라고 합니다.</div>
+  <div class="box analogy"><span class="box-t">🟪 비유로 이해하기</span>
+    고화질 사진(용량 큼)을 <strong>적당한 화질로 압축</strong>하면 눈으로 보기엔 거의 똑같은데 파일이 확
+    작아지죠. int8이 딱 그것입니다 — <strong>사람이 알아채기 어려울 만큼만</strong> 정밀도를 낮춰, 작은
+    기기에서도 <strong>빠르고 가볍게</strong> 돌아가게 합니다.</div>
   <div class="box us"><span class="box-t">🟧 소리봄에서는</span>
     자막 모델을 <strong>int8</strong>로 가볍게 만들어 작은 기기의 GPU에 올렸습니다. 정확도는 거의
     그대로면서, <strong>빠르고 메모리를 적게</strong> 씁니다. 이 덕분에 자막·방향·말하기를 한 기기에
@@ -912,18 +922,23 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     “스피커로 나간 참고 소리”입니다. 칩은 이걸 이용해 에코를 지웁니다. — 이 모든 걸 칩이 알아서
     하니, 우리는 깨끗한 0번 줄만 받아 쓰면 됩니다.</div>
 
-  <h3>5.6 ‘앞’이 어디인지는 케이스가 정한다 — 보정 이야기</h3>
+  <h3>5.6 ‘앞’이 어디인지는 ‘놓는 방향’이 정한다 — 보정 이야기</h3>
   <p>
-    마이크가 주는 각도는 <strong>마이크 자신의 기준</strong>입니다. 그런데 이 마이크가 케이스 안에서
-    <strong>어느 쪽을 향해 고정</strong>되느냐에 따라, 화면에서 ‘앞’이라고 부를 각도가 달라집니다.
-    그래서 <strong>케이스에 마이크를 고정한 뒤</strong>, 실제로 앞/좌/우/뒤에서 소리를 내어 화면과
-    맞는지 확인하고 <strong>기준값을 다시 맞춥니다</strong>(보정, calibration).
+    마이크가 주는 각도는 <strong>마이크 자신의 기준</strong>입니다. 그런데 소리봄의 마이크는 기기에
+    <strong>나사로 고정돼 있지 않고</strong>, <strong>USB 케이블로 연결해 책상 위에 올려 두는</strong> 방식입니다
+    (마이크는 자체 케이스 안에 들어 있습니다). 그러면 마이크를 <strong>어느 방향으로 돌려 놓느냐</strong>에
+    따라 화면의 ‘앞’이 실제와 어긋날 수 있습니다.
+  </p>
+  <p>
+    그래서 우리는 <strong>간단한 약속</strong>을 정했습니다 — <strong>USB 케이블이 꽂힌 쪽을 항상 ‘뒤’로 두고
+    놓는다.</strong> 이렇게 방향을 하나로 고정해 두면 ‘앞’이 늘 같은 쪽이 되어, <strong>보정을 한 번만 해
+    두면 계속 유효</strong>합니다.
   </p>
   <div class="box term"><span class="box-t">⬛ 용어 — 보정(캘리브레이션)</span>
     측정 기준을 <strong>실제와 맞도록 조정</strong>하는 것. 저울의 영점을 맞추는 것과 같습니다.
-    소리봄은 케이스 조립 후 <strong>‘앞’ 기준 각도</strong>를 다시 맞춥니다(설정 파일의 한 값만 바꿈).</div>
-  <div class="box good"><span class="box-t">🟩 케이스 조립 후 측정 완료 — 평균 1.5°</span>
-    케이스에 마이크를 고정한 뒤 네 방향에서 재어 <strong>평균 오차 1.5°</strong>를 확인했습니다.
+    소리봄은 <strong>USB 쪽을 ‘뒤’로 두는 약속</strong> 아래에서 앞/좌/우/뒤로 소리를 내어 ‘앞’ 기준 각도를 한 번 맞춥니다(설정 파일의 한 값만 바꿈).</div>
+  <div class="box good"><span class="box-t">🟩 측정 완료 — 평균 1.5°</span>
+    <strong>USB 쪽을 뒤로 둔 상태</strong>에서 네 방향으로 소리를 내어 재어 <strong>평균 오차 1.5°</strong>를 확인했습니다.
     처음엔 오차가 컸는데, 원인은 <strong>측정하는 학생이 정확한 각도에 서지 못한 것</strong>이었습니다.
     <strong>마이크 보드의 LED로 실제 방향을 확인</strong>해 그 각도에 정확히 서서 다시 재자 1.5°로
     좁혀졌습니다(자세히는 5.7과 11.6).</div>
@@ -943,7 +958,7 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     처음 측정에서 오차가 <strong>28~64°</strong>로 크고 잴 때마다 값이 달랐습니다. 원인은 기계가 아니라
     <strong>측정하는 학생이 정확한 각도에 서지 못한 것</strong>이었습니다. <strong>LED를 기준으로 실제
     방향을 확인</strong>하고 정확히 선 뒤 다시 재자 <strong>1.5°</strong>로 회복됐습니다. → 그래서 마이크
-    윗면(구멍·LED)은 <strong>케이스 밖으로 보이게</strong> 두어야 합니다(LED 확인 + 소리 유입).</div>
+    윗면(구멍·LED)은 <strong>마이크 케이스 밖으로 보이게</strong> 두어야 합니다(LED 확인 + 소리 유입).</div>
 
   <h3>5.8 화살표가 덜덜 떨지 않게 — 부드럽게 만들기</h3>
   <p>
@@ -1302,6 +1317,11 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     <strong>PC(연산 보드) 케이스</strong>와 <strong>마이크 케이스</strong>를 3D 프린팅으로 제작했습니다.
     <strong>어떻게 조립해야 하는지 조사하고 주문(출력)을 주도한 것은 강주언</strong>이고,
     <strong>실제 조립은 세 명이 함께</strong> 했습니다. “못 사면 만든다”는 태도가 마감을 지켰습니다.</div>
+  <div class="box term"><span class="box-t">⬛ 출처 — 케이스 도면(오픈소스)</span>
+    케이스는 처음부터 그린 게 아니라, <strong>공개된 오픈소스 도면</strong>을 가져와 우리 부품에 맞게
+    썼습니다. <strong>PC(연산 보드) 케이스</strong>는 github.com/crussella0129/Jetson-Orin-Nano-Super-Case,
+    <strong>마이크 케이스</strong>는 github.com/weirdtangent/pulse-os(models 폴더)의 도면을 참고했습니다.
+    가져다 쓴 것은 반드시 출처를 밝힙니다(부록 D).</div>
   <div class="box warn"><span class="box-t">🟥 함정 — 방열판과 케이스</span>
     저장장치(SSD)에 <strong>방열판</strong>이 붙어 있으면 케이스에 안 들어갈 수 있습니다. 조립할 때
     <strong>부품 높이와 케이스 안 공간</strong>을 미리 맞춰 봐야 합니다. 작은 실측을 건너뛰면 조립 날
@@ -1353,7 +1373,7 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     <li>운영체제를 microSD에 구워 꽂고, 화면·키보드·전원 연결(전원은 <strong>맨 마지막</strong>).</li>
     <li>초기 설정 → 원격 접속 켜기 → 고성능 모드 켜기.</li>
     <li>마이크(USB)·스피커 연결 확인.</li>
-    <li>부품을 <strong>3D 프린팅 케이스</strong>에 넣어 고정 → 마이크 ‘앞’ 방향 확정 → 방향 보정(5.6).</li>
+    <li>부품을 <strong>3D 프린팅 케이스</strong>에 넣어 고정. 마이크는 <strong>USB로 연결해 책상에 올려 두되 USB 쪽을 ‘뒤’로</strong> → 방향 보정(5.6).</li>
   </ol>
 
   <h3>8.8 왜 하필 이 두뇌(Jetson)인가</h3>
@@ -2014,10 +2034,18 @@ tts:                     # 말하기(음성합성) 설정
     <li><strong>강구현</strong> — 녹음한 음성 파일 하나를 <strong>글자로 바꾸는 데 성공</strong>했습니다.
       음성인식의 첫걸음입니다.</li>
   </ul>
-  <div class="box warn"><span class="box-t">🟥 첫날의 교훈 — 준비물이 반이다</span>
-    유선 키보드가 없어서(블루투스는 초기 설정 때 안 됨), 정밀 드라이버가 없어서 <strong>하루를
-    통째로 날릴 뻔</strong>했습니다. “부품 말고 <strong>조립에 필요한 물건</strong>”을 미리 챙기는 것이
-    얼마나 중요한지 배웠습니다.</div>
+  <div class="box warn"><span class="box-t">🟥 첫날의 진짜 이야기 — 하루가 통째로 밀렸다</span>
+    소리봄의 두뇌(Jetson)는 사실 <strong>‘작은 PC 한 대’</strong>인데, 우리는 그걸 미처 생각하지 못했습니다.
+    전원을 켜니 <strong>우분투 초기 설정 화면</strong>이 떴고, 언어·계정·와이파이를 고르려면 <strong>키보드와
+    마우스</strong>가 있어야 했습니다. 그런데 우리에겐 <strong>블루투스 키보드·마우스</strong>뿐이었고,
+    블루투스는 <strong>페어링을 하려면 이미 입력장치가 있어야</strong> 해서 초기 설정 화면에서는 쓸 수가
+    없었습니다. 결국 <strong>급하게 저렴한 유선 USB 키보드·마우스를 사러</strong> 나가야 했고, 그 바람에
+    초기 설정에 필요한 <strong>와이파이 연결도 그날 못 해</strong> 개발 환경 세팅이 <strong>하루 통째로
+    미뤄졌습니다.</strong> (설정을 끝낸 뒤에는 블루투스로도 잘 연결됩니다.)</div>
+  <div class="box good"><span class="box-t">🟩 그래서 배운 것 — “이건 부품이 아니라 컴퓨터 한 대다”</span>
+    처음 준비물 목록에는 전자부품만 있었지, <strong>조립·설정에 필요한 물건</strong>(유선 키보드·마우스,
+    정밀 드라이버, DP→HDMI 변환 젠더 등)은 없었습니다. “새 PC를 한 대 조립한다”고 생각을 바꾸자
+    무엇을 미리 챙겨야 하는지가 보였습니다. <strong>이 하루의 손해가 가장 값진 교훈</strong>이었습니다.</div>
 
   <h3>둘째 날 — 파일 하나가 아니라 ‘계속’</h3>
   <p>
@@ -3063,6 +3091,8 @@ integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도�
       <tr><td>sherpa-onnx</td><td>오프라인 음성 실행 엔진(TTS)</td><td>github.com/k2-fsa/sherpa-onnx · Apache-2.0</td></tr>
       <tr><td>Supertonic</td><td>한국어 목소리 모델</td><td>Supertone Inc. · github.com/supertone-inc/supertonic</td></tr>
       <tr><td>ReSpeaker 튜닝 코드</td><td>마이크에서 방향 각도 읽기</td><td>github.com/respeaker/usb_4_mic_array · Apache-2.0</td></tr>
+      <tr><td>PC 케이스 도면</td><td>연산 보드 3D 프린팅 케이스</td><td>github.com/crussella0129/Jetson-Orin-Nano-Super-Case</td></tr>
+      <tr><td>마이크 케이스 도면</td><td>마이크 3D 프린팅 케이스</td><td>github.com/weirdtangent/pulse-os (models)</td></tr>
       <tr><td>PySide6 (Qt)</td><td>화면(UI)</td><td>Qt for Python · LGPL</td></tr>
       <tr><td>PyTorch·NumPy·sounddevice 등</td><td>기본 계산·오디오 입출력</td><td>각 프로젝트의 오픈소스 라이선스</td></tr>
     </tbody>
