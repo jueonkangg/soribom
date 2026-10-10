@@ -251,6 +251,8 @@ class SoribomUI(QObject):
     # 워커 스레드 → 메인 스레드로 (자막, 방향)을 안전하게 넘기는 통로.
     _caption_arrived = Signal(str, object)   # (text, angle 또는 None)
     _alert_arrived = Signal(str)             # 소리 이벤트 알림(이름 호명 등)
+    _devices_changed = Signal(str, str, str)
+    _models_changed = Signal(bool, str)
 
     def __init__(self, cfg: dict) -> None:
         super().__init__()
@@ -263,6 +265,9 @@ class SoribomUI(QObject):
         self.on_note_snapshot = lambda: ""
         self.on_send_note = self._email_not_connected
         self._email_dialog = None
+        self.on_reconnect = lambda: None
+        self._device_state = ("preparing", "waiting", "")
+        self._models_ready = True
 
         ui = cfg.get("ui", {})
         self.font_size = ui.get("font_size", 36)
@@ -334,6 +339,21 @@ class SoribomUI(QObject):
         header_row.addWidget(self.email_button)
         root.addWidget(self.header)
 
+        self.connection_bar = QFrame()
+        # 정상/오류 문구의 줄 수가 달라도 자막 위치가 위아래로 튀지 않게 한다.
+        self.connection_bar.setMinimumHeight(int(self.font_size * 2))
+        connection_row = QHBoxLayout(self.connection_bar)
+        connection_row.setContentsMargins(28, 10, 28, 10)
+        self.connection_label = QLabel("마이크 연결 확인 중 · 방향 연결 확인 중")
+        self.connection_label.setWordWrap(True)
+        connection_row.addWidget(self.connection_label, stretch=1)
+        self.reconnect_button = QPushButton("다시 연결")
+        self.reconnect_button.setMinimumHeight(44)
+        self.reconnect_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.reconnect_button.clicked.connect(self._reconnect)
+        connection_row.addWidget(self.reconnect_button)
+        root.addWidget(self.connection_bar)
+
         # ── 본문: 왼쪽 자막 + 오른쪽 방향 박스 ──
         body = QHBoxLayout()
         body.setContentsMargins(28, 22, 28, 10)
@@ -342,7 +362,7 @@ class SoribomUI(QObject):
         # 왼쪽 열: 자막(위로 쌓임) + 소리 알림 박스(아래, 평소 숨김)
         left = QVBoxLayout()
         left.setSpacing(12)
-        self.caption_label = QLabel("소리봄 준비 완료 — 말하면 자막이 나옵니다.")
+        self.caption_label = QLabel("마이크 연결을 확인하고 있습니다.")
         self.caption_label.setStyleSheet(style["caption"])
         self.caption_label.setWordWrap(True)
         self.caption_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
@@ -414,6 +434,9 @@ class SoribomUI(QObject):
         QShortcut(QKeySequence("Escape"), self.window, activated=self.window.close)
 
         self._caption_arrived.connect(self._update)
+        self._devices_changed.connect(self._update_devices)
+        self._models_changed.connect(self._update_models)
+        self._render_connection()
 
         # 알림 박스: 시그널로 받고, 4초 뒤 자동으로 숨긴다(타이머는 메인 스레드에서 만든다).
         self._alert_arrived.connect(self._show_alert)
@@ -503,6 +526,7 @@ class SoribomUI(QObject):
         self.subject_box.setStyleSheet(style["subject_box"])
         self.summary_button.setStyleSheet(style["summary_button"])
         self.email_button.setStyleSheet(style["summary_button"])
+        self._render_connection()
         self.caption_label.setStyleSheet(style["caption"])
         self.alert_label.setStyleSheet(style["alert"])
         self.dial_box.setStyleSheet(style["dial_box"])
@@ -531,8 +555,77 @@ class SoribomUI(QObject):
             while self._lines and self._lines[0] == "":
                 self._lines.pop(0)
             self.caption_label.setText("\n".join(self._lines))
-        if angle is not None:
-            self.dial.set_angle(angle)
+        self.dial.set_angle(angle if self._device_state[:2] == ("ready", "ready") else None)
+
+    def show_device_status(self, microphone, direction, detail=""):
+        self._devices_changed.emit(microphone, direction, detail)
+
+    @Slot(str, str, str)
+    def _update_devices(self, microphone, direction, detail):
+        self._device_state = (microphone, direction, detail)
+        if microphone != "ready" or direction != "ready":
+            self.dial.set_angle(None)
+        if not self._lines:
+            self.caption_label.setText(
+                "소리봄 준비 완료 — 말하면 자막이 나옵니다."
+                if microphone == "ready" else "마이크 연결 후 새 자막이 표시됩니다."
+            )
+        self._render_connection()
+
+    def _render_connection(self):
+        mic, doa, detail = self._device_state
+        if mic == "preparing":
+            text = "◌ " + (detail or "소리봄 모델 준비 중입니다.")
+        elif mic == "failed":
+            text = "⚠ " + detail
+        elif mic == "connecting":
+            text = "◌ 마이크 연결 확인 중입니다. 잠시 기다려주세요."
+        elif mic != "ready":
+            text = ("⚠ 마이크 연결을 확인해주세요. 자동으로 다시 연결합니다.\n"
+                    "연결이 끊긴 동안의 음성은 기록되지 않습니다.")
+        else:
+            direction = {
+                "ready": "● 방향 사용 가능", "disabled": "방향 표시 꺼짐",
+                "connecting": "◌ 방향 연결 확인 중", "waiting": "⚠ 방향 확인 불가 · 자동 재연결 중",
+            }.get(doa, "방향 확인 불가")
+            text = "● 마이크 연결됨    " + direction
+        self.connection_label.setText(text)
+        self.connection_label.setToolTip(detail)
+        warning = mic in ("waiting", "failed") or (mic == "ready" and doa == "waiting")
+        bg = ALERT_BG if warning else BOX_BG
+        border = ALERT_LINE if warning else LINE
+        self.connection_bar.setStyleSheet(f"background: {bg}; border-bottom: 1px solid {border};")
+        self.connection_label.setStyleSheet(f"color: {INK}; border: none; font-size: {int(self.font_size * 0.48)}px;")
+        self.reconnect_button.setStyleSheet(
+            f"QPushButton {{ color: {ACCENT}; background: {CARD_BG}; border: 1px solid {LINE}; "
+            f"border-radius: 8px; padding: 8px 18px; font-weight: 600; "
+            f"font-size: {int(self.font_size * 0.5)}px; }}"
+            f"QPushButton:disabled {{ color: {MUTED}; background: {BOX_BG}; }}"
+        )
+        connecting = mic in ("preparing", "connecting", "failed") or doa == "connecting"
+        healthy = mic == "ready" and doa in ("ready", "disabled")
+        self.reconnect_button.setVisible(not healthy)
+        self.reconnect_button.setEnabled(not connecting)
+        self.reconnect_button.setText("연결 확인 중…" if connecting and mic != "failed" else "다시 연결")
+        self.dial_title.setText("화자 방향 (누가, 어디서)" if mic == doa == "ready"
+                                else "방향 표시 꺼짐" if doa == "disabled" else "방향 확인 불가")
+
+    def _reconnect(self):
+        self.reconnect_button.setEnabled(False)
+        self.reconnect_button.setText("연결 확인 중…")
+        self.on_reconnect()
+
+    def set_models_ready(self, ready, message=""):
+        self._models_changed.emit(ready, message)
+
+    @Slot(bool, str)
+    def _update_models(self, ready, message):
+        self._models_ready = ready
+        self.speak_button.setEnabled(ready)
+        self.input_box.setEnabled(ready)
+        self.subject_box.setEnabled(ready)
+        if not ready:
+            self._update_devices("preparing", "waiting", message)
 
     def show_caption(self, text: str, angle: float = None, tentative: bool = False) -> None:
         """자막과 화자 방향을 화면에 띄운다. (tentative는 단일패스라 안 씀)
@@ -610,8 +703,10 @@ class SoribomUI(QObject):
         raise NoteEmailError("메일 발송 기능이 연결되지 않았습니다.")
 
     def eventFilter(self, watched, event) -> bool:
-        if (watched is self.window and event.type() == QEvent.Type.Close
-                and self._email_dialog is not None and self._email_dialog.sending):
+        # Qt가 위젯을 정리하는 동안에는 Python 속성이 먼저 사라질 수 있다.
+        dialog = getattr(self, "_email_dialog", None)
+        if (watched is getattr(self, "window", None) and event.type() == QEvent.Type.Close
+                and dialog is not None and dialog.sending):
             event.ignore()
             return True
         return super().eventFilter(watched, event)
@@ -636,6 +731,8 @@ class SoribomUI(QObject):
         on_speak(=TTS)는 소리를 내는 동안 시간이 걸릴 수 있어 별도 스레드에서
         부른다. 안 그러면 발화하는 동안 화면이 멈춘다.
         """
+        if not self._models_ready:
+            return
         text = self.input_box.text().strip()
         if not text:
             return
@@ -667,6 +764,7 @@ def _selftest() -> None:
 
     cfg = yaml.safe_load(open(src_dir / "config.yaml", encoding="utf-8"))
     ui = SoribomUI(cfg)
+    ui.show_device_status("ready", "ready")
 
     # 입력 테스트용: on_speak 이 불리면 콘솔에 찍는다(실제 TTS는 주언 speaker.py).
     ui.on_speak = lambda text: print(f"[on_speak 호출됨] → TTS로 발화: {text}")

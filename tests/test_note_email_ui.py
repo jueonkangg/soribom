@@ -42,6 +42,7 @@ class NoteEmailUITests(unittest.TestCase):
 
     def test_sending_blocks_duplicates_and_close_but_not_captions(self):
         ui = SoribomUI({})
+        ui.show_device_status("ready", "ready")
         calls = []
         release = threading.Event()
 

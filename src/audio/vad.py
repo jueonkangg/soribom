@@ -14,10 +14,9 @@ STT(단일 패스)는 이 덩어리를 받아 자막으로 만든다.
 - 모델 출처: https://github.com/snakers4/silero-vad (MIT License)
 """
 from collections import deque
+from pathlib import Path
 
 import numpy as np
-
-from faster_whisper.vad import get_vad_model
 
 
 # silero VAD 는 16kHz에서 정확히 512샘플(=32ms) 창을 요구한다.
@@ -35,6 +34,7 @@ class _SileroVad:
     """
 
     def __init__(self) -> None:
+        from faster_whisper.vad import get_vad_model
         self.model = get_vad_model()   # onnxruntime 기반, torch 불필요
 
     def speech_prob(self, window) -> float:
@@ -48,7 +48,7 @@ class VoiceActivityDetector:
         self.cfg = cfg
         self.model = _SileroVad()
 
-    def stream(self, audio_q):
+    def stream(self, audio_q, with_generation=False):
         """말하는 구간이 끝날 때마다 그 구간 오디오(모노 float32)를 yield 한다.
 
         상태기계 요약:
@@ -63,6 +63,8 @@ class VoiceActivityDetector:
         min_silence_ms = self.cfg["min_silence_ms"]
         pad_ms = self.cfg.get("speech_pad_ms", 200)
         pad_windows = max(1, pad_ms // WINDOW_MS)
+        max_windows = max(1, int(self.cfg.get("max_utterance_seconds", 30) * 1000 / WINDOW_MS))
+        generation = None
 
         recent = deque(maxlen=pad_windows)   # 발화 시작 전 창들(앞 패딩용)
         in_speech = False
@@ -77,6 +79,15 @@ class VoiceActivityDetector:
             # None은 종료 신호(자체 테스트에서 사용). 평상시엔 들어오지 않는다.
             if block is None:
                 return
+            if isinstance(block, tuple):
+                block_generation, block = block
+                if block_generation != generation:
+                    generation = block_generation
+                    recent.clear()
+                    in_speech = False
+                    collected = []
+                    speech_ms = silence_ms = 0
+                    leftover = np.zeros(0, dtype=np.float32)
 
             samples = np.concatenate([leftover, block])
             n_windows = len(samples) // WINDOW_SAMPLES
@@ -100,11 +111,22 @@ class VoiceActivityDetector:
                         silence_ms += WINDOW_MS
                         if silence_ms >= min_silence_ms:
                             if speech_ms >= min_speech_ms:
-                                yield np.concatenate(collected)
+                                audio = np.concatenate(collected)
+                                yield (generation, audio) if with_generation else audio
                             # 발화 종료 → 다음 발화를 위해 초기화
                             in_speech = False
                             collected = []
                             recent.clear()
+
+                # 긴 발화도 계속 모으지 않고 나눠서 자막으로 만든다.
+                if in_speech and len(collected) >= max_windows:
+                    if speech_ms >= min_speech_ms:
+                        audio = np.concatenate(collected)
+                        yield (generation, audio) if with_generation else audio
+                    in_speech = False
+                    collected = []
+                    speech_ms = silence_ms = 0
+                    recent.clear()
 
             leftover = samples[n_windows * WINDOW_SAMPLES:]
 

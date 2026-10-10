@@ -18,7 +18,6 @@ import usb.util
 # 검증된 파라미터 = (id, offset). respeaker tuning.py의 PARAMETERS 표.
 #   DOAANGLE : 도래각 0~359 (읽기전용 int). id=21, offset=0 로 실측 확인됨.
 _DOAANGLE = (21, 0)
-_CTRL_TIMEOUT_MS = 100000
 
 
 class DoaTracker:
@@ -27,6 +26,7 @@ class DoaTracker:
         self.front_offset = cfg.get("front_offset", 0)   # 앞 방향 보정(케이스 후 확정)
         self.smoothing = cfg.get("smoothing", 0.3)       # EMA 계수(클수록 민감)
         self._angle = None                               # 평활화된 화면 각도
+        self.timeout_ms = cfg.get("timeout_ms", 300)
 
         self.dev = usb.core.find(
             idVendor=cfg["vendor_id"], idProduct=cfg["product_id"]
@@ -44,7 +44,7 @@ class DoaTracker:
         cmd = 0x80 | offset | 0x40
         response = self.dev.ctrl_transfer(
             usb.util.CTRL_IN | usb.util.CTRL_TYPE_VENDOR | usb.util.CTRL_RECIPIENT_DEVICE,
-            0, cmd, param_id, 8, _CTRL_TIMEOUT_MS,
+            0, cmd, param_id, 8, self.timeout_ms,
         )
         value, _ = struct.unpack("ii", response.tobytes())
         return value
@@ -73,6 +73,12 @@ class DoaTracker:
             diff = ((screen - self._angle + 180) % 360) - 180
             self._angle = (self._angle + self.smoothing * diff) % 360
         return self._angle
+
+    def close(self) -> None:
+        if self.dev is not None:
+            usb.util.dispose_resources(self.dev)
+            self.dev = None
+        self._angle = None
 
 
 def _angle_diff(a: float, b: float) -> float:

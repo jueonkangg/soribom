@@ -8,6 +8,9 @@
 """
 import sys
 import queue
+import os
+import struct
+import time
 
 import numpy as np
 import sounddevice as sd
@@ -36,16 +39,10 @@ class MicArray:
         device = find_input_device(self.cfg["device"])   # 부분 문자열 매칭
         channels = self.cfg["channels"]
 
-        # ReSpeaker를 못 찾았으면 기본 마이크로 대체한다.
-        # 기본 마이크는 보통 1~2채널이라 4채널을 요청하면 실패하므로,
-        # 장치가 허용하는 채널 수로 줄인다.
+        # 다른 마이크를 몰래 사용하면 학생은 ReSpeaker로 듣고 있다고 오인한다.
         if device is None:
-            default_in = sd.query_devices(kind="input")
-            channels = min(channels, default_in["max_input_channels"])
-            print(f"[capture] '{self.cfg['device']}' 못 찾음 → 기본 입력 "
-                  f"'{default_in['name']}', {channels}채널")
-        else:
-            print(f"[capture] 장치 #{device} 사용, {channels}채널")
+            raise RuntimeError(f"'{self.cfg['device']}' 입력 장치를 찾지 못했습니다.")
+        print(f"[capture] 장치 #{device} 사용, {channels}채널")
 
         # block_ms 만큼의 프레임을 한 블록으로 모아서 콜백에 넘긴다.
         blocksize = int(self.cfg["sample_rate"] * self.cfg["block_ms"] / 1000)
@@ -73,9 +70,57 @@ class MicArray:
 
     def stop(self) -> None:
         if self.stream is not None:
-            self.stream.stop()
-            self.stream.close()
-            self.stream = None
+            stream, self.stream = self.stream, None
+            try:
+                stream.abort()
+            finally:
+                stream.close()
+
+
+def send_audio_block(blocks, block):
+    """작은 오디오 프레임을 원자적으로 보낸다. 파이프가 차면 기다리지 않는다.
+
+    Queue의 feeder가 쓰는 도중 자식이 죽으면 수신이 멈출 수 있다.
+    PIPE_BUF 이하의 단일 write는 중간 프레임을 남기지 않는다(Linux/POSIX).
+    """
+    payload = struct.pack("d", time.monotonic()) + block.tobytes()
+    frame = struct.pack("!i", len(payload)) + payload
+    if len(frame) > os.fpathconf(blocks.fileno(), "PC_PIPE_BUF"):
+        raise ValueError("오디오 블록이 너무 큽니다. block_ms를 줄여주세요.")
+    try:
+        os.write(blocks.fileno(), frame)
+    except (BlockingIOError, BrokenPipeError):
+        pass
+
+
+def capture_process(cfg, blocks, control, stop_signal):
+    """프로세스당 PortAudio를 새로 열어 USB 재연결 후 장치 목록도 갱신한다.
+
+    GUI/TTS의 PortAudio를 재초기화하지 않는다. 모델은 이 프로세스에서 읽지 않는다.
+    """
+    class Sink:
+        def put(self, block):
+            send_audio_block(blocks, block)
+
+    os.set_blocking(blocks.fileno(), False)
+    mic = MicArray(cfg, Sink())
+    try:
+        blocksize = int(cfg["sample_rate"] * cfg["block_ms"] / 1000)
+        if 12 + blocksize * 4 > os.fpathconf(blocks.fileno(), "PC_PIPE_BUF"):
+            raise ValueError("오디오 블록이 너무 큽니다. block_ms를 줄여주세요.")
+        mic.start()
+        control.send(("opened", ""))
+        stop_signal.recv_bytes()
+    except Exception as exc:
+        control.send(("error", str(exc)))
+    finally:
+        try:
+            mic.stop()
+        except Exception:
+            pass
+        control.close()
+        blocks.close()
+        stop_signal.close()
 
 
 # ---------------------------------------------------------------------------
