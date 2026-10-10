@@ -15,12 +15,14 @@ import math
 import threading
 import time
 
-from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot
+from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot, QEvent
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QTextEdit, QVBoxLayout, QWidget,
 )
+
+from summary.email_sender import NoteEmailError, validate_recipient
 
 # 색 팔레트 두 벌 — 밝은 테마(목업)와 어두운 테마.
 #
@@ -147,6 +149,104 @@ class DirectionDial(QWidget):
         p.drawEllipse(QPointF(cx, cy), 6, 6)
 
 
+class NoteEmailDialog(QDialog):
+    """기록을 고정해서 보내고, 네트워크 대기 중에도 자막 처리는 계속한다."""
+
+    _finished = Signal(bool, str)
+
+    def __init__(self, parent, transcript: str, on_send, styles: dict) -> None:
+        super().__init__(parent)
+        self.transcript = transcript
+        self.on_send = on_send
+        self.sending = False
+        self.setWindowTitle("노트 보내기")
+        self.setMinimumSize(760, 580)
+        self.setStyleSheet(f"background: {PAGE_BG}; color: {INK}; font-size: 18px;")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(12)
+        layout.addWidget(QLabel("받는 이메일 주소"))
+        self.recipient = QLineEdit()
+        self.recipient.setPlaceholderText("student@gmail.com")
+        self.recipient.setStyleSheet(styles["input"])
+        self.recipient.setMaxLength(254)
+        layout.addWidget(self.recipient)
+        layout.addWidget(QLabel("창을 연 시점까지의 수업 기록 · 메일 본문과 TXT 첨부로 전송"))
+        self.preview = QTextEdit()
+        self.preview.setReadOnly(True)
+        self.preview.setPlainText(transcript or "아직 보낼 수업 기록이 없습니다.")
+        self.preview.setStyleSheet(
+            f"background: {CARD_BG}; color: {INK}; border: 1px solid {LINE}; padding: 12px;"
+        )
+        layout.addWidget(self.preview, stretch=1)
+        self.status = QLabel("이메일 전송에는 인터넷이 필요합니다.")
+        self.status.setWordWrap(True)
+        layout.addWidget(self.status)
+        row = QHBoxLayout()
+        row.addStretch()
+        self.send_button = QPushButton("보내기")
+        self.send_button.setStyleSheet(styles["speak_button"])
+        self.send_button.setEnabled(bool(transcript.strip()))
+        self.send_button.setAutoDefault(False)
+        self.send_button.clicked.connect(self._send)
+        self.close_button = QPushButton("닫기")
+        self.close_button.setStyleSheet(styles["summary_button"])
+        self.close_button.setAutoDefault(False)
+        self.close_button.clicked.connect(self.reject)
+        row.addWidget(self.send_button)
+        row.addWidget(self.close_button)
+        layout.addLayout(row)
+        self._finished.connect(self._show_result)
+
+    def _send(self) -> None:
+        if self.sending or not self.send_button.isEnabled():
+            return
+        try:
+            recipient = validate_recipient(self.recipient.text())
+        except NoteEmailError as e:
+            self.status.setText(str(e))
+            return
+        self.recipient.setText(recipient)
+        self.sending = True
+        self.recipient.setEnabled(False)
+        self.send_button.setEnabled(False)
+        self.close_button.setEnabled(False)
+        self.status.setText("메일 전송 중입니다. 잠시 기다려주세요.")
+
+        def send() -> None:
+            try:
+                self.on_send(recipient, self.transcript)
+            except NoteEmailError as e:
+                self._finished.emit(False, str(e))
+            except Exception:
+                # 서버 응답에는 주소나 인증 정보가 들어갈 수 있어 그대로 표시하지 않는다.
+                self._finished.emit(False, "전송 중 문제가 발생했습니다. 메일함에서 발송 여부를 확인해주세요.")
+            else:
+                self._finished.emit(True, "메일 서버에 전송했습니다. 받은편지함 또는 스팸함을 확인해주세요.")
+
+        threading.Thread(target=send, daemon=True).start()
+
+    @Slot(bool, str)
+    def _show_result(self, success: bool, message: str) -> None:
+        self.sending = False
+        self.status.setText(message)
+        self.close_button.setEnabled(True)
+        # 성공 후 같은 창에서 연타로 다시 보내는 일은 막는다. 실패 시 주소·기록은 유지한다.
+        self.recipient.setEnabled(not success)
+        self.send_button.setEnabled(not success)
+
+    def done(self, result: int) -> None:
+        # ESC도 reject() → done()을 거친다. 전송 중 창을 없애면 결과를 전달할 수 없다.
+        if not self.sending:
+            super().done(result)
+
+    def closeEvent(self, event) -> None:
+        if self.sending:
+            event.ignore()
+        else:
+            super().closeEvent(event)
+
+
 class SoribomUI(QObject):
     # 워커 스레드 → 메인 스레드로 (자막, 방향)을 안전하게 넘기는 통로.
     _caption_arrived = Signal(str, object)   # (text, angle 또는 None)
@@ -160,6 +260,9 @@ class SoribomUI(QObject):
         self.on_summarize = lambda: "요약 기능이 연결되지 않았습니다."
         # 과목 드롭다운이 부를 콜백. main 에서 Transcriber.set_subject 로 연결.
         self.on_subject_change = lambda subject: None
+        self.on_note_snapshot = lambda: ""
+        self.on_send_note = self._email_not_connected
+        self._email_dialog = None
 
         ui = cfg.get("ui", {})
         self.font_size = ui.get("font_size", 36)
@@ -183,6 +286,7 @@ class SoribomUI(QObject):
         self.app = QApplication.instance() or QApplication([])
 
         self.window = QWidget()
+        self.window.installEventFilter(self)
         self.window.setStyleSheet(style["window"])
         root = QVBoxLayout(self.window)
         root.setContentsMargins(0, 0, 0, 0)   # 헤더가 화면 끝까지 닿게
@@ -223,6 +327,11 @@ class SoribomUI(QObject):
         self.summary_button.setStyleSheet(style["summary_button"])
         self.summary_button.clicked.connect(self._show_summary)
         header_row.addWidget(self.summary_button)
+        self.email_button = QPushButton("노트 보내기")
+        self.email_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.email_button.setStyleSheet(style["summary_button"])
+        self.email_button.clicked.connect(self._show_email)
+        header_row.addWidget(self.email_button)
         root.addWidget(self.header)
 
         # ── 본문: 왼쪽 자막 + 오른쪽 방향 박스 ──
@@ -393,6 +502,7 @@ class SoribomUI(QObject):
         self.subj_label.setStyleSheet(style["subj_label"])
         self.subject_box.setStyleSheet(style["subject_box"])
         self.summary_button.setStyleSheet(style["summary_button"])
+        self.email_button.setStyleSheet(style["summary_button"])
         self.caption_label.setStyleSheet(style["caption"])
         self.alert_label.setStyleSheet(style["alert"])
         self.dial_box.setStyleSheet(style["dial_box"])
@@ -494,6 +604,31 @@ class SoribomUI(QObject):
         lay.addLayout(btn_row)
 
         dlg.exec()
+
+    @staticmethod
+    def _email_not_connected(recipient: str, transcript: str) -> None:
+        raise NoteEmailError("메일 발송 기능이 연결되지 않았습니다.")
+
+    def eventFilter(self, watched, event) -> bool:
+        if (watched is self.window and event.type() == QEvent.Type.Close
+                and self._email_dialog is not None and self._email_dialog.sending):
+            event.ignore()
+            return True
+        return super().eventFilter(watched, event)
+
+    def _show_email(self) -> None:
+        try:
+            transcript = self.on_note_snapshot()
+        except Exception:
+            self.show_alert("수업 기록을 불러오지 못했습니다. 다시 시도해주세요.")
+            return
+        dialog = NoteEmailDialog(self.window, transcript, self.on_send_note, self._styles())
+        self._email_dialog = dialog
+        try:
+            dialog.exec()
+        finally:
+            self._email_dialog = None
+            dialog.deleteLater()
 
     def _on_enter(self) -> None:
         """입력칸 Enter / '말하기' 버튼: 내용을 on_speak 로 넘겨 발화하고 칸을 비운다.

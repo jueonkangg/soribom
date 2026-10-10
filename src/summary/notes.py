@@ -9,6 +9,7 @@
 모든 내용을 남긴다(짧은 맞장구도 기록). 화면 '수업 기록 보기' 패널 + 종료 시 파일 저장.
 """
 import re
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -17,6 +18,7 @@ class NoteBuilder:
     def __init__(self, cfg: dict) -> None:
         self.cfg = cfg
         self.lines: list = []
+        self._lock = threading.Lock()
 
         # 저장 위치. config 가 상대경로면 repo 루트 기준으로 푼다(실행 위치 무관).
         out = cfg.get("output_dir", "./notes")
@@ -27,7 +29,8 @@ class NoteBuilder:
         self.output_dir = out_path
 
     def add(self, text: str, angle: float) -> None:
-        self.lines.append({"text": text, "angle": angle})
+        with self._lock:
+            self.lines.append({"text": text, "angle": angle})
 
     @staticmethod
     def _clean_line(text: str) -> str:
@@ -42,7 +45,10 @@ class NoteBuilder:
     def _script_lines(self) -> list:
         """모든 발화를 정리해 순서대로. 바로 앞과 똑같은 줄(STT 이중출력)만 제거."""
         out = []
-        for ln in self.lines:
+        # 복사할 때만 잠근다. 화면 미리보기·메일 처리 중에도 새 자막은 계속 기록한다.
+        with self._lock:
+            snapshot = list(self.lines)
+        for ln in snapshot:
             s = self._clean_line(ln["text"])
             if not s:
                 continue
@@ -56,9 +62,13 @@ class NoteBuilder:
 
         메서드 이름은 호환을 위해 build_summary 로 두되, 내용은 '전체 기록'이다.
         """
+        return self.build_email_transcript() or "아직 기록된 수업 내용이 없습니다."
+
+    def build_email_transcript(self) -> str:
+        """메일 미리보기용 스냅샷. 빈 기록은 안내문 대신 빈 문자열로 반환한다."""
         lines = self._script_lines()
         if not lines:
-            return "아직 기록된 수업 내용이 없습니다."
+            return ""
         header = f"수업 기록 · {datetime.now():%Y-%m-%d %H:%M}  (발화 {len(lines)}개)\n"
         body = "\n".join(f"• {s}" for s in lines)
         return header + "\n" + body

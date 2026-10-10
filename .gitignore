@@ -62,3 +62,7 @@ mainTest.txt
 #   (설명서·콘티 등: private/ — GitHub에는 올라가되, 본선에서 리포 공유할 때 제거)
 possibleQuestions.txt
 exeError.txt
+
+# 이메일 발송 계정·앱 비밀번호 (설정 도구의 임시 파일 포함)
+.email.local.ini
+.email.local.*.tmp

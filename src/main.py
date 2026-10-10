@@ -18,6 +18,7 @@ from audio.vad import VoiceActivityDetector
 from events.sound_events import SoundEventClassifier
 from stt.transcriber import Transcriber
 from summary.notes import NoteBuilder
+from summary.email_sender import send_note
 from tts.speaker import Speaker
 from ui.app import SoribomUI
 
@@ -63,6 +64,8 @@ def main() -> None:
     ui.on_speak = speaker.say
     # '수업 기록 보기' 버튼 → 지금까지의 전체 발화 기록을 화면 패널로 (기능 5)
     ui.on_summarize = notes.build_summary
+    ui.on_note_snapshot = notes.build_email_transcript
+    ui.on_send_note = send_note
     # 헤더 과목 드롭다운 → 그 과목 용어로 STT 편향 전환(다음 발화부터)
     ui.on_subject_change = stt.set_subject
 
