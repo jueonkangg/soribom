@@ -253,6 +253,8 @@ class SoribomUI(QObject):
     _alert_arrived = Signal(str)             # 소리 이벤트 알림(이름 호명 등)
     _devices_changed = Signal(str, str, str)
     _models_changed = Signal(bool, str)
+    _speech_finished = Signal(bool, str)
+    _notes_changed = Signal(bool, str)
 
     def __init__(self, cfg: dict) -> None:
         super().__init__()
@@ -268,6 +270,10 @@ class SoribomUI(QObject):
         self.on_reconnect = lambda: None
         self._device_state = ("preparing", "waiting", "")
         self._models_ready = True
+        self._speaking = False
+        self._speech_failed = False
+        self._note_failed = False
+        self._speech_text = ""
 
         ui = cfg.get("ui", {})
         self.font_size = ui.get("font_size", 36)
@@ -353,6 +359,10 @@ class SoribomUI(QObject):
         self.reconnect_button.clicked.connect(self._reconnect)
         connection_row.addWidget(self.reconnect_button)
         root.addWidget(self.connection_bar)
+        self.note_status = QLabel("수업 기록 자동 저장 대기 중" if cfg.get("summary", {}).get("enabled", True) else "수업 기록 파일 저장 꺼짐")
+        self.note_status.setWordWrap(True)
+        self.note_status.setContentsMargins(28, 4, 28, 4)
+        root.addWidget(self.note_status)
 
         # ── 본문: 왼쪽 자막 + 오른쪽 방향 박스 ──
         body = QHBoxLayout()
@@ -413,6 +423,9 @@ class SoribomUI(QObject):
         self.speak_title = QLabel("양방향 말하기 (입력 → 스피커)")
         self.speak_title.setStyleSheet(style["speak_title"])
         speak_wrap.addWidget(self.speak_title)
+        self.speech_status = QLabel("")
+        self.speech_status.setWordWrap(True)
+        speak_wrap.addWidget(self.speech_status)
 
         input_row = QHBoxLayout()
         input_row.setSpacing(10)
@@ -436,6 +449,9 @@ class SoribomUI(QObject):
         self._caption_arrived.connect(self._update)
         self._devices_changed.connect(self._update_devices)
         self._models_changed.connect(self._update_models)
+        self._speech_finished.connect(self._finish_speech)
+        self._notes_changed.connect(self._update_note_status)
+        self._render_operation_status()
         self._render_connection()
 
         # 알림 박스: 시그널로 받고, 4초 뒤 자동으로 숨긴다(타이머는 메인 스레드에서 만든다).
@@ -535,6 +551,7 @@ class SoribomUI(QObject):
         self.speak_title.setStyleSheet(style["speak_title"])
         self.input_box.setStyleSheet(style["input"])
         self.speak_button.setStyleSheet(style["speak_button"])
+        self._render_operation_status()
         self.dial.update()      # 다이얼은 직접 그리는 위젯이라 '다시 그려라'만 알려주면 된다
 
     @Slot(str, object)
@@ -621,8 +638,8 @@ class SoribomUI(QObject):
     @Slot(bool, str)
     def _update_models(self, ready, message):
         self._models_ready = ready
-        self.speak_button.setEnabled(ready)
-        self.input_box.setEnabled(ready)
+        self.speak_button.setEnabled(ready and not self._speaking)
+        self.input_box.setEnabled(ready and not self._speaking)
         self.subject_box.setEnabled(ready)
         if not ready:
             self._update_devices("preparing", "waiting", message)
@@ -725,19 +742,67 @@ class SoribomUI(QObject):
             self._email_dialog = None
             dialog.deleteLater()
 
-    def _on_enter(self) -> None:
-        """입력칸 Enter / '말하기' 버튼: 내용을 on_speak 로 넘겨 발화하고 칸을 비운다.
+    def _render_operation_status(self):
+        normal = INK
+        warning = "#FCA5A5" if self.theme == "dark" else "#B91C1C"
+        size = int(self.font_size * 0.42)
+        self.note_status.setStyleSheet(f"color: {warning if self._note_failed else normal}; font-size: {size}px;")
+        self.speech_status.setStyleSheet(f"color: {warning if self._speech_failed else normal}; font-size: {size}px;")
 
-        on_speak(=TTS)는 소리를 내는 동안 시간이 걸릴 수 있어 별도 스레드에서
-        부른다. 안 그러면 발화하는 동안 화면이 멈춘다.
-        """
-        if not self._models_ready:
+    def show_note_status(self, success, message):
+        self._notes_changed.emit(success, message)
+
+    @Slot(bool, str)
+    def _update_note_status(self, success, message):
+        self._note_failed = not success
+        self.note_status.setText(message)
+        self._render_operation_status()
+
+    def _on_enter(self) -> None:
+        """합성·재생은 한 번에 하나만. 성공한 문장만 입력칸에서 지운다."""
+        if not self._models_ready or self._speaking:
             return
         text = self.input_box.text().strip()
         if not text:
             return
-        self.input_box.clear()
-        threading.Thread(target=self.on_speak, args=(text,), daemon=True).start()
+        limit = self.cfg.get("tts", {}).get("max_chars", 200)
+        if len(text) > limit:
+            self._speech_failed = True
+            self.speech_status.setText(f"한 번에 {limit}자까지 말할 수 있습니다. 문장을 나눠주세요.")
+            self._render_operation_status()
+            return
+        self._speaking = True
+        self._speech_text = text
+        self._speech_failed = False
+        self.speak_button.setEnabled(False)
+        self.input_box.setEnabled(False)
+        self.speak_button.setText("말하는 중…")
+        self.speech_status.setText("음성을 준비하고 재생하고 있습니다.")
+        self._render_operation_status()
+
+        def speak():
+            try:
+                self.on_speak(text)
+            except Exception as exc:
+                print(f"[말하기] 실패: {exc}", flush=True)
+                self._speech_finished.emit(False, "말하기에 실패했습니다. 스피커 연결과 출력 장치를 확인한 뒤 다시 눌러주세요. 입력은 남아 있습니다.")
+            else:
+                self._speech_finished.emit(True, "말하기 완료")
+
+        threading.Thread(target=speak, name="speech-playback", daemon=True).start()
+
+    @Slot(bool, str)
+    def _finish_speech(self, success, message):
+        self._speaking = False
+        self._speech_failed = not success
+        if success and self.input_box.text().strip() == self._speech_text:
+            self.input_box.clear()
+        self.speak_button.setText("말하기 ▶")
+        self.speak_button.setEnabled(self._models_ready)
+        self.input_box.setEnabled(self._models_ready)
+        self.speech_status.setText(message)
+        self._render_operation_status()
+        self.input_box.setFocus()
 
     def run(self) -> None:
         """전체화면으로 띄우고 이벤트 루프를 돈다. (ESC로 종료)"""

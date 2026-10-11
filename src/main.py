@@ -26,12 +26,13 @@ def main() -> None:
     ui = SoribomUI(cfg)
     audio = AudioBuffer(cfg["audio"].get("queue_max_blocks", 100))
     devices = DeviceController(cfg, audio, ui.show_device_status)
-    notes = NoteBuilder(cfg["summary"])
+    notes = NoteBuilder(cfg["summary"], subject=cfg["stt"].get("subject", "science"))
     stopped = threading.Event()
     ui.on_reconnect = devices.retry
     ui.on_summarize = notes.build_summary
     ui.on_note_snapshot = notes.build_email_transcript
     ui.on_send_note = send_note
+    notes.start_autosave(ui.show_note_status)
     ui.set_models_ready(False, "자막·말하기 모델을 준비하고 있습니다.")
 
     def initialize():
@@ -48,7 +49,10 @@ def main() -> None:
             if stopped.is_set():
                 return
             ui.on_speak = speaker.say
-            ui.on_subject_change = stt.set_subject
+            def change_subject(subject):
+                stt.set_subject(subject)
+                notes.set_subject(subject)
+            ui.on_subject_change = change_subject
             ui.set_models_ready(True)
 
             def caption_lane():
@@ -59,6 +63,7 @@ def main() -> None:
                     if not audio.publish(generation, lambda: devices.request_direction(generation)):
                         continue
                     try:
+                        subject = notes.current_subject()
                         text = stt.transcribe(chunk)
                     except Exception as exc:
                         print(f"[자막] 전사 실패: {exc}", flush=True)
@@ -68,7 +73,7 @@ def main() -> None:
                     def publish():
                         angle = devices.current_angle()
                         ui.show_caption(text, angle=angle)
-                        notes.add(text, angle=angle)
+                        notes.add(text, angle=angle, subject=subject)
                         if cfg["events"].get("enabled"):
                             for alert in events.detect_in_text(text):
                                 ui.show_alert(alert)
@@ -90,8 +95,9 @@ def main() -> None:
     finally:
         stopped.set()
         devices.stop()
-        if cfg["summary"].get("enabled"):
-            notes.save()
+        notes.stop_autosave()
+        if cfg["summary"].get("enabled", True):
+            notes.save_safely()
 
 
 if __name__ == "__main__":

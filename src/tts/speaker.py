@@ -17,6 +17,7 @@
   이건 UX 설계 결정이지 기술적 편의가 아니다.
 """
 import time
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -32,6 +33,7 @@ class Speaker:
         self.speed = cfg.get("speed", 1.0)
         self.language = cfg.get("language", "ko")
         self.output_device = cfg.get("output_device")   # None = 시스템 기본
+        self._speech_lock = threading.RLock()
 
         # 모델 경로는 repo 루트 기준으로 푼다(어디서 실행하든 찾도록).
         #   src/tts/speaker.py → parents[2] = repo 루트
@@ -75,6 +77,10 @@ class Speaker:
         self.sample_rate = self.tts.sample_rate
 
     def synthesize(self, text: str):
+        with self._speech_lock:
+            return self._synthesize(text)
+
+    def _synthesize(self, text: str):
         """텍스트 → (float32 mono 파형, 샘플레이트). 재생과 분리해 테스트를 쉽게 한다."""
         gen = sherpa_onnx.GenerationConfig()
         gen.sid = self.sid
@@ -88,7 +94,7 @@ class Speaker:
 
         samples = np.array(audio.samples, dtype=np.float32)
 
-        # 지표 측정(TTS 지연): 합성에 걸린 시간을 남긴다(타이핑 완료 → 소리까지).
+        # 합성 시간만 측정한다. 재생 준비까지 포함한 사용자 체감 지연과 구분한다.
         dur = len(samples) / audio.sample_rate if len(samples) else 0.0
         print(f"[TTS] 합성 {synth_s:.2f}s (오디오 {dur:.1f}s, steps={self.num_steps}) : {text[:20]}")
 
@@ -99,6 +105,24 @@ class Speaker:
         text = text.strip()
         if not text:
             return
-        samples, sr = self.synthesize(text)
-        sd.play(samples, samplerate=sr, device=self.output_device)
-        sd.wait()
+        if len(text) > self.cfg.get("max_chars", 200):
+            raise ValueError("말하기 문장이 너무 깁니다. 나눠서 입력해주세요.")
+        # UI 외 호출도 합성·재생을 겹치거나 대기 스레드를 쌓지 않도록 한다.
+        if not self._speech_lock.acquire(blocking=False):
+            raise RuntimeError("이미 말하는 중입니다.")
+        try:
+            samples, sr = self.synthesize(text)
+            if not len(samples):
+                raise RuntimeError("합성된 음성이 없습니다.")
+            try:
+                sd.play(samples, samplerate=sr, device=self.output_device)
+                # 재생 중 장치 오류는 예외로 받아 입력 보존·재시도로 연결한다.
+                status = sd.wait()
+                if status:
+                    raise RuntimeError("음성 출력이 중단되었습니다.")
+            except Exception:
+                # 실패한 출력 스트림을 남겨 다음 재시도에 섞지 않는다.
+                sd.stop()
+                raise
+        finally:
+            self._speech_lock.release()
