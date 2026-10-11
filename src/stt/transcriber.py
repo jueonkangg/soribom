@@ -5,8 +5,8 @@ medium은 8GB 공유메모리에 앱과 함께 올리면 OOM 나고, 정확도�
 사실상 같았다(둘 다 CER ~1%). 문맥 기반 2-패스 교정도 정확도를 못 올렸다.
 그래서 small 단일 패스로 확정했다. (자세한 근거는 config.yaml 주석 참고)
 
-정확도 보강은 2-패스 대신 'initial_prompt(도메인 용어 힌트)'로 한다. 수업 용어를
-힌트로 주면 인식이 올바른 후보로 정렬돼, 없는 말을 지어내지 않고 오인식만 준다.
+과목별 hotwords로 용어 인식을 보강한다. 힌트 과편향·환각은 남을 수 있으므로
+인식 신뢰도를 함께 확인하며, 정상적인 용어 나열을 무조건 삭제하지 않는다.
 
 입력 chunk 는 VAD가 잘라준 발화 한 덩어리(모노 float32, 16kHz)다.
 """
@@ -57,22 +57,19 @@ class Transcriber:
         self.extra_terms = list(terms or [])
         self._apply_vocab()
 
-    def _is_prompt_echo(self, text: str) -> bool:
-        """인식 결과가 '힌트 용어 나열'(환각)인지 판단한다.
-
-        소리가 불분명할 때 모델이 힌트 용어를 쉼표/공백으로 죽 나열하는 경우가 있다
-        (예: "이산화탄소, 포도당, 수행평가, 교과서"). 이런 건 진짜 발화가 아니므로 버린다.
-        정상 문장은 용어 사이에 다른 말·문장 끝(다/요 등)이 있어 걸리지 않는다.
-        """
+    def _is_prompt_echo(self, text: str, keywords=None) -> bool:
+        """힌트 용어 나열 형태인지 확인한다. 실제 발화일 수 있어 이것만으로 삭제하지 않는다."""
         import re
-        if not self.keywords or not text:
+        if keywords is None:
+            keywords = self.keywords
+        if not keywords or not text:
             return False
-        kw = set(self.keywords)
-        # 1) 쉼표로 나뉜 항목이 대부분 '용어 그 자체'면 나열 환각.
+        kw = set(keywords)
+        # 쉼표/공백 항목 대부분이 힌트 용어인 나열 후보를 찾는다.
         parts = [p.strip() for p in re.split(r"[,，]", text) if p.strip()]
         if len(parts) >= 2 and sum(p in kw for p in parts) >= max(2, 0.8 * len(parts)):
             return True
-        # 2) 쉼표가 없어도, 토큰 대부분이 정확히 용어면 나열 환각.
+        # 쉼표가 없는 나열도 같은 신뢰도 검사를 거친다.
         toks = [t for t in re.split(r"\s+", text.strip()) if t]
         if len(toks) >= 3 and sum(t in kw for t in toks) >= 0.8 * len(toks):
             return True
@@ -81,29 +78,34 @@ class Transcriber:
     def transcribe(self, chunk) -> str:
         """발화 한 덩어리를 자막 문자열로 바꾼다. (환각 방어 포함)"""
         start = time.monotonic()
+        # 전사 중 과목을 바꿔도 해당 발화의 힌트와 필터 기준은 같아야 한다.
+        keywords = tuple(self.keywords)
         segments, _ = self.model.transcribe(
             chunk,
             language=self.language,
             beam_size=self.beam_size,
-            hotwords=self.prompt,              # 도메인 용어 편향(에코 적음, initial_prompt 대체)
+            hotwords=", ".join(keywords) if keywords else None,
             vad_filter=False,                  # 이미 VAD로 걸렀으니 중복하지 않는다
             condition_on_previous_text=False,  # 짧은 발화에서 반복/환각을 줄인다
         )
         # 신뢰도 필터: 무음/저신뢰 세그먼트(환각 위험)는 버린다.
         parts = []
         for seg in segments:
-            if getattr(seg, "no_speech_prob", 0.0) > 0.85:   # 거의 무음
+            no_speech = getattr(seg, "no_speech_prob", 0.0)
+            logprob = getattr(seg, "avg_logprob", 0.0)
+            if no_speech > 0.85:   # 거의 무음
                 continue
-            if getattr(seg, "avg_logprob", 0.0) < -1.3:      # 확신이 매우 낮음
+            if logprob < -1.3:      # 확신이 매우 낮음
                 continue
             t = seg.text.strip()
+            weak = (no_speech > self.cfg.get("echo_no_speech_prob", 0.5)
+                    or logprob < self.cfg.get("echo_avg_logprob", -0.8))
+            # 나열 하나 때문에 같은 발화의 정상 설명까지 버리지 않는다.
+            if weak and self._is_prompt_echo(t, keywords):
+                continue
             if t:
                 parts.append(t)
         text = " ".join(parts).strip()
-
-        # 프롬프트 에코(용어 나열 환각)면 버린다.
-        if self._is_prompt_echo(text):
-            text = ""
 
         self.last_sec = time.monotonic() - start
         return text
