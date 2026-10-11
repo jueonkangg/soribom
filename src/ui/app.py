@@ -392,7 +392,7 @@ class SoribomUI(QObject):
         self.dial_box.setStyleSheet(style["dial_box"])
         dial_layout = QVBoxLayout(self.dial_box)
         dial_layout.setContentsMargins(14, 12, 14, 14)
-        self.dial_title = QLabel("화자 방향 (누가, 어디서)")
+        self.dial_title = QLabel("화자 방향")
         self.dial_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.dial_title.setStyleSheet(style["dial_title"])
         dial_layout.addWidget(self.dial_title)
@@ -573,6 +573,8 @@ class SoribomUI(QObject):
                 self._lines.pop(0)
             self.caption_label.setText("\n".join(self._lines))
         self.dial.set_angle(angle if self._device_state[:2] == ("ready", "ready") else None)
+        if self._device_state[:2] == ("ready", "ready"):
+            self.dial_title.setText("화자 방향 (미확정)" if angle is None else "화자 방향")
 
     def show_device_status(self, microphone, direction, detail=""):
         self._devices_changed.emit(microphone, direction, detail)
@@ -624,7 +626,8 @@ class SoribomUI(QObject):
         self.reconnect_button.setVisible(not healthy)
         self.reconnect_button.setEnabled(not connecting)
         self.reconnect_button.setText("연결 확인 중…" if connecting and mic != "failed" else "다시 연결")
-        self.dial_title.setText("화자 방향 (누가, 어디서)" if mic == doa == "ready"
+        self.dial_title.setText(("화자 방향 (미확정)" if self._lines and self.dial._angle is None
+                                 else "화자 방향") if mic == doa == "ready"
                                 else "방향 표시 꺼짐" if doa == "disabled" else "방향 확인 불가")
 
     def _reconnect(self):

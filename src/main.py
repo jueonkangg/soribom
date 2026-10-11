@@ -56,11 +56,10 @@ def main() -> None:
             ui.set_models_ready(True)
 
             def caption_lane():
-                for generation, chunk in vad.stream(audio, with_generation=True):
+                for generation, chunk, speech_ranges in vad.stream(audio, with_timing=True):
                     if stopped.is_set():
                         return
-                    # 방향 USB 요청은 장치 워커가 처리한다. 실패해도 STT는 계속 돈다.
-                    if not audio.publish(generation, lambda: devices.request_direction(generation)):
+                    if not audio.publish(generation, lambda: None):
                         continue
                     try:
                         subject = notes.current_subject()
@@ -70,8 +69,9 @@ def main() -> None:
                         ui.show_alert("자막 처리에 실패했습니다. 다음 음성을 다시 처리합니다.")
                         continue
 
+                    # 표본 집계 중에도 마이크 워커가 음성을 큐에 넣을 수 있게 한다.
+                    angle = devices.direction_for(generation, speech_ranges)
                     def publish():
-                        angle = devices.current_angle()
                         ui.show_caption(text, angle=angle)
                         notes.add(text, angle=angle, subject=subject)
                         if cfg["events"].get("enabled"):

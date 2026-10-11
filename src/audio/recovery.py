@@ -4,11 +4,13 @@ import queue
 import struct
 import threading
 import time
+from collections import deque
+import math
 
 import numpy as np
 
 from audio.capture import capture_process
-from audio.doa import DoaTracker
+from audio.doa import DoaTracker, _robust_center
 
 
 class AudioBuffer:
@@ -33,14 +35,16 @@ class AudioBuffer:
                 self._reset()
                 self.queue.put_nowait((self.generation, np.zeros(0, dtype=np.float32)))
 
-    def put(self, block):
+    def put(self, block, captured_at=None):
         with self.lock:
             if self.closed:
                 return
             if self.queue.full():
                 # 오래된 자막을 뒤늦게 내보내는 대신 현재 음성부터 다시 처리한다.
                 self._reset()
-            self.queue.put_nowait((self.generation, block))
+            item = ((self.generation, block) if captured_at is None
+                    else (self.generation, block, captured_at))
+            self.queue.put_nowait(item)
 
     def get(self):
         return self.queue.get()
@@ -74,8 +78,12 @@ class DeviceController:
         self.direction_reset = threading.Event()
         self.lock = threading.Lock()
         self.retry_pending = False
-        self.direction_generation = None
         self.angle = None
+        self.sample_seconds = max(0.05, float(cfg["doa"].get("sample_seconds", 0.1)))
+        self.history_seconds = max(1.0, float(cfg["doa"].get("history_seconds", 60)))
+        capacity = min(2000, math.ceil(self.history_seconds / self.sample_seconds) + 2)
+        self.direction_samples = deque(maxlen=capacity)
+        self.next_direction_sample = 0
         self.thread = None
         self.direction_thread = None
         self.process = None
@@ -108,15 +116,42 @@ class DeviceController:
         self.wake.set()
         self.direction_wake.set()
 
-    def request_direction(self, generation):
-        with self.lock:
-            self.direction_generation = generation
-            self.angle = None
-        self.direction_wake.set()
-
     def current_angle(self):
         with self.lock:
             return self.angle
+
+    def _record_direction(self, generation, started, finished, angle):
+        def record():
+            with self.lock:
+                self.angle = angle
+                self.direction_samples.append((generation, started, finished, angle))
+                cutoff = finished - self.history_seconds
+                while self.direction_samples and self.direction_samples[0][2] < cutoff:
+                    self.direction_samples.popleft()
+        self.audio.publish(generation, record)
+
+    def direction_for(self, generation, speech_ranges):
+        """이번 발화 중 읽은 표본만 선택한다. 추론 뒤의 현재 각도는 쓰지 않는다."""
+        if generation != self.audio.generation or self.mic_state != "ready" or self.doa_state != "ready":
+            return None
+        cutoff = time.monotonic() - self.history_seconds
+        with self.lock:
+            samples = list(self.direction_samples)
+        angles = []
+        for sample_generation, started, finished, angle in samples:
+            if sample_generation != generation or started < cutoff:
+                continue
+            # USB가 기다린 구간까지 발화 안에 있어야 다른 화자 표본을 섞지 않는다.
+            if any(begin <= started <= finished <= end for begin, end in speech_ranges):
+                angles.append(angle)
+        if len(angles) < self.cfg["doa"].get("min_samples", 2):
+            return None
+        center, _, consensus, _, _ = _robust_center(
+            angles, window=self.cfg["doa"].get("cluster_window_degrees", 30)
+        )
+        if consensus < self.cfg["doa"].get("min_consensus", 0.7):
+            return None
+        return center
 
     def _status(self):
         state = (self.mic_state, self.doa_state, self.detail)
@@ -182,7 +217,7 @@ class DeviceController:
         self.audio.reset()
         with self.lock:
             self.angle = None
-            self.direction_generation = None
+            self.direction_samples.clear()
         if self.doa_state != "disabled":
             self.doa_state = "waiting"
         self.direction_reset.set()
@@ -215,7 +250,7 @@ class DeviceController:
             if self.last_block is not None and captured_at - self.last_block > 3 * self.cfg["audio"]["block_ms"] / 1000:
                 self.audio.reset()
             self.last_block = captured_at
-            self.audio.put(block)
+            self.audio.put(block, captured_at=captured_at)
             self.mic_state = "ready"
             self.detail = ""
         deadline = (self.opened_at + self.open_seconds if self.last_block is None
@@ -226,7 +261,7 @@ class DeviceController:
     def _close_doa(self):
         with self.lock:
             self.angle = None
-            self.direction_generation = None
+            self.direction_samples.clear()
         if self.doa is not None:
             try:
                 self.doa.close()
@@ -250,17 +285,15 @@ class DeviceController:
                 print(f"[방향] 연결 실패: {exc}", flush=True)
                 self._close_doa()
                 self.next_doa = time.monotonic() + self.retry_seconds
-        with self.lock:
-            generation = self.direction_generation
-            self.direction_generation = None
-        if self.doa is not None and generation is not None:
+        if self.doa is not None and now >= self.next_direction_sample:
             try:
-                angle = self.doa.current()
-                # 재연결/큐 초기화 전 음성에 해당하는 방향은 사용하지 않는다.
-                def set_angle():
-                    with self.lock:
-                        self.angle = angle
-                self.audio.publish(generation, set_angle)
+                generation = self.audio.generation
+                started = time.monotonic()
+                # 발화 사이 EMA 관성이 다음 화자에 남지 않도록 원본 표본을 모은다.
+                angle = (self.cfg["doa"].get("front_offset", 0) - self.doa.raw_angle()) % 360.0
+                finished = time.monotonic()
+                self._record_direction(generation, started, finished, angle)
+                self.next_direction_sample = finished + self.sample_seconds
             except Exception as exc:
                 print(f"[방향] 읽기 실패: {exc}", flush=True)
                 self._close_doa()

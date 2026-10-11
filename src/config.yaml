@@ -41,6 +41,7 @@ vad:
   min_silence_ms: 400
   speech_pad_ms: 200       # 발화 앞에 붙일 여유 (첫 음절 잘림 방지)
   max_utterance_seconds: 30  # 침묵이 없어도 발화를 나눠 버퍼 증가를 막는다
+  timestamp_tolerance_ms: 10  # 연속 콜백의 작은 시간 흔들림만 합친다. 32ms 무음 창은 제외.
 
 stt:
   # small 단일 패스로 확정. 원래 2-패스(small→medium) 설계였으나 실측으로 폐기:
@@ -69,6 +70,11 @@ stt:
 doa:
   enabled: true
   timeout_ms: 300          # USB 응답이 없어도 자막 처리를 오래 기다리게 하지 않는다
+  sample_seconds: 0.1      # 방향 워커 하나에서 표본 수집; 발화 중 읽은 값만 자막에 연결
+  history_seconds: 60     # 대기 음성·30초 발화·STT 처리 지연을 포함할 한도
+  min_samples: 2          # 표본 부족은 추측하지 않고 방향 미확정으로 표시
+  cluster_window_degrees: 30
+  min_consensus: 0.7      # 같은 방향으로 모인 표본이 70% 미만이면 미확정
 
   # 방향을 계산하는 건 ReSpeaker 의 XMOS 칩이다.
   # Jetson 은 USB 로 각도 값만 읽는다.
@@ -84,12 +90,13 @@ doa:
   #   screen_angle = (front_offset - mic_angle) % 360
   front_offset: 90
 
-  # 목소리가 감지될 때만 각도를 갱신한다.
+  # 표본은 주기적으로 읽지만 목소리가 감지된 구간의 값만 화면에 사용한다.
   #    조용할 때 값은 직전 방향이 남아 있는 것이라 믿을 수 없다.
   #    이걸 끄면 화살표가 제멋대로 돈다.
   require_voice: true
 
-  # 화살표가 덜덜 떨리지 않게 부드럽게 만든다 (지수이동평균)
+  # DoaTracker.current()를 사용하는 개별 측정의 지수이동평균 값.
+  # 통합 앱은 원본 표본의 발화별 중심을 사용해 이전 화자의 관성을 남기지 않는다.
   smoothing: 0.3
 
 tts:

@@ -48,7 +48,7 @@ class VoiceActivityDetector:
         self.cfg = cfg
         self.model = _SileroVad()
 
-    def stream(self, audio_q, with_generation=False):
+    def stream(self, audio_q, with_generation=False, with_timing=False):
         """말하는 구간이 끝날 때마다 그 구간 오디오(모노 float32)를 yield 한다.
 
         상태기계 요약:
@@ -64,6 +64,7 @@ class VoiceActivityDetector:
         pad_ms = self.cfg.get("speech_pad_ms", 200)
         pad_windows = max(1, pad_ms // WINDOW_MS)
         max_windows = max(1, int(self.cfg.get("max_utterance_seconds", 30) * 1000 / WINDOW_MS))
+        timestamp_tolerance = self.cfg.get("timestamp_tolerance_ms", 10) / 1000
         generation = None
 
         recent = deque(maxlen=pad_windows)   # 발화 시작 전 창들(앞 패딩용)
@@ -71,6 +72,7 @@ class VoiceActivityDetector:
         collected = []       # 현재 발화의 창 목록
         speech_ms = 0        # 임계값을 넘은 시간(실제 말한 길이)
         silence_ms = 0       # 발화 중 이어진 침묵 길이
+        speech_ranges = []
 
         leftover = np.zeros(0, dtype=np.float32)   # 512로 안 떨어지고 남은 샘플
 
@@ -79,17 +81,23 @@ class VoiceActivityDetector:
             # None은 종료 신호(자체 테스트에서 사용). 평상시엔 들어오지 않는다.
             if block is None:
                 return
+            captured_at = None
             if isinstance(block, tuple):
-                block_generation, block = block
+                if len(block) == 3:
+                    block_generation, block, captured_at = block
+                else:
+                    block_generation, block = block
                 if block_generation != generation:
                     generation = block_generation
                     recent.clear()
                     in_speech = False
                     collected = []
                     speech_ms = silence_ms = 0
+                    speech_ranges = []
                     leftover = np.zeros(0, dtype=np.float32)
 
             samples = np.concatenate([leftover, block])
+            samples_start = None if captured_at is None else captured_at - len(samples) / SAMPLE_RATE
             n_windows = len(samples) // WINDOW_SAMPLES
 
             for i in range(n_windows):
@@ -101,9 +109,18 @@ class VoiceActivityDetector:
                         in_speech = True
                         collected = list(recent)   # 앞 패딩부터 시작
                         speech_ms = 0
+                        speech_ranges = []
                     collected.append(window)
                     speech_ms += WINDOW_MS
                     silence_ms = 0
+                    if samples_start is not None:
+                        begin = samples_start + i * WINDOW_SAMPLES / SAMPLE_RATE
+                        end = begin + WINDOW_SAMPLES / SAMPLE_RATE
+                        # 콜백의 작은 시간 흔들림을 허용하며 연속 발화 창을 한 구간으로 묶는다.
+                        if speech_ranges and begin <= speech_ranges[-1][1] + timestamp_tolerance:
+                            speech_ranges[-1] = (speech_ranges[-1][0], max(end, speech_ranges[-1][1]))
+                        else:
+                            speech_ranges.append((begin, end))
                 else:
                     recent.append(window)
                     if in_speech:
@@ -112,21 +129,29 @@ class VoiceActivityDetector:
                         if silence_ms >= min_silence_ms:
                             if speech_ms >= min_speech_ms:
                                 audio = np.concatenate(collected)
-                                yield (generation, audio) if with_generation else audio
+                                if with_timing:
+                                    yield generation, audio, list(speech_ranges)
+                                else:
+                                    yield (generation, audio) if with_generation else audio
                             # 발화 종료 → 다음 발화를 위해 초기화
                             in_speech = False
                             collected = []
                             recent.clear()
+                            speech_ranges = []
 
                 # 긴 발화도 계속 모으지 않고 나눠서 자막으로 만든다.
                 if in_speech and len(collected) >= max_windows:
                     if speech_ms >= min_speech_ms:
                         audio = np.concatenate(collected)
-                        yield (generation, audio) if with_generation else audio
+                        if with_timing:
+                            yield generation, audio, list(speech_ranges)
+                        else:
+                            yield (generation, audio) if with_generation else audio
                     in_speech = False
                     collected = []
                     speech_ms = silence_ms = 0
                     recent.clear()
+                    speech_ranges = []
 
             leftover = samples[n_windows * WINDOW_SAMPLES:]
 

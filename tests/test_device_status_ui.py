@@ -46,6 +46,11 @@ class DeviceStatusUITests(unittest.TestCase):
         self.assertEqual(ui.dial._angle, 45)
         ui.show_caption("방향 미확정", angle=None)
         self.assertIsNone(ui.dial._angle)
+        self.assertIn("미확정", ui.dial_title.text())
+        ui._toggle_theme()
+        self.assertIn("미확정", ui.dial_title.text())
+        ui.show_caption("방향 확정", angle=30)
+        self.assertNotIn("미확정", ui.dial_title.text())
         ui.window.close()
 
     def test_preparation_and_reconnect_disable_duplicate_requests(self):

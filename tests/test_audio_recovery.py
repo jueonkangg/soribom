@@ -107,10 +107,9 @@ class AudioRecoveryTests(unittest.TestCase):
         controller = DeviceController(self.config(), AudioBuffer(8), lambda *_: None)
         controller.doa_state = controller.mic_state = "ready"
         device = Mock()
-        device.current.side_effect = RuntimeError("USB disconnected")
+        device.raw_angle.side_effect = RuntimeError("USB disconnected")
         controller.doa = device
         controller.angle = 90
-        controller.request_direction(controller.audio.generation)
         controller._poll_doa(time.monotonic())
         device.close.assert_called_once()
         self.assertEqual(controller.mic_state, "ready")
@@ -147,14 +146,13 @@ class AudioRecoveryTests(unittest.TestCase):
         device = Mock()
         def slow_angle():
             time.sleep(0.3)
-            return 90
-        device.current.side_effect = slow_angle
+            return 270
+        device.raw_angle.side_effect = slow_angle
         with patch("audio.recovery.capture_process", fake_capture), patch("audio.recovery.DoaTracker", return_value=device):
             controller.start()
             try:
                 self.wait_for(lambda: controller.mic_state == controller.doa_state == "ready")
                 generation = audio.generation
-                controller.request_direction(generation)
                 time.sleep(0.4)
                 self.assertLess(time.monotonic() - controller.last_block, 0.15)
                 self.assertEqual(audio.generation, generation)
