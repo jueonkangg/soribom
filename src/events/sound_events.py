@@ -6,13 +6,24 @@
   방법: 자막(STT)이 이미 뽑아 준 텍스트에 학생 이름이 들어 있으면 알림을 낸다.
   → 새 모델·마이크 0. 자막 텍스트를 '읽기'만 한다.
 """
+import re
 
 
 class SoundEventClassifier:
     def __init__(self, cfg: dict) -> None:
         self.cfg = cfg
-        # 감지할 학생 이름(부분 일치). "함도유 학생" → '함도유', "도유야" → '도유' 로 잡힌다.
-        self.student_names = cfg.get("student_names", [])
+        self.student_names = []
+        for name in cfg.get("student_names", []):
+            name = name.strip()
+            if name and name not in self.student_names:
+                self.student_names.append(name)
+        # 한국어 호격·조사가 붙은 이름은 허용하되 긴 단어 안의 부분 일치는 피한다.
+        self.name_patterns = []
+        endings = "야|아|은|는|이|가|을|를|에게|한테|께|도|만|의|랑|와|과|씨|님|학생"
+        for name in self.student_names:
+            pattern = re.compile(r"(?<!\w)" + re.escape(name)
+                                 + r"(?=$|\W|(?:" + endings + r")(?=$|\W))")
+            self.name_patterns.append((name, pattern))
 
     def detect_in_text(self, text: str) -> list:
         """자막 텍스트에서 '이름 호명'을 찾아 알림 문구 목록을 돌려준다.
@@ -22,12 +33,16 @@ class SoundEventClassifier:
         """
         if not text or not self.student_names:
             return []
-        for name in self.student_names:
-            if name and name in text:
-                # 표시는 가장 짧은 이름으로(예: '도유')— 부르는 느낌이 자연스럽다.
-                short = min(self.student_names, key=len)
-                return [f"🔔 {short} 학생을 불렀어요"]   # 한 발화에 한 번만 알림
-        return []
+        matches = []
+        for name, pattern in self.name_patterns:
+            match = pattern.search(text)
+            if match:
+                matches.append((match.start(), name))
+        if not matches:
+            return []
+        # 한 발화에 한 번만 알린다. 먼저 나온 이름을 쓰고 같은 위치면 긴 이름을 우선한다.
+        _, name = min(matches, key=lambda item: (item[0], -len(item[1])))
+        return [f"🔔 {name} 학생을 불렀어요"]
 
     def stream(self, audio_q):
         """(라벨, 신뢰도) 를 yield 한다. — 비음성 소리(종소리·경보) 분류. 다음 단계(미구현)."""

@@ -28,7 +28,6 @@ class Transcriber:
         self.extra_terms = []                 # 학생 이름 등(main 에서 set_extra_terms 로 채움)
         self.keywords = []                    # 현재 hotwords 용어 목록(에코 가드에도 씀)
         self.prompt = None                    # hotwords 문자열
-        self._apply_vocab()
 
         # 모델 로드는 몇 초 걸린다. 시작할 때 한 번만 올려둔다.
         self.model = WhisperModel(
@@ -37,15 +36,21 @@ class Transcriber:
             compute_type=cfg["compute_type"],
             cpu_threads=cfg.get("cpu_threads", 0),
         )
+        self._apply_vocab()
 
         # 지표 측정(자막 지연): 마지막 전사에 걸린 시간(초).
         self.last_sec = 0.0
 
     def _apply_vocab(self) -> None:
         """현재 과목 + 공통 + 추가어로 hotwords 를 다시 만든다(모델 재로딩 없음)."""
-        from stt.vocab import build_hotwords
-        self.keywords = build_hotwords(self.subject, self.extra_terms)
+        from stt.vocab import build_hotwords, fit_hotwords
+        candidates = build_hotwords(self.subject, self.extra_terms)
+        # faster-whisper는 max_length의 절반-1 토큰까지만 hotwords를 사용한다.
+        # 문자열에 이름이 있어도 뒤쪽이면 잘리므로 실제 토크나이저로 제한한다.
+        limit = self.model.max_length // 2 - 1
+        self.keywords = fit_hotwords(candidates, self.model.hf_tokenizer, limit)
         self.prompt = ", ".join(self.keywords) if self.keywords else None
+        print(f"[STT] 힌트 {len(self.keywords)}/{len(candidates)}개 선택 (최대 {limit}토큰)", flush=True)
 
     def set_subject(self, subject: str) -> None:
         """과목을 바꾼다 → 다음 발화부터 그 과목 용어로 편향(UI 드롭다운에서 호출)."""

@@ -45,7 +45,8 @@ def main() -> None:
                 return
             speaker = Speaker(cfg["tts"])
             events = SoundEventClassifier(cfg["events"])
-            stt.set_extra_terms(cfg["events"].get("student_names", []))
+            from stt.vocab import build_name_hotwords
+            stt.set_extra_terms(build_name_hotwords(cfg["events"].get("student_names", [])))
             if stopped.is_set():
                 return
             ui.on_speak = speaker.say
