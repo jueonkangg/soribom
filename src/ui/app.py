@@ -19,7 +19,7 @@ from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot, Q
 from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QTextEdit, QVBoxLayout, QWidget,
+    QPushButton, QTextEdit, QPlainTextEdit, QVBoxLayout, QWidget,
 )
 
 from summary.email_sender import NoteEmailError, validate_recipient
@@ -247,6 +247,28 @@ class NoteEmailDialog(QDialog):
             super().closeEvent(event)
 
 
+class CaptionView(QPlainTextEdit):
+    """창 크기에 맞춰 배치하며 최신 자막으로 자동 스크롤한다."""
+    def __init__(self, history_blocks):
+        super().__init__()
+        self.setReadOnly(True)
+        self.setUndoRedoEnabled(False)
+        self.setMaximumBlockCount(history_blocks)
+        self.document().setDocumentMargin(0)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+    def text(self):
+        return self.toPlainText()
+
+    def setText(self, text):
+        self.setPlainText(text)
+
+    def append_caption(self, text):
+        self.appendPlainText(text)
+        bar = self.verticalScrollBar()
+        bar.setValue(bar.maximum())
+
+
 class SoribomUI(QObject):
     # 워커 스레드 → 메인 스레드로 (자막, 방향)을 안전하게 넘기는 통로.
     _caption_arrived = Signal(str, object)   # (text, angle 또는 None)
@@ -277,8 +299,8 @@ class SoribomUI(QObject):
 
         ui = cfg.get("ui", {})
         self.font_size = ui.get("font_size", 36)
-        # 대화록처럼 여러 줄 쌓기. config max_lines 가 작아도 흐름이 보이게 최소 5줄.
-        self.max_lines = max(ui.get("max_lines", 3), 5)
+        # 화면 줄 수는 창 크기와 폰트에 맡긴다. 이 제한은 메모리 보관량이다.
+        self.max_lines = max(20, int(ui.get("caption_history_blocks", 200)))
         self._lines = []                    # 화면에 남길 최근 자막 줄들
 
         # 대화가 한참 끊겼다 다시 시작되면 자막 사이에 빈 줄을 하나 넣는다.
@@ -372,10 +394,9 @@ class SoribomUI(QObject):
         # 왼쪽 열: 자막(위로 쌓임) + 소리 알림 박스(아래, 평소 숨김)
         left = QVBoxLayout()
         left.setSpacing(12)
-        self.caption_label = QLabel("마이크 연결을 확인하고 있습니다.")
+        self.caption_label = CaptionView(self.max_lines)
+        self.caption_label.setText("마이크 연결을 확인하고 있습니다.")
         self.caption_label.setStyleSheet(style["caption"])
-        self.caption_label.setWordWrap(True)
-        self.caption_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         left.addWidget(self.caption_label, stretch=1)
 
         # 소리 알림 박스(이름 호명). 입력칸을 밀지 않도록 자막 아래(본문 안)에 둔다.
@@ -486,7 +507,7 @@ class SoribomUI(QObject):
                 f"background: {PILL_BG}; color: {PILL_INK}; border: none; border-radius: 13px; "
                 f"padding: 8px 18px; font-size: {int(f * 0.42)}px; font-weight: 700;"
             ),
-            "caption": f"color: {INK}; font-size: {f}px; font-weight: 600;",
+            "caption": f"color: {INK}; font-size: {f}px; font-weight: 600; background: transparent; border: none; padding: 0;",
             "alert": (
                 f"background: {ALERT_BG}; color: {INK}; border: 1px solid {ALERT_LINE}; "
                 f"border-radius: 10px; padding: 12px 16px; "
@@ -559,9 +580,12 @@ class SoribomUI(QObject):
         """메인 스레드에서 실행: 자막과 방향을 화면에 반영한다."""
         if text:
             now = time.monotonic()
+            if not self._lines:
+                self.caption_label.clear()
             # 앞 자막과 gap_seconds 이상 떨어져 있으면 빈 줄로 묶음을 나눈다.
-            if (self._last_caption_at is not None
-                    and now - self._last_caption_at >= self.gap_seconds):
+            gap = (self._last_caption_at is not None
+                   and now - self._last_caption_at >= self.gap_seconds)
+            if gap:
                 self._lines.append("")
             self._last_caption_at = now
 
@@ -571,7 +595,7 @@ class SoribomUI(QObject):
             # 여백만 만들 뿐이라 버린다.
             while self._lines and self._lines[0] == "":
                 self._lines.pop(0)
-            self.caption_label.setText("\n".join(self._lines))
+            self.caption_label.append_caption(("\n" if gap else "") + text)
         self.dial.set_angle(angle if self._device_state[:2] == ("ready", "ready") else None)
         if self._device_state[:2] == ("ready", "ready"):
             self.dial_title.setText("화자 방향 (미확정)" if angle is None else "화자 방향")
