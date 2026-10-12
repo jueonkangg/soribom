@@ -87,6 +87,20 @@ class SpeechUITests(unittest.TestCase):
         self.assertEqual(len(self.ui.input_box.text()), 201)
         self.assertIn("200자", self.ui.speech_status.text())
 
+    def test_synthesis_failure_is_distinguished_from_output_failure(self):
+        class SpeechSynthesisError(RuntimeError):
+            pass
+        def fail(text):
+            raise SpeechSynthesisError("synthesis failed")
+        self.ui.on_speak = fail
+        self.ui.input_box.setText("다시 말할 문장")
+        self.ui._on_enter()
+        self.wait_for(lambda: not self.ui._speaking)
+        self.assertIn("음성 합성", self.ui.speech_status.text())
+        self.assertNotIn("스피커 연결", self.ui.speech_status.text())
+        self.assertEqual(self.ui.input_box.text(), "다시 말할 문장")
+        self.assertTrue(self.ui.speak_button.isEnabled())
+
     def test_save_failure_remains_visible_until_recovery(self):
         self.ui.show_note_status(False, "기록 저장 실패")
         for _ in range(2):

@@ -24,6 +24,7 @@ def main() -> None:
     from ui.app import SoribomUI
     from diagnostics import DiagnosticRecorder, resource_sample
     from stt.pipeline import UtteranceBuffer, error_category
+    from inference import InferenceGate
 
     cfg = load_config()
     diagnostics = DiagnosticRecorder(cfg.get("diagnostics", {}))
@@ -31,6 +32,7 @@ def main() -> None:
     audio = AudioBuffer(cfg["audio"].get("queue_max_blocks", 100))
     pending = UtteranceBuffer(cfg["stt"].get("queue_max_utterances", 4),
                               cfg["stt"].get("queue_max_age_seconds", 6))
+    inference_gate = InferenceGate()
     def device_status(microphone, direction, detail=""):
         diagnostics.record("device_status", microphone=microphone, direction=direction)
         ui.show_device_status(microphone, direction, detail)
@@ -54,6 +56,7 @@ def main() -> None:
     diagnostics.start()
     notes = NoteBuilder(cfg["summary"], subject=cfg["stt"].get("subject", "science"))
     stopped = threading.Event()
+    speaker = None
     ui.on_reconnect = devices.retry
     ui.on_summarize = notes.build_summary
     ui.on_note_snapshot = notes.build_email_transcript
@@ -65,6 +68,7 @@ def main() -> None:
     ui.set_models_ready(False, "자막·말하기 모델을 준비하고 있습니다.")
 
     def initialize():
+        nonlocal speaker
         try:
             from stt.transcriber import Transcriber
             from tts.speaker import Speaker
@@ -75,9 +79,28 @@ def main() -> None:
                 return
             speaker = Speaker(cfg["tts"])
             speaker.on_event = diagnostics.record
+            speaker.inference_gate = inference_gate
             events = SoundEventClassifier(cfg["events"])
             from stt.vocab import build_name_hotwords
             stt.set_extra_terms(build_name_hotwords(cfg["events"].get("student_names", [])))
+            if cfg["stt"].get("warmup", False):
+                import numpy as np
+                began = time.monotonic()
+                inference_gate.run(stt.transcribe, np.zeros(cfg["audio"].get("sample_rate", 16000), dtype=np.float32))
+                diagnostics.record("models_warmup", stage="caption", duration_s=time.monotonic() - began)
+            if cfg["tts"].get("warmup", False):
+                began = time.monotonic()
+                speaker.warmup()
+                diagnostics.record("models_warmup", stage="tts", duration_s=time.monotonic() - began)
+            if stopped.is_set():
+                speaker.close()
+                return
+            try:
+                speaker.prepare_output()
+            except Exception as exc:
+                # 출력 장치가 없어도 자막/기록은 준비한다. 말하기 때 장치를 다시 연다.
+                diagnostics.record("error", stage="tts", error_type=type(exc).__name__, operation="output")
+                ui.show_alert("스피커 출력을 준비하지 못했습니다. 출력 장치를 확인해주세요.")
             def log_hotwords(subject):
                 values = getattr(stt, "last_hotword_stats", {})
                 diagnostics.record("hotwords", subject=subject,
@@ -113,13 +136,21 @@ def main() -> None:
                     try:
                         started = time.monotonic()
                         speech_end = speech_ranges[-1][1] if speech_ranges else None
-                        text = stt.transcribe(chunk)
-                        stt_seconds = time.monotonic() - started
+                        wait = [0.0]
+                        def waited(seconds):
+                            wait[0] = seconds
+                            diagnostics.record("inference_wait", stage="caption", duration_s=seconds)
+                        text = inference_gate.run(stt.transcribe, chunk,
+                                                  on_wait=waited)
+                        stt_seconds = time.monotonic() - started - wait[0]
                     except Exception as exc:
                         diagnostics.record("error", stage="caption", operation="transcribe",
                                            error_category=error_category(exc), error_type=type(exc).__name__)
                         print(f"[자막] 전사 실패: {exc}", flush=True)
-                        ui.show_alert("자막 처리에 실패했습니다. 다음 음성을 다시 처리합니다.")
+                        if error_category(exc) == "memory":
+                            ui.show_alert("자막 처리 중 메모리 오류가 발생했습니다. 다음 음성을 다시 처리합니다.")
+                        else:
+                            ui.show_alert("자막 처리에 실패했습니다. 다음 음성을 다시 처리합니다.")
                         continue
 
                     # 표본 집계 중에도 마이크 워커가 음성을 큐에 넣을 수 있게 한다.
@@ -136,7 +167,8 @@ def main() -> None:
                                            duration_s=time.monotonic() - started,
                                            stt_duration_s=stt_seconds,
                                            audio_s=len(chunk) / cfg["audio"].get("sample_rate", 16000),
-                                           speech_age_s=started - speech_end if speech_end else None,
+                                           inference_wait_s=wait[0],
+                                           speech_age_s=started + wait[0] - speech_end if speech_end else None,
                                            dispatch_delay_s=time.monotonic() - speech_end if speech_end else None,
                                            **(counts if isinstance(counts, dict) else {}))
 
@@ -170,6 +202,8 @@ def main() -> None:
         pending.close()
         try:
             devices.stop()
+            if speaker is not None:
+                speaker.close()
             notes.stop_autosave()
             if cfg["summary"].get("enabled", True):
                 notes.save_safely()

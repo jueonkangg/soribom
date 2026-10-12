@@ -28,7 +28,7 @@ def summarize(rows):
             lines.append(f"{title} MiB: 처음 {values[0]/1024:.1f}, 마지막 {values[-1]/1024:.1f}, "
                          f"최소 {min(values)/1024:.1f}, 최대 {max(values)/1024:.1f}")
     lines.append(f"자막 처리 {len(captions)}건, 빈 결과 {sum(not row.get('has_text') for row in captions)}건")
-    for key, title in [("duration_s", "전사·게시 처리"), ("stt_duration_s", "전사만"), ("speech_age_s", "발화 끝→전사 시작"),
+    for key, title in [("duration_s", "전사·게시 처리"), ("stt_duration_s", "전사만"), ("inference_wait_s", "공유 추론 대기"), ("speech_age_s", "발화 끝→전사 시작"),
                        ("dispatch_delay_s", "발화 끝→UI 전달"), ("audio_s", "전사 오디오 길이")]:
         values = sorted(row[key] for row in captions if isinstance(row.get(key), (int, float)))
         if values:
@@ -58,6 +58,10 @@ def summarize(rows):
                          for row in rows if row["event"] == "error")
     for (operation, category), count in categories.items():
         lines.append(f"오류 위치/분류 {operation}/{category}: {count}건")
+    for stage in ["caption", "tts"]:
+        values = [row['duration_s'] for row in rows if row['event'] == 'inference_wait' and row.get('stage') == stage]
+        if values:
+            lines.append(f"추론 대기 {stage} 초: 중앙 {statistics.median(values):.3f}, 최대 {max(values):.3f}")
     lines.append(f"기록 저장 실패: {sum(row['event'] == 'note_save' and not row.get('success') for row in rows)}건")
     lines.append("RSS는 공유 GPU 전체 사용량이 아니며, UI 전달·재생 제출은 실제 화면·소리 시작 시각이 아닙니다.")
     return "\n".join(lines)

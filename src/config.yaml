@@ -45,6 +45,7 @@ vad:
   timestamp_tolerance_ms: 10  # 연속 콜백의 작은 시간 흔들림만 합친다. 32ms 무음 창은 제외.
 
 stt:
+  warmup: true             # 첫 실제 발화 전에 추론 메모리/커널을 준비, 결과는 게시하지 않음
   queue_max_utterances: 4     # VAD는 추론 중에도 계속 입력을 소비한다
   queue_max_age_seconds: 6   # 너무 오래 기다린 발화는 유실 카운터에 남기고 제외
   # small 단일 패스로 확정. 원래 2-패스(small→medium) 설계였으나 실측으로 폐기:
@@ -126,6 +127,7 @@ tts:
   # 연산 장치. cuda = Jetson GPU(sherpa-onnx GPU 빌드 필요, 이미 .venv에 설치됨).
   #   GPU 초기화 실패 시 speaker.py 가 자동으로 cpu 로 폴백한다.
   provider: "cuda"
+  warmup: true             # 초기 합성 비용을 앱 준비 단계로 옮김, 재생하지 않음
 
   # flow-matching 스텝 수. 클수록 품질↑·느림.
   #   실측(Orin Nano, 문장 2.7s):
@@ -139,6 +141,7 @@ tts:
   # 재생 장치. null = 시스템 기본(현재 블루투스 스피커).
   #   특정 출력을 고정하려면 sounddevice 장치 인덱스/이름을 적는다.
   output_device: null
+  output_latency: "high"  # 출력 여유 버퍼를 유지하며 스트림을 재사용
 
   max_chars: 200           # 긴 합성으로 자원을 한꺼번에 쓰지 않도록 문장 분할 안내
 

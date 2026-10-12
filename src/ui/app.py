@@ -812,7 +812,11 @@ class SoribomUI(QObject):
                 self.on_speak(text)
             except Exception as exc:
                 print(f"[말하기] 실패: {exc}", flush=True)
-                self._speech_finished.emit(False, "말하기에 실패했습니다. 스피커 연결과 출력 장치를 확인한 뒤 다시 눌러주세요. 입력은 남아 있습니다.")
+                if type(exc).__name__ == "SpeechSynthesisError":
+                    message = "음성 합성에 실패했습니다. 다시 시도해주세요. 입력은 남아 있습니다."
+                else:
+                    message = "말하기에 실패했습니다. 스피커 연결과 출력 장치를 확인한 뒤 다시 눌러주세요. 입력은 남아 있습니다."
+                self._speech_finished.emit(False, message)
             else:
                 self._speech_finished.emit(True, "말하기 완료")
 
