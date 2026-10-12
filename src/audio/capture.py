@@ -11,17 +11,19 @@ import queue
 import os
 import struct
 import time
+import math
 
 import numpy as np
 import sounddevice as sd
+
+# 순번·콜백 시각·ADC 시각·PortAudio 현재 시각·입력 overflow·파이프 유실 누계.
+BLOCK_HEADER = struct.Struct("=QdddQQ")
 
 
 def find_input_device(name_hint: str):
     """이름에 name_hint(예: "ReSpeaker")가 든 '입력' 장치의 번호를 찾는다.
 
-    개발 중엔 ReSpeaker가 안 꽂혀 있을 수 있다. 그럴 땐 None을 돌려주고,
-    호출한 쪽에서 기본 마이크로 넘어가게 한다. 이렇게 해야 하드웨어가
-    없어도 코드를 돌려보며 검증할 수 있다.
+    장치가 없으면 None을 반환한다. 기본 마이크로 자동 대체하지 않는다.
     """
     for index, dev in enumerate(sd.query_devices()):
         if dev["max_input_channels"] > 0 and name_hint.lower() in dev["name"].lower():
@@ -48,15 +50,15 @@ class MicArray:
         blocksize = int(self.cfg["sample_rate"] * self.cfg["block_ms"] / 1000)
 
         def callback(indata, frames, time_info, status):
-            if status:
-                # 오버플로/언더런 같은 문제는 흘리지 말고 눈에 보이게 남긴다.
-                print(f"[capture] 경고: {status}", file=sys.stderr)
             # indata: (frames, channels) float32.
             # 채널 0 하나만 쓴다. ReSpeaker에선 채널 0이 칩이 빔포밍·에코제거를
             # 끝낸 '처리된' 채널이라 음성인식에 가장 깨끗하다. 기본 마이크에서도
             # 채널 0이면 충분하다. (4채널 평균은 정렬 없이 섞여 오히려 흐려진다)
             mono = indata[:, 0].copy()   # copy: 콜백 버퍼는 재사용되므로 반드시 복사
-            self.sink.put(mono)
+            if hasattr(self.sink, "put_capture"):
+                self.sink.put_capture(mono, time_info, status)
+            else:
+                self.sink.put(mono)
 
         self.stream = sd.InputStream(
             samplerate=self.cfg["sample_rate"],
@@ -77,20 +79,41 @@ class MicArray:
                 stream.close()
 
 
-def send_audio_block(blocks, block):
+def send_audio_block(blocks, block, metadata=None):
     """작은 오디오 프레임을 원자적으로 보낸다. 파이프가 차면 기다리지 않는다.
 
     Queue의 feeder가 쓰는 도중 자식이 죽으면 수신이 멈출 수 있다.
     PIPE_BUF 이하의 단일 write는 중간 프레임을 남기지 않는다(Linux/POSIX).
     """
-    payload = struct.pack("d", time.monotonic()) + block.tobytes()
+    if metadata is None:
+        metadata = (0, time.monotonic(), 0.0, 0.0, 0, 0)
+    payload = BLOCK_HEADER.pack(*metadata) + block.tobytes()
     frame = struct.pack("!i", len(payload)) + payload
     if len(frame) > os.fpathconf(blocks.fileno(), "PC_PIPE_BUF"):
         raise ValueError("오디오 블록이 너무 큽니다. block_ms를 줄여주세요.")
     try:
-        os.write(blocks.fileno(), frame)
+        return os.write(blocks.fileno(), frame) == len(frame)
     except (BlockingIOError, BrokenPipeError):
-        pass
+        return False
+
+
+class CaptureSink:
+    def __init__(self, blocks):
+        self.blocks = blocks
+        self.sequence = 0
+        self.overflows = 0
+        self.dropped = 0
+
+    def put_capture(self, block, time_info, status):
+        self.sequence += 1
+        self.overflows += int(bool(status.input_overflow))
+        adc = float(time_info.inputBufferAdcTime)
+        current = float(time_info.currentTime)
+        if not math.isfinite(adc) or not math.isfinite(current):
+            adc = current = 0.0
+        metadata = (self.sequence, time.monotonic(), adc, current, self.overflows, self.dropped)
+        if not send_audio_block(self.blocks, block, metadata):
+            self.dropped += 1
 
 
 def capture_process(cfg, blocks, control, stop_signal):
@@ -98,15 +121,11 @@ def capture_process(cfg, blocks, control, stop_signal):
 
     GUI/TTS의 PortAudio를 재초기화하지 않는다. 모델은 이 프로세스에서 읽지 않는다.
     """
-    class Sink:
-        def put(self, block):
-            send_audio_block(blocks, block)
-
     os.set_blocking(blocks.fileno(), False)
-    mic = MicArray(cfg, Sink())
+    mic = MicArray(cfg, CaptureSink(blocks))
     try:
         blocksize = int(cfg["sample_rate"] * cfg["block_ms"] / 1000)
-        if 12 + blocksize * 4 > os.fpathconf(blocks.fileno(), "PC_PIPE_BUF"):
+        if 4 + BLOCK_HEADER.size + blocksize * 4 > os.fpathconf(blocks.fileno(), "PC_PIPE_BUF"):
             raise ValueError("오디오 블록이 너무 큽니다. block_ms를 줄여주세요.")
         mic.start()
         control.send(("opened", ""))

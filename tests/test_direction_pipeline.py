@@ -1,5 +1,6 @@
 """VAD→STT→화면·노트 통합 경로에서 다음 화자의 각도를 잘못 쓰지 않는지 확인한다."""
 import os
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -24,10 +25,13 @@ class DirectionPipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             cfg = {"audio": {}, "doa": {"enabled": True}, "vad": {}, "stt": {},
                    "tts": {}, "summary": {"enabled": False, "output_dir": directory},
-                   "events": {"enabled": False}}
+                   "events": {"enabled": False},
+                   "diagnostics": {"enabled": True, "output_dir": str(Path(directory) / "diagnostics")}}
             ui = SoribomUI(cfg)
             notes = NoteBuilder(cfg["summary"])
             ready = threading.Event()
+            stt_entered = threading.Event()
+            vad_advanced = threading.Event()
             holder = {}
             now = time.monotonic()
             ranges = [(now - 3, now - 2)]
@@ -50,8 +54,12 @@ class DirectionPipelineTests(unittest.TestCase):
                 if not with_timing:
                     raise AssertionError("main이 발화 시각을 요청하지 않았습니다")
                 yield audio.generation, np.zeros(512, dtype=np.float32), ranges
+                if stt_entered.wait(2):
+                    vad_advanced.set()
 
             def transcribe(chunk):
+                stt_entered.set()
+                self.assertTrue(vad_advanced.wait(2), "전사 중에도 VAD가 계속 실행되어야 합니다")
                 # STT가 실행되는 동안 실제로 다음 화자 방향 표본이 들어온 상황.
                 holder["devices"]._record_direction(0, now - 1, now - 0.99, 270)
                 return "첫 화자의 문장"
@@ -83,5 +91,13 @@ class DirectionPipelineTests(unittest.TestCase):
                      patch.object(ui, "run", side_effect=run_screen):
                     main.main()
                 self.assertTrue(holder["devices"].audio.closed)
+                log = Path(directory) / "diagnostics/runtime.jsonl"
+                rows = [json.loads(line) for line in log.read_text().splitlines()]
+                caption = next(row for row in rows if row["event"] == "caption")
+                self.assertTrue(caption["has_text"])
+                self.assertTrue(caption["direction_known"])
+                self.assertGreater(caption["dispatch_delay_s"], 2)
+                self.assertEqual(rows[-1]["event"], "session_end")
+                self.assertNotIn("첫 화자의 문장", log.read_text())
             finally:
                 ui.window.close()

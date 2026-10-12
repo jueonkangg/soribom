@@ -52,6 +52,8 @@ class TranscriberFilterTests(unittest.TestCase):
             self.segment("안녕하세요", no_speech=0.9),
             self.segment("수업을 시작합니다", logprob=-1.4)
         ), "")
+        self.assertEqual(self.stt.last_filter_counts["no_speech_filtered"], 1)
+        self.assertEqual(self.stt.last_filter_counts["low_confidence_filtered"], 1)
 
     def test_subject_change_during_inference_keeps_original_filter_vocabulary(self):
         def decode(*args, **kwargs):

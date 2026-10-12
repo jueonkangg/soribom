@@ -31,6 +31,7 @@ audio:
   health_timeout_seconds: 2   # 무음이 아닌 오디오 콜백 중단을 감지
   open_timeout_seconds: 5
   queue_max_blocks: 100       # 30ms × 100 = 최대 약 3초의 대기 음성
+  gap_tolerance_ms: 10        # 콜백 간격 대신 ADC/순번으로 연속성을 판정
 
 vad:
   # 말하는 구간만 골라낸다. 조용한 구간까지 인식하면
@@ -44,6 +45,8 @@ vad:
   timestamp_tolerance_ms: 10  # 연속 콜백의 작은 시간 흔들림만 합친다. 32ms 무음 창은 제외.
 
 stt:
+  queue_max_utterances: 4     # VAD는 추론 중에도 계속 입력을 소비한다
+  queue_max_age_seconds: 6   # 너무 오래 기다린 발화는 유실 카운터에 남기고 제외
   # small 단일 패스로 확정. 원래 2-패스(small→medium) 설계였으나 실측으로 폐기:
   #  (1) medium은 8GB 공유메모리에 앱과 함께 올리면 OOM(예산 총 150만원 제약),
   #  (2) 정확도도 small과 사실상 동일(둘 다 CER ~1%, 잡음에도 강함 — ReSpeaker ch0 빔포밍),
@@ -62,7 +65,9 @@ stt:
   #   등록 이름·호칭 우선 → 과목/공통 용어 번갈아 배치 → 실제 토큰 제한 내 선택.
   #   initial_prompt 가 아니라 hotwords 로 쓴다(불분명할 때 용어를 그대로 뱉는 에코 방지).
   # 아래 subject 로 시작 과목을 정하고, 실행 중에는 UI 헤더 드롭다운으로 바꾼다.
-  subject: "science"       # korean | math | science | english | economics
+  subject: "korean"        # 이번 문학 낭독 시험. korean | math | science | english | economics
+  lesson_vocab:
+    korean: "young_days"   # 젊은이의 시절 실험용. 일반 수업 복귀 시 이 항목을 제거한다.
 
   # CTranslate2를 CUDA로 소스빌드(v4.5.0)해 GPU로 돌린다(2026-07-21 cuDNN 확인 완료).
   # 순수 int8이 이 공유메모리에 맞는다. (CUDA CT2가 없는 환경이면 device: cpu / compute_type int8)
@@ -161,6 +166,13 @@ metrics:
   # 나중에 붙이려면 구조를 뜯어야 한다.
   enabled: true
   output_dir: "../experiments/data"   # 커밋 금지 (.gitignore)
+
+diagnostics:
+  enabled: true
+  output_dir: "diagnostics"  # 음성·자막 원문 없이 상태·수치만 기록, Git 제외
+  sample_seconds: 10
+  max_bytes: 2097152         # 파일당 2MiB
+  backups: 4                # 현재 파일 포함 최대 약 10MiB
 
 # ─────────────────────────────────────────────
 # 핵심 세 기능(기능 1·2·6)을 먼저 만든 뒤, 기능 3(이름 호명)·기능 5(수업 기록)를 추가로 구현했다.

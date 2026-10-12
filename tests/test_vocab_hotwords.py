@@ -72,6 +72,13 @@ class VocabHotwordsTests(unittest.TestCase):
         self.assertEqual(selected, ["도유야", "학생"])
         self.assertLessEqual(len(tokenizer.encode(" " + ", ".join(selected)).ids), 9)
 
+    def test_lesson_terms_are_opt_in_and_precede_general_vocabulary(self):
+        default = build_hotwords("korean", ["도유"])
+        lesson = build_hotwords("korean", ["도유"], lesson="young_days")
+        self.assertNotIn("조철하", default)
+        self.assertEqual(lesson[0], "도유")
+        self.assertLess(lesson.index("조철하"), lesson.index("문학"))
+
     def test_actual_whisper_tokenizer_keeps_names_within_library_budget(self):
         # GPU 모델 없이 설치된 모델의 토크나이저·라이브러리 프롬프트를 검증한다.
         from tokenizers import Tokenizer as HFTokenizer
@@ -97,6 +104,10 @@ class VocabHotwordsTests(unittest.TestCase):
                 prompt = model.get_prompt(tokenizer, [], hotwords=text)
                 self.assertEqual(prompt[1:1 + len(tokens)], tokens)
                 self.assertIn("함도유 학생", tokenizer.decode(prompt))
+        lesson_terms = load_terms("young_days")
+        terms = fit_hotwords(build_hotwords("korean", names, lesson="young_days"), hf, 223)
+        for term in lesson_terms + names:
+            self.assertIn(term, terms)
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ class SpeakerTests(unittest.TestCase):
         self.speaker.cfg = {"max_chars": 200}
         self.speaker._speech_lock = threading.RLock()
         self.speaker.output_device = None
+        self.speaker.on_event = Mock()
         self.speaker.synthesize = Mock(return_value=(np.ones(10, dtype=np.float32), 16000))
 
     def test_output_error_closes_stream_and_next_request_succeeds(self):
@@ -31,6 +32,12 @@ class SpeakerTests(unittest.TestCase):
         self.output.wait.side_effect = None
         self.speaker.say("다시 말하기")
         self.assertEqual(self.output.play.call_count, 2)
+        ends = [call for call in self.speaker.on_event.call_args_list if call.args[0] == "tts_end"]
+        self.assertFalse(ends[0].kwargs["success"])
+        self.assertEqual(ends[0].kwargs["error_type"], "RuntimeError")
+        self.assertTrue(ends[1].kwargs["success"])
+        for call in self.speaker.on_event.call_args_list:
+            self.assertNotIn("text", call.kwargs)
 
     def test_concurrent_call_is_rejected_without_more_synthesis(self):
         started = threading.Event()

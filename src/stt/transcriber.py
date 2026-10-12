@@ -44,12 +44,16 @@ class Transcriber:
     def _apply_vocab(self) -> None:
         """현재 과목 + 공통 + 추가어로 hotwords 를 다시 만든다(모델 재로딩 없음)."""
         from stt.vocab import build_hotwords, fit_hotwords
-        candidates = build_hotwords(self.subject, self.extra_terms)
+        lesson = self.cfg.get("lesson_vocab", {}).get(self.subject)
+        candidates = build_hotwords(self.subject, self.extra_terms, lesson=lesson)
         # faster-whisper는 max_length의 절반-1 토큰까지만 hotwords를 사용한다.
         # 문자열에 이름이 있어도 뒤쪽이면 잘리므로 실제 토크나이저로 제한한다.
         limit = self.model.max_length // 2 - 1
         self.keywords = fit_hotwords(candidates, self.model.hf_tokenizer, limit)
         self.prompt = ", ".join(self.keywords) if self.keywords else None
+        self.last_hotword_stats = {"hotwords_total": len(candidates), "hotwords_selected": len(self.keywords),
+                                   "hotwords_tokens": len(self.model.hf_tokenizer.encode(
+                                       " " + self.prompt, add_special_tokens=False).ids) if self.prompt else 0}
         print(f"[STT] 힌트 {len(self.keywords)}/{len(candidates)}개 선택 (최대 {limit}토큰)", flush=True)
 
     def set_subject(self, subject: str) -> None:
@@ -83,6 +87,7 @@ class Transcriber:
     def transcribe(self, chunk) -> str:
         """발화 한 덩어리를 자막 문자열로 바꾼다. (환각 방어 포함)"""
         start = time.monotonic()
+        self.last_filter_counts = {"no_speech_filtered": 0, "low_confidence_filtered": 0, "echo_filtered": 0}
         # 전사 중 과목을 바꿔도 해당 발화의 힌트와 필터 기준은 같아야 한다.
         keywords = tuple(self.keywords)
         segments, _ = self.model.transcribe(
@@ -99,14 +104,17 @@ class Transcriber:
             no_speech = getattr(seg, "no_speech_prob", 0.0)
             logprob = getattr(seg, "avg_logprob", 0.0)
             if no_speech > 0.85:   # 거의 무음
+                self.last_filter_counts["no_speech_filtered"] += 1
                 continue
             if logprob < -1.3:      # 확신이 매우 낮음
+                self.last_filter_counts["low_confidence_filtered"] += 1
                 continue
             t = seg.text.strip()
             weak = (no_speech > self.cfg.get("echo_no_speech_prob", 0.5)
                     or logprob < self.cfg.get("echo_avg_logprob", -0.8))
             # 나열 하나 때문에 같은 발화의 정상 설명까지 버리지 않는다.
             if weak and self._is_prompt_echo(t, keywords):
+                self.last_filter_counts["echo_filtered"] += 1
                 continue
             if t:
                 parts.append(t)

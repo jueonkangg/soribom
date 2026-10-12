@@ -34,6 +34,7 @@ class Speaker:
         self.language = cfg.get("language", "ko")
         self.output_device = cfg.get("output_device")   # None = 시스템 기본
         self._speech_lock = threading.RLock()
+        self.on_event = lambda *args, **kwargs: None
 
         # 모델 경로는 repo 루트 기준으로 푼다(어디서 실행하든 찾도록).
         #   src/tts/speaker.py → parents[2] = repo 루트
@@ -111,11 +112,17 @@ class Speaker:
         if not self._speech_lock.acquire(blocking=False):
             raise RuntimeError("이미 말하는 중입니다.")
         try:
+            started = time.monotonic()
+            event = getattr(self, "on_event", lambda *args, **kwargs: None)
+            event("tts_start")
             samples, sr = self.synthesize(text)
+            event("tts_synthesis", duration_s=time.monotonic() - started,
+                  audio_s=len(samples) / sr)
             if not len(samples):
                 raise RuntimeError("합성된 음성이 없습니다.")
             try:
                 sd.play(samples, samplerate=sr, device=self.output_device)
+                event("tts_playback", duration_s=time.monotonic() - started)
                 # 재생 중 장치 오류는 예외로 받아 입력 보존·재시도로 연결한다.
                 status = sd.wait()
                 if status:
@@ -124,5 +131,10 @@ class Speaker:
                 # 실패한 출력 스트림을 남겨 다음 재시도에 섞지 않는다.
                 sd.stop()
                 raise
+            event("tts_end", success=True, duration_s=time.monotonic() - started)
+        except Exception as exc:
+            event("tts_end", success=False, duration_s=time.monotonic() - started,
+                  error_type=type(exc).__name__)
+            raise
         finally:
             self._speech_lock.release()

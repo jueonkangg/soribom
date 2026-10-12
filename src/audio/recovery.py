@@ -1,7 +1,6 @@
 """마이크와 방향 워커를 하나씩 유지한다. 연결 재시도에서 모델은 건드리지 않는다."""
 import multiprocessing
 import queue
-import struct
 import threading
 import time
 from collections import deque
@@ -9,7 +8,7 @@ import math
 
 import numpy as np
 
-from audio.capture import capture_process
+from audio.capture import capture_process, BLOCK_HEADER
 from audio.doa import DoaTracker, _robust_center
 
 
@@ -20,12 +19,19 @@ class AudioBuffer:
         self.generation = 0
         self.closed = False
         self.lock = threading.RLock()
+        self.dropped_blocks = 0
+        self.resets = 0
+        self.overflows = 0
+        self.stale_results = 0
 
     def _reset(self):
         self.generation += 1
+        self.resets += 1
         while True:
             try:
-                self.queue.get_nowait()
+                item = self.queue.get_nowait()
+                if item is not None and len(item[1]):
+                    self.dropped_blocks += 1
             except queue.Empty:
                 break
 
@@ -40,6 +46,7 @@ class AudioBuffer:
             if self.closed:
                 return
             if self.queue.full():
+                self.overflows += 1
                 # 오래된 자막을 뒤늦게 내보내는 대신 현재 음성부터 다시 처리한다.
                 self._reset()
             item = ((self.generation, block) if captured_at is None
@@ -49,9 +56,14 @@ class AudioBuffer:
     def get(self):
         return self.queue.get()
 
+    def boundary(self):
+        # 짧은 실제 유실은 앞의 유효한 발화를 보존한다. USB 재연결의 reset과 구분한다.
+        self.put(np.zeros(0, dtype=np.float32))
+
     def publish(self, generation, callback):
         with self.lock:
             if self.closed or generation != self.generation:
+                self.stale_results += 1
                 return False
             callback()
             return True
@@ -62,12 +74,29 @@ class AudioBuffer:
             self.closed = True
             self.queue.put_nowait(None)
 
+    def stats(self):
+        with self.lock:
+            return {"generation": self.generation, "queue_depth": self.queue.qsize(),
+                    "queue_capacity": self.queue.maxsize, "queue_dropped_blocks": self.dropped_blocks,
+                    "queue_overflows": self.overflows, "resets": self.resets, "stale_results": self.stale_results}
+
 
 class DeviceController:
     def __init__(self, cfg, audio, on_status):
         self.cfg = cfg
         self.audio = audio
         self.on_status = on_status
+        self.on_event = lambda *args, **kwargs: None
+        self.mic_starts = 0
+        self.stale_input_blocks = 0
+        self.audio_gaps = 0
+        self.callback_jitters = 0
+        self.capture_overflows = 0
+        self.pipe_dropped_blocks = 0
+        self.last_sequence = None
+        self.last_adc = None
+        self.last_capture_overflows = 0
+        self.last_pipe_dropped = 0
         self.retry_seconds = cfg["audio"].get("retry_seconds", 5)
         self.health_seconds = cfg["audio"].get("health_timeout_seconds", 2)
         self.open_seconds = cfg["audio"].get("open_timeout_seconds", 5)
@@ -99,6 +128,41 @@ class DeviceController:
         self.last_block = None
         self.opened_at = 0
 
+    def _accept_block(self, payload, now):
+        sequence, callback_at, adc, current, overflows, dropped = BLOCK_HEADER.unpack_from(payload)
+        block = np.frombuffer(payload, dtype=np.float32, offset=BLOCK_HEADER.size).copy()
+        if now - callback_at > self.health_seconds:
+            self.stale_input_blocks += 1
+            return
+        duration = len(block) / self.cfg["audio"].get("sample_rate", 16000)
+        missing = max(0, sequence - self.last_sequence - 1) if self.last_sequence is not None else 0
+        overflow_delta = max(0, overflows - self.last_capture_overflows)
+        drop_delta = max(0, dropped - self.last_pipe_dropped)
+        self.capture_overflows += overflow_delta
+        self.pipe_dropped_blocks += drop_delta
+        adc_valid = adc > 0 and current >= adc and current - adc < self.health_seconds
+        adc_gap = adc - self.last_adc - duration if adc_valid and self.last_adc is not None else 0
+        tolerance = self.cfg["audio"].get("gap_tolerance_ms", 10) / 1000
+        callback_gap = callback_at - self.last_block if self.last_block is not None else duration
+        if missing or overflow_delta or abs(adc_gap) > tolerance:
+            self.audio_gaps += 1
+            self.on_event("audio_gap", duration_s=max(0, adc_gap), missing_blocks=missing,
+                          capture_overflows=overflow_delta, pipe_dropped_blocks=drop_delta)
+            self.audio.boundary()
+        elif callback_gap > 3 * duration:
+            self.callback_jitters += 1
+            self.on_event("callback_jitter", duration_s=callback_gap)
+        # ADC는 별도 시계다. 콜백에서 제공된 현재 시각과의 차이로 monotonic에 매핑한다.
+        captured_end = callback_at - (current - adc) + duration if adc_valid else callback_at
+        self.last_block = callback_at
+        self.last_sequence = sequence if sequence else None
+        self.last_adc = adc if adc_valid else None
+        self.last_capture_overflows = overflows
+        self.last_pipe_dropped = dropped
+        self.audio.put(block, captured_at=captured_end)
+        self.mic_state = "ready"
+        self.detail = ""
+
     def start(self):
         with self.lock:
             if self.stop_event.is_set() or self.thread is not None:
@@ -115,6 +179,7 @@ class DeviceController:
             self.retry_pending = True
         self.wake.set()
         self.direction_wake.set()
+        self.on_event("retry")
 
     def current_angle(self):
         with self.lock:
@@ -174,6 +239,8 @@ class DeviceController:
         )
         try:
             self.process.start()
+            self.mic_starts += 1
+            self.on_event("mic_start", capture_pid=self.process.pid)
         finally:
             child_control.close()
             child_blocks.close()
@@ -210,8 +277,13 @@ class DeviceController:
             self.child_stop.close()
             self.child_stop = None
         self.last_block = None
+        self.last_sequence = None
+        self.last_adc = None
+        self.last_capture_overflows = 0
+        self.last_pipe_dropped = 0
 
-    def _mic_failed(self, message):
+    def _mic_failed(self, message, reason="driver_error"):
+        self.on_event("mic_failure", failure_reason=reason)
         self.mic_state = "waiting"
         self.detail = message
         self.audio.reset()
@@ -233,30 +305,21 @@ class DeviceController:
             except EOFError:
                 kind, message = "error", "녹음 프로세스가 종료되었습니다."
             if kind == "error":
-                self._mic_failed(message)
+                self._mic_failed(message, reason="capture_error")
                 return
         if not self.process.is_alive():
-            self._mic_failed("녹음 프로세스가 종료되었습니다.")
+            self._mic_failed("녹음 프로세스가 종료되었습니다.", reason="process_exit")
             return
         # 한 번에 큐 용량만큼만 읽어 방향 확인/종료 요청을 굶기지 않는다.
         for _ in range(self.cfg["audio"].get("queue_max_blocks", 100)):
             if not self.blocks.poll():
                 break
             payload = self.blocks.recv_bytes()
-            captured_at = struct.unpack("d", payload[:8])[0]
-            block = np.frombuffer(payload, dtype=np.float32, offset=8).copy()
-            if now - captured_at > self.health_seconds:
-                continue
-            if self.last_block is not None and captured_at - self.last_block > 3 * self.cfg["audio"]["block_ms"] / 1000:
-                self.audio.reset()
-            self.last_block = captured_at
-            self.audio.put(block, captured_at=captured_at)
-            self.mic_state = "ready"
-            self.detail = ""
+            self._accept_block(payload, now)
         deadline = (self.opened_at + self.open_seconds if self.last_block is None
                     else self.last_block + self.health_seconds)
         if now > deadline:
-            self._mic_failed("마이크에서 오디오가 도착하지 않습니다.")
+            self._mic_failed("마이크에서 오디오가 도착하지 않습니다.", reason="input_timeout")
 
     def _close_doa(self):
         with self.lock:
@@ -283,6 +346,7 @@ class DeviceController:
                 self.doa_state = "ready"
             except Exception as exc:
                 print(f"[방향] 연결 실패: {exc}", flush=True)
+                self.on_event("error", stage="direction", error_type=type(exc).__name__)
                 self._close_doa()
                 self.next_doa = time.monotonic() + self.retry_seconds
         if self.doa is not None and now >= self.next_direction_sample:
@@ -296,6 +360,7 @@ class DeviceController:
                 self.next_direction_sample = finished + self.sample_seconds
             except Exception as exc:
                 print(f"[방향] 읽기 실패: {exc}", flush=True)
+                self.on_event("error", stage="direction", error_type=type(exc).__name__)
                 self._close_doa()
                 self.next_doa = time.monotonic() + self.retry_seconds
 
@@ -314,6 +379,7 @@ class DeviceController:
                         self._poll_mic(now)
                 except Exception as exc:
                     print(f"[마이크] 연결 실패: {exc}", flush=True)
+                    self.on_event("error", stage="mic", error_type=type(exc).__name__)
                     try:
                         self._mic_failed("연결에 실패했습니다. 케이블과 USB 권한을 확인해주세요.")
                     except Exception as cleanup_error:

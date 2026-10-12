@@ -52,11 +52,13 @@ def build_name_hotwords(names) -> list:
     return list(dict.fromkeys(terms))
 
 
-def build_hotwords(subject: str, extra=()) -> list:
-    """이름을 먼저 넣고 과목·공통 용어를 섞어 한쪽만 길이 제한에 잘리지 않게 한다."""
+def build_hotwords(subject: str, extra=(), lesson=None) -> list:
+    """이름·선택한 수업 용어 우선, 나머지 과목·공통 용어는 번갈아 배치한다."""
     subject_terms = load_terms(subject)
     common_terms = load_terms("common")
     terms = list(extra)
+    if lesson:
+        terms.extend(load_terms(lesson))
     for index in range(max(len(subject_terms), len(common_terms))):
         if index < len(subject_terms):
             terms.append(subject_terms[index])

@@ -96,6 +96,22 @@ class VoiceActivityDetector:
                     speech_ranges = []
                     leftover = np.zeros(0, dtype=np.float32)
 
+            if len(block) == 0:
+                # 유실 앞의 유효한 발화를 먼저 내보낸다. 연결 세대가 바뀌면 위에서 폐기된다.
+                if in_speech and speech_ms >= min_speech_ms:
+                    audio = np.concatenate(collected)
+                    if with_timing:
+                        yield generation, audio, list(speech_ranges)
+                    else:
+                        yield (generation, audio) if with_generation else audio
+                recent.clear()
+                in_speech = False
+                collected = []
+                speech_ms = silence_ms = 0
+                speech_ranges = []
+                leftover = np.zeros(0, dtype=np.float32)
+                continue
+
             samples = np.concatenate([leftover, block])
             samples_start = None if captured_at is None else captured_at - len(samples) / SAMPLE_RATE
             n_windows = len(samples) // WINDOW_SAMPLES
