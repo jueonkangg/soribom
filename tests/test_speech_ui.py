@@ -47,7 +47,7 @@ class SpeechUITests(unittest.TestCase):
                 self.ui.speak_button.click()
             self.ui.set_models_ready(True)
             self.assertFalse(self.ui.speak_button.isEnabled())
-            self.assertFalse(self.ui.input_box.isEnabled())
+            self.assertTrue(self.ui.input_box.isEnabled())
             self.ui.show_caption("말하기 중에도 새 자막")
             self.assertIn("새 자막", self.ui.caption_label.text())
             self.assertEqual(calls, ["질문이 있습니다"])
@@ -57,6 +57,31 @@ class SpeechUITests(unittest.TestCase):
             self.wait_for(lambda: not self.ui._speaking)
         self.assertEqual(self.ui.input_box.text(), "")
         self.assertTrue(self.ui.speak_button.isEnabled())
+
+    def test_editing_next_sentence_during_playback_preserves_it_and_allows_next_enter(self):
+        release = threading.Event()
+        entered = threading.Event()
+        def speak(text):
+            entered.set()
+            release.wait(3)
+        self.ui.on_speak = speak
+        self.ui.input_box.setText("첫 문장")
+        self.ui._on_enter()
+        try:
+            self.assertTrue(entered.wait(1))
+            self.assertTrue(self.ui.input_box.isEnabled())
+            self.ui.input_box.setText("다음 문장")
+            self.ui.show_caption("음성 인식도 계속 진행")
+            self.ui._on_enter()
+        finally:
+            release.set()
+            self.wait_for(lambda: not self.ui._speaking)
+        self.assertEqual(self.ui.input_box.text(), "다음 문장")
+        calls = []
+        self.ui.on_speak = calls.append
+        self.ui._on_enter()
+        self.wait_for(lambda: not self.ui._speaking)
+        self.assertEqual(calls, ["다음 문장"])
 
     def test_output_failure_keeps_input_and_retry_succeeds_in_both_themes(self):
         def fail(text):

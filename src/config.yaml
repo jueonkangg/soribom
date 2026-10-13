@@ -48,6 +48,7 @@ stt:
   warmup: true             # 첫 실제 발화 전에 추론 메모리/커널을 준비, 결과는 게시하지 않음
   queue_max_utterances: 4     # VAD는 추론 중에도 계속 입력을 소비한다
   queue_max_age_seconds: 6   # 너무 오래 기다린 발화는 유실 카운터에 남기고 제외
+  speech_queue_max_utterances: 32  # 말하기 중/이후 대기 발화는 시간 제한 없이 순서대로 처리, 개수 제한 유지
   # small 단일 패스로 확정. 원래 2-패스(small→medium) 설계였으나 실측으로 폐기:
   #  (1) medium은 8GB 공유메모리에 앱과 함께 올리면 OOM(예산 총 150만원 제약),
   #  (2) 정확도도 small과 사실상 동일(둘 다 CER ~1%, 잡음에도 강함 — ReSpeaker ch0 빔포밍),
@@ -141,7 +142,11 @@ tts:
   # 재생 장치. null = 시스템 기본(현재 블루투스 스피커).
   #   특정 출력을 고정하려면 sounddevice 장치 인덱스/이름을 적는다.
   output_device: null
+  output_backend: "pulse"  # 재연결 후 오래된 PortAudio 스트림을 재사용하지 않는다
+  output_sink: "bluez_output.C8_7B_23_EF_4E_9A.a2dp-sink"
+  bluetooth_address: "C8:7B:23:EF:4E:9A"  # 출력이 없으면 이 스피커만 제한 시간 내 재연결
   output_latency: "high"  # 출력 여유 버퍼를 유지하며 스트림을 재사용
+  playback_timeout_margin_seconds: 3  # 음성 길이+여유 시간이 지나도 출력이 끝나지 않으면 실패 안내
 
   max_chars: 200           # 긴 합성으로 자원을 한꺼번에 쓰지 않도록 문장 분할 안내
 

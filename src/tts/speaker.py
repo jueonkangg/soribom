@@ -44,10 +44,19 @@ class Speaker:
         self._speech_lock = threading.RLock()
         self.on_event = lambda *args, **kwargs: None
         self.inference_gate = None
+        self.on_speech_pause = lambda paused: None
         self._output_lock = threading.Lock()
         self._output_stream = None
         self._closed = False
+        self._playback_done = threading.Event()
+        self._playback_samples = None
+        self._playback_offset = 0
+        self._playback_error = False
         self.last_inference_wait = 0.0
+        self.pulse_output = None
+        if cfg.get("output_backend", "sounddevice") == "pulse":
+            from tts.pulse_output import PulseOutput
+            self.pulse_output = PulseOutput(cfg)
 
         # 모델 경로는 repo 루트 기준으로 푼다(어디서 실행하든 찾도록).
         #   src/tts/speaker.py → parents[2] = repo 루트
@@ -106,6 +115,9 @@ class Speaker:
         self.synthesize("안녕하세요.")
 
     def prepare_output(self, sample_rate=None):
+        if getattr(self, "pulse_output", None) is not None:
+            self.pulse_output.prepare()
+            return
         # 출력 스트림을 재사용해 매 요청마다 장치를 여는 지연을 피한다. 준비만 하고 재생하지 않는다.
         with self._output_lock:
             if self._closed:
@@ -113,8 +125,25 @@ class Speaker:
             if self._output_stream is None:
                 self._output_stream = sd.OutputStream(samplerate=sample_rate or self.sample_rate,
                     channels=1, dtype="float32", device=self.output_device,
-                    latency=self.cfg.get("output_latency", "high"))
+                    latency=self.cfg.get("output_latency", "high"),
+                    callback=self._fill_output, finished_callback=self._playback_done.set)
             return self._output_stream
+
+    def _fill_output(self, outdata, frames, timing, status):
+        # 합성된 음성을 짧게 복사한다. 마지막 출력의 재생 완료는 PortAudio가 알려준다.
+        outdata.fill(0)
+        if status.output_underflow:
+            self._playback_error = True
+        try:
+            remaining = len(self._playback_samples) - self._playback_offset
+            count = min(frames, remaining)
+            outdata[:count, 0] = self._playback_samples[self._playback_offset:self._playback_offset + count]
+            self._playback_offset += count
+        except Exception:
+            self._playback_error = True
+            raise sd.CallbackAbort
+        if self._playback_offset >= len(self._playback_samples):
+            raise sd.CallbackStop
 
     def _close_output(self):
         with self._output_lock:
@@ -129,9 +158,12 @@ class Speaker:
                                   error_type=type(exc).__name__)
 
     def close(self):
+        if getattr(self, "pulse_output", None) is not None:
+            self.pulse_output.close()
         with self._output_lock:
             self._closed = True
         self._close_output()
+        self._playback_done.set()
 
     def _synthesize(self, text: str):
         """텍스트 → (float32 mono 파형, 샘플레이트). 재생과 분리해 테스트를 쉽게 한다."""
@@ -169,27 +201,22 @@ class Speaker:
             started = time.monotonic()
             event = getattr(self, "on_event", lambda *args, **kwargs: None)
             event("tts_start")
-            try:
-                samples, sr = self.synthesize(text)
-            except Exception as exc:
-                raise SpeechSynthesisError("음성 합성에 실패했습니다.") from exc
-            event("tts_synthesis", duration_s=time.monotonic() - started - getattr(self, "last_inference_wait", 0),
-                  audio_s=len(samples) / sr)
-            if not len(samples):
-                raise RuntimeError("합성된 음성이 없습니다.")
-            try:
-                stream = self.prepare_output(sr)
-                stream.start()
-                event("tts_playback", duration_s=time.monotonic() - started)
-                # 재생 중 장치 오류는 예외로 받아 입력 보존·재시도로 연결한다.
-                underflowed = stream.write(samples)
-                stream.stop()  # 남은 출력까지 재생한 뒤 반환
-                if underflowed:
-                    raise RuntimeError("음성 출력이 중단되었습니다.")
-            except Exception as exc:
-                # 실패한 출력 스트림을 남겨 다음 재시도에 섞지 않는다.
-                self._close_output()
-                raise SpeechOutputError("음성 출력이 중단되었습니다.") from exc
+            if getattr(self, "pulse_output", None) is not None:
+                try:
+                    # 연결 확인은 추론 게이트 밖에서 해 자막 처리를 막지 않는다.
+                    self.pulse_output.prepare(reconnect=True)
+                except Exception as exc:
+                    event("error", stage="tts", operation="output", error_type=type(exc).__name__)
+                    raise SpeechOutputError("스피커 연결을 확인해주세요.") from exc
+            self.last_inference_wait = 0.0
+            if self.inference_gate is None:
+                self._say_audio(text, started, event)
+            else:
+                def waited(seconds):
+                    self.last_inference_wait = seconds
+                    event("inference_wait", stage="tts", duration_s=seconds)
+                self.inference_gate.run(self._say_audio, text, started, event,
+                                        speech=True, on_wait=waited)
             event("tts_end", success=True, duration_s=time.monotonic() - started)
         except Exception as exc:
             event("tts_end", success=False, duration_s=time.monotonic() - started,
@@ -197,3 +224,48 @@ class Speaker:
             raise
         finally:
             self._speech_lock.release()
+
+    def _say_audio(self, text, started, event):
+        # 게이트를 합성부터 재생 완료까지 유지하되, 마이크/VAD는 계속 수음한다.
+        self.on_speech_pause(True)
+        try:
+            try:
+                samples, sr = self._synthesize(text)
+            except Exception as exc:
+                raise SpeechSynthesisError("음성 합성에 실패했습니다.") from exc
+            event("tts_synthesis", duration_s=time.monotonic() - started - getattr(self, "last_inference_wait", 0),
+                  audio_s=len(samples) / sr)
+            if not len(samples):
+                raise RuntimeError("합성된 음성이 없습니다.")
+            if getattr(self, "pulse_output", None) is not None:
+                try:
+                    self.pulse_output.play(samples, sr, lambda: event(
+                        "tts_playback", duration_s=time.monotonic() - started))
+                except Exception as exc:
+                    event("error", stage="tts", operation="output", error_type=type(exc).__name__)
+                    raise SpeechOutputError("스피커 재생에 실패했습니다.") from exc
+                return
+            try:
+                stream = self.prepare_output(sr)
+                self._playback_done.clear()
+                self._playback_samples = samples
+                self._playback_offset = 0
+                self._playback_error = False
+                stream.start()
+                event("tts_playback", duration_s=time.monotonic() - started)
+                # 장치 응답이 사라져도 입력/말하기를 영구 잠그지 않는다.
+                margin = max(0.1, float(self.cfg.get("playback_timeout_margin_seconds", 3)))
+                if not self._playback_done.wait(len(samples) / sr + margin):
+                    event("error", stage="tts", operation="output", error_type="TimeoutError")
+                    raise TimeoutError("스피커 재생 완료를 확인하지 못했습니다.")
+                if self._closed or self._playback_error or self._playback_offset < len(samples):
+                    raise RuntimeError("음성 출력이 중단되었습니다.")
+                # CallbackStop 후 비활성 스트림을 다음 요청에서 다시 시작할 수 있게 한다.
+                stream.abort()
+            except Exception as exc:
+                # 실패한 출력 스트림을 남겨 다음 재시도에 섞지 않는다.
+                self._close_output()
+                raise SpeechOutputError("음성 출력이 중단되었습니다.") from exc
+        finally:
+            self.on_speech_pause(False)
+            self._playback_samples = None

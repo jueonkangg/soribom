@@ -14,9 +14,10 @@ Qt(PySide6) 주의: GUI는 '메인 스레드'에서만 바꿀 수 있다. 자막
 import math
 import threading
 import time
+from pathlib import Path
 
 from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot, QEvent
-from PySide6.QtGui import QColor, QKeySequence, QPainter, QPen, QShortcut
+from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QTextEdit, QPlainTextEdit, QVBoxLayout, QWidget,
@@ -290,6 +291,7 @@ class SoribomUI(QObject):
         self.on_send_note = self._email_not_connected
         self._email_dialog = None
         self.on_reconnect = lambda: None
+        self.on_retry_models = lambda: None
         self._device_state = ("preparing", "waiting", "")
         self._models_ready = True
         self._speaking = False
@@ -317,6 +319,8 @@ class SoribomUI(QObject):
 
         # QApplication 은 프로그램당 하나. 이미 있으면 그걸 쓰고 없으면 만든다.
         self.app = QApplication.instance() or QApplication([])
+        icon_path = Path(__file__).resolve().parents[2] / "assets" / "soribom-logo.png"
+        self.app.setWindowIcon(QIcon(str(icon_path)))
 
         self.window = QWidget()
         self.window.installEventFilter(self)
@@ -619,7 +623,7 @@ class SoribomUI(QObject):
         mic, doa, detail = self._device_state
         if mic == "preparing":
             text = "◌ " + (detail or "소리봄 모델 준비 중입니다.")
-        elif mic == "failed":
+        elif mic in ("failed", "model_failed"):
             text = "⚠ " + detail
         elif mic == "connecting":
             text = "◌ 마이크 연결 확인 중입니다. 잠시 기다려주세요."
@@ -634,7 +638,7 @@ class SoribomUI(QObject):
             text = "● 마이크 연결됨    " + direction
         self.connection_label.setText(text)
         self.connection_label.setToolTip(detail)
-        warning = mic in ("waiting", "failed") or (mic == "ready" and doa == "waiting")
+        warning = mic in ("waiting", "failed", "model_failed") or (mic == "ready" and doa == "waiting")
         bg = ALERT_BG if warning else BOX_BG
         border = ALERT_LINE if warning else LINE
         self.connection_bar.setStyleSheet(f"background: {bg}; border-bottom: 1px solid {border};")
@@ -650,11 +654,17 @@ class SoribomUI(QObject):
         self.reconnect_button.setVisible(not healthy)
         self.reconnect_button.setEnabled(not connecting)
         self.reconnect_button.setText("연결 확인 중…" if connecting and mic != "failed" else "다시 연결")
+        if mic == "model_failed":
+            self.reconnect_button.setText("모델 준비 재시도")
         self.dial_title.setText(("화자 방향 (미확정)" if self._lines and self.dial._angle is None
                                  else "화자 방향") if mic == doa == "ready"
                                 else "방향 표시 꺼짐" if doa == "disabled" else "방향 확인 불가")
 
     def _reconnect(self):
+        if self._device_state[0] == "model_failed":
+            self._update_devices("preparing", "waiting", "모델 준비를 다시 시도합니다.")
+            self.on_retry_models()
+            return
         self.reconnect_button.setEnabled(False)
         self.reconnect_button.setText("연결 확인 중…")
         self.on_reconnect()
@@ -666,7 +676,7 @@ class SoribomUI(QObject):
     def _update_models(self, ready, message):
         self._models_ready = ready
         self.speak_button.setEnabled(ready and not self._speaking)
-        self.input_box.setEnabled(ready and not self._speaking)
+        self.input_box.setEnabled(ready)
         self.subject_box.setEnabled(ready)
         if not ready:
             self._update_devices("preparing", "waiting", message)
@@ -802,9 +812,9 @@ class SoribomUI(QObject):
         self._speech_text = text
         self._speech_failed = False
         self.speak_button.setEnabled(False)
-        self.input_box.setEnabled(False)
+        self.input_box.setEnabled(True)
         self.speak_button.setText("말하는 중…")
-        self.speech_status.setText("음성을 준비하고 재생하고 있습니다.")
+        self.speech_status.setText("말하기가 끝나면 보관한 음성을 인식합니다. 다음 문장을 입력할 수 있습니다.")
         self._render_operation_status()
 
         def speak():

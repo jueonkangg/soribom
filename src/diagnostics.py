@@ -28,7 +28,8 @@ CHOICES = {"microphone": {"ready", "waiting", "connecting", "failed"},
            "provider": {"cuda", "cpu"}}
 CHOICES["failure_reason"] = {"capture_error", "process_exit", "input_timeout", "driver_error"}
 CHOICES["subject"] = {"korean", "math", "science", "english", "economics"}
-CHOICES["operation"] = {"transcribe", "vad", "publish", "output"}
+CHOICES["operation"] = {"transcribe", "vad", "publish", "output",
+                        "vad_load", "stt_load", "tts_load", "stt_warmup", "tts_warmup", "devices_start"}
 CHOICES["error_category"] = {"memory", "cuda", "input", "unknown"}
 
 

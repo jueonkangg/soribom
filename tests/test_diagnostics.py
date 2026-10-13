@@ -61,6 +61,18 @@ class DiagnosticsTests(unittest.TestCase):
             for line in path.read_text().splitlines():
                 json.loads(line)
 
+    def test_initialization_failure_records_stage_without_exception_text(self):
+        recorder = self.recorder()
+        recorder.start()
+        recorder.record("error", stage="initialize", operation="stt_warmup",
+                        error_category="memory", error_type="RuntimeError",
+                        exception="비공개 경로와 오류 원문")
+        recorder.close()
+        failure = next(row for row in self.read(recorder) if row["event"] == "error")
+        self.assertEqual(failure["operation"], "stt_warmup")
+        self.assertEqual(failure["error_category"], "memory")
+        self.assertNotIn("비공개", recorder.path.read_text())
+
     def test_full_queue_drops_diagnostics_without_blocking(self):
         recorder = self.recorder()
         for _ in range(1000):

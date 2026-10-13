@@ -31,7 +31,8 @@ def main() -> None:
     ui = SoribomUI(cfg)
     audio = AudioBuffer(cfg["audio"].get("queue_max_blocks", 100))
     pending = UtteranceBuffer(cfg["stt"].get("queue_max_utterances", 4),
-                              cfg["stt"].get("queue_max_age_seconds", 6))
+                              cfg["stt"].get("queue_max_age_seconds", 6),
+                              cfg["stt"].get("speech_queue_max_utterances", 32))
     inference_gate = InferenceGate()
     def device_status(microphone, direction, detail=""):
         diagnostics.record("device_status", microphone=microphone, direction=direction)
@@ -57,6 +58,10 @@ def main() -> None:
     notes = NoteBuilder(cfg["summary"], subject=cfg["stt"].get("subject", "science"))
     stopped = threading.Event()
     speaker = None
+    initializer = None
+    initialization_lock = threading.Lock()
+    initialization_running = False
+    models_initialized = False
     ui.on_reconnect = devices.retry
     ui.on_summarize = notes.build_summary
     ui.on_note_snapshot = notes.build_email_transcript
@@ -68,27 +73,37 @@ def main() -> None:
     ui.set_models_ready(False, "자막·말하기 모델을 준비하고 있습니다.")
 
     def initialize():
-        nonlocal speaker
+        nonlocal speaker, initialization_running, models_initialized
+        operation = "vad_load"
+        failure_detail = None
         try:
-            from stt.transcriber import Transcriber
-            from tts.speaker import Speaker
             vad = VoiceActivityDetector(cfg["vad"])
+            operation = "stt_load"
+            from stt.transcriber import Transcriber
             stt = Transcriber(cfg["stt"])
             if stopped.is_set():
                 diagnostics.record("models_cancelled")
                 return
-            speaker = Speaker(cfg["tts"])
-            speaker.on_event = diagnostics.record
-            speaker.inference_gate = inference_gate
             events = SoundEventClassifier(cfg["events"])
             from stt.vocab import build_name_hotwords
             stt.set_extra_terms(build_name_hotwords(cfg["events"].get("student_names", [])))
             if cfg["stt"].get("warmup", False):
+                operation = "stt_warmup"
                 import numpy as np
                 began = time.monotonic()
                 inference_gate.run(stt.transcribe, np.zeros(cfg["audio"].get("sample_rate", 16000), dtype=np.float32))
                 diagnostics.record("models_warmup", stage="caption", duration_s=time.monotonic() - began)
+            # STT의 첫 추론 메모리를 먼저 확보한 뒤 TTS를 올린다.
+            if stopped.is_set():
+                return
+            operation = "tts_load"
+            from tts.speaker import Speaker
+            speaker = Speaker(cfg["tts"])
+            speaker.on_event = diagnostics.record
+            speaker.inference_gate = inference_gate
+            speaker.on_speech_pause = pending.hold_for_speech
             if cfg["tts"].get("warmup", False):
+                operation = "tts_warmup"
                 began = time.monotonic()
                 speaker.warmup()
                 diagnostics.record("models_warmup", stage="tts", duration_s=time.monotonic() - began)
@@ -116,9 +131,6 @@ def main() -> None:
                 notes.set_subject(subject)
                 log_hotwords(subject)
             ui.on_subject_change = change_subject
-            ui.set_models_ready(True)
-            diagnostics.record("models_ready", provider=getattr(speaker, "provider", None))
-
             def vad_lane():
                 for generation, chunk, speech_ranges in vad.stream(audio, with_timing=True):
                     if stopped.is_set():
@@ -182,17 +194,54 @@ def main() -> None:
                     diagnostics.record("error", stage="caption", operation=operation,
                                        error_category=error_category(exc), error_type=type(exc).__name__)
                     ui.show_alert("자막 처리가 중단됐습니다. 앱을 다시 실행해주세요.")
+            operation = "devices_start"
+            devices.start()
             threading.Thread(target=guarded_lane, args=(vad_lane, "vad"), name="vad", daemon=True).start()
             threading.Thread(target=guarded_lane, args=(caption_lane, "publish"), name="captions", daemon=True).start()
-            devices.start()
+            models_initialized = True
+            ui.set_models_ready(True)
+            diagnostics.record("models_ready", provider=getattr(speaker, "provider", None))
         except Exception as exc:
-            diagnostics.record("error", stage="initialize", error_type=type(exc).__name__)
-            print(f"[준비] 초기화 실패: {exc}", flush=True)
-            ui.set_models_ready(False, "모델 준비에 실패했습니다.")
-            ui.show_device_status("failed", "waiting", "모델 준비에 실패했습니다. 앱을 다시 실행해주세요.")
+            category = error_category(exc)
+            diagnostics.record("error", stage="initialize", operation=operation,
+                               error_category=category, error_type=type(exc).__name__)
+            print(f"[준비] {operation} 실패: {exc}", flush=True)
+            if speaker is not None:
+                try:
+                    speaker.close()
+                except Exception as cleanup_error:
+                    diagnostics.record("error", stage="initialize", operation="output",
+                                       error_type=type(cleanup_error).__name__)
+                speaker = None
+            if stopped.is_set():
+                return
+            stage_name = {"vad_load": "음성 구간 감지", "stt_load": "자막 모델",
+                          "stt_warmup": "자막 모델 첫 실행", "tts_load": "말하기 모델",
+                          "tts_warmup": "말하기 모델 첫 실행", "devices_start": "장치 시작"}[operation]
+            detail = f"{stage_name} 준비에 실패했습니다. 모델 준비 재시도를 눌러주세요."
+            if category in ("memory", "cuda"):
+                detail += " 메모리·GPU 상태를 확인하고 다른 무거운 앱을 닫아주세요."
+            failure_detail = detail
+            # 실패한 모델 참조를 내려 재시도 시 GPU 모델이 중복으로 남지 않게 한다.
+            stt = vad = None
+        finally:
+            with initialization_lock:
+                initialization_running = False
+            if failure_detail is not None and not stopped.is_set():
+                ui.set_models_ready(False, failure_detail)
+                ui.show_device_status("model_failed", "waiting", failure_detail)
 
-    initializer = threading.Thread(target=initialize, name="model-loading", daemon=True)
-    initializer.start()
+    def retry_models():
+        nonlocal initializer, initialization_running
+        with initialization_lock:
+            if stopped.is_set() or initialization_running or models_initialized:
+                return
+            initialization_running = True
+            ui.set_models_ready(False, "자막·말하기 모델을 준비하고 있습니다.")
+            initializer = threading.Thread(target=initialize, name="model-loading", daemon=True)
+            initializer.start()
+    ui.on_retry_models = retry_models
+    retry_models()
     clean = False
     try:
         ui.run()

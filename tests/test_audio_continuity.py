@@ -114,3 +114,24 @@ class ContinuityTests(unittest.TestCase):
         self.assertEqual(error_category(RuntimeError("cuBLAS failure private")), "cuda")
         self.assertEqual(error_category(ValueError("private audio")), "input")
         self.assertEqual(error_category(RuntimeError("private")), "unknown")
+
+    def test_speech_hold_preserves_old_and_new_utterances_in_order_after_resume(self):
+        q = UtteranceBuffer(2, 1, speech_capacity=4)
+        with patch("stt.pipeline.time.monotonic", return_value=100):
+            q.put(0, "before", [(99.5, 100)], "science")
+            q.hold_for_speech(True)
+            q.put(0, "during", [(100, 101)], "science")
+            q.put(0, "during 2", [(101, 102)], "science")
+            q.hold_for_speech(False)
+        with patch("stt.pipeline.time.monotonic", return_value=120):
+            self.assertEqual([q.get()[1] for _ in range(3)], ["before", "during", "during 2"])
+        self.assertEqual(q.dropped, 0)
+
+    def test_speech_hold_still_bounds_memory_and_reports_overflow(self):
+        q = UtteranceBuffer(1, 1, speech_capacity=2)
+        q.hold_for_speech(True)
+        for i in range(3):
+            q.put(0, i, [], "science")
+        q.hold_for_speech(False)
+        self.assertEqual(q.stats(), {"utterance_queue_depth": 2, "utterance_dropped": 1})
+        self.assertEqual([q.get()[1] for _ in range(2)], [1, 2])
