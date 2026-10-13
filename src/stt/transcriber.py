@@ -1,4 +1,4 @@
-"""한국어 전사 (단일 패스, GPU).
+"""발화 언어를 유지하는 전사 (단일 패스, GPU).
 
 원래 설계는 2-패스(small 임시자막 → medium 교정)였다. 하지만 실측 결과
 medium은 8GB 공유메모리에 앱과 함께 올리면 OOM 나고, 정확도도 small과
@@ -18,7 +18,11 @@ from faster_whisper import WhisperModel
 class Transcriber:
     def __init__(self, cfg: dict) -> None:
         self.cfg = cfg
-        self.language = cfg["language"]
+        # 영어 과목에서 사용할 언어 설정. 나머지 과목은 한국어로 고정한다.
+        language = cfg.get("language", "auto")
+        if language not in (None, "auto", "ko", "en"):
+            raise ValueError("인식 언어는 auto, ko, en 중에서 선택해주세요.")
+        self.language = None if language in (None, "auto") else language
         self.beam_size = cfg.get("beam_size", 1)
 
         # 수업 용어를 hotwords 로 STT 에 편향한다(과목별 사전 + 공통 + 이름).
@@ -90,9 +94,17 @@ class Transcriber:
         self.last_filter_counts = {"no_speech_filtered": 0, "low_confidence_filtered": 0, "echo_filtered": 0}
         # 전사 중 과목을 바꿔도 해당 발화의 힌트와 필터 기준은 같아야 한다.
         keywords = tuple(self.keywords)
+        language = self.language if self.subject == "english" else "ko"
+        if language is None:
+            # 감지 후보 중 한국어/영어만 비교해 다른 언어로 전사되는 것을 막는다.
+            _, _, probabilities = self.model.detect_language(chunk)
+            scores = dict(probabilities or [])
+            language = max(("ko", "en"), key=lambda code: scores.get(code, 0.0))
+        self.last_language = language
         segments, _ = self.model.transcribe(
             chunk,
-            language=self.language,
+            language=language,
+            task="transcribe",               # 번역 대신 발화 원문의 언어를 유지한다
             beam_size=self.beam_size,
             hotwords=", ".join(keywords) if keywords else None,
             vad_filter=False,                  # 이미 VAD로 걸렀으니 중복하지 않는다
