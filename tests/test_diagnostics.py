@@ -73,6 +73,22 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(failure["error_category"], "memory")
         self.assertNotIn("비공개", recorder.path.read_text())
 
+    def test_speech_phase_metrics_are_saved_without_original_text(self):
+        recorder = self.recorder()
+        recorder.start()
+        recorder.record("tts_output_ready", duration_s=0.02, text="비공개 입력")
+        recorder.record("tts_playback", duration_s=1.6, output_prepare_s=0.03,
+                        leading_trim_s=0.12, samples=[0.1, 0.2])
+        recorder.close()
+        rows = self.read(recorder)
+        ready = next(row for row in rows if row['event'] == 'tts_output_ready')
+        playback = next(row for row in rows if row['event'] == 'tts_playback')
+        self.assertEqual(ready['duration_s'], 0.02)
+        self.assertEqual(playback['output_prepare_s'], 0.03)
+        self.assertEqual(playback['leading_trim_s'], 0.12)
+        self.assertNotIn('samples', playback)
+        self.assertNotIn('비공개', recorder.path.read_text())
+
     def test_full_queue_drops_diagnostics_without_blocking(self):
         recorder = self.recorder()
         for _ in range(1000):

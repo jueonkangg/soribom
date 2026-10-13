@@ -33,6 +33,21 @@ class SpeechOutputError(RuntimeError):
     pass
 
 
+def trim_leading_quiet(samples, sample_rate):
+    """첫 신호 앞 60ms를 남기고 매우 작은 선행 잡음만 최대 200ms 제거한다."""
+    if sample_rate <= 0 or not len(samples) or not np.isfinite(samples).all():
+        return samples, 0.0
+    # -80dB보다 큰 첫 샘플을 기준으로 삼아 작은 첫 자음도 보존한다.
+    audible = np.flatnonzero(np.abs(samples) > 0.0001)
+    if not len(audible):
+        return samples, 0.0
+    cut = min(max(0, int(audible[0]) - int(sample_rate * 0.06)),
+              int(sample_rate * 0.2))
+    if cut < int(sample_rate * 0.05):
+        return samples, 0.0
+    return samples[cut:], cut / sample_rate
+
+
 class Speaker:
     def __init__(self, cfg: dict) -> None:
         self.cfg = cfg
@@ -202,9 +217,11 @@ class Speaker:
             event = getattr(self, "on_event", lambda *args, **kwargs: None)
             event("tts_start")
             if getattr(self, "pulse_output", None) is not None:
+                preparing = time.monotonic()
                 try:
                     # 연결 확인은 추론 게이트 밖에서 해 자막 처리를 막지 않는다.
                     self.pulse_output.prepare(reconnect=True)
+                    event("tts_output_ready", duration_s=time.monotonic() - preparing)
                 except Exception as exc:
                     event("error", stage="tts", operation="output", error_type=type(exc).__name__)
                     raise SpeechOutputError("스피커 연결을 확인해주세요.") from exc
@@ -229,18 +246,26 @@ class Speaker:
         # 게이트를 합성부터 재생 완료까지 유지하되, 마이크/VAD는 계속 수음한다.
         self.on_speech_pause(True)
         try:
+            synthesizing = time.monotonic()
             try:
                 samples, sr = self._synthesize(text)
             except Exception as exc:
                 raise SpeechSynthesisError("음성 합성에 실패했습니다.") from exc
-            event("tts_synthesis", duration_s=time.monotonic() - started - getattr(self, "last_inference_wait", 0),
+            synthesized = time.monotonic()
+            event("tts_synthesis", duration_s=synthesized - synthesizing,
                   audio_s=len(samples) / sr)
             if not len(samples):
                 raise RuntimeError("합성된 음성이 없습니다.")
+            trimmed = 0.0
+            if self.cfg.get("trim_leading_quiet", True):
+                samples, trimmed = trim_leading_quiet(samples, sr)
+            def playback_started():
+                now = time.monotonic()
+                event("tts_playback", duration_s=now - started,
+                      output_prepare_s=now - synthesized, leading_trim_s=trimmed)
             if getattr(self, "pulse_output", None) is not None:
                 try:
-                    self.pulse_output.play(samples, sr, lambda: event(
-                        "tts_playback", duration_s=time.monotonic() - started))
+                    self.pulse_output.play(samples, sr, playback_started)
                 except Exception as exc:
                     event("error", stage="tts", operation="output", error_type=type(exc).__name__)
                     raise SpeechOutputError("스피커 재생에 실패했습니다.") from exc
@@ -252,7 +277,7 @@ class Speaker:
                 self._playback_offset = 0
                 self._playback_error = False
                 stream.start()
-                event("tts_playback", duration_s=time.monotonic() - started)
+                playback_started()
                 # 장치 응답이 사라져도 입력/말하기를 영구 잠그지 않는다.
                 margin = max(0.1, float(self.cfg.get("playback_timeout_margin_seconds", 3)))
                 if not self._playback_done.wait(len(samples) / sr + margin):

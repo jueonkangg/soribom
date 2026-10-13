@@ -136,6 +136,7 @@ tts:
   #     CPU  16→5.0s, 32→9.4s   (폴백 시. 느림)
   #   청취 비교로 32스텝 확정(사용자가 제일 깔끔하다고 고름). GPU라 실시간 가능.
   num_steps: 32
+  trim_leading_quiet: true  # 첫 신호 앞 60ms 보존, 매우 작은 선행 잡음만 최대 200ms 제거
   speed: 1.0
   num_threads: 4          # cpu 폴백 시 사용. Orin Nano 6코어지만 int8은 4가 가장 빠름(6은 경합)
 

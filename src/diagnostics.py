@@ -13,14 +13,14 @@ import uuid
 
 EVENTS = {"session_start", "session_end", "resources", "device_status", "mic_start",
           "mic_failure", "audio_gap", "retry", "error", "models_ready", "models_cancelled",
-          "caption", "callback_jitter", "models_warmup", "inference_wait", "tts_start", "tts_synthesis", "tts_playback", "tts_end", "note_save", "hotwords"}
+          "caption", "callback_jitter", "models_warmup", "inference_wait", "tts_start", "tts_output_ready", "tts_synthesis", "tts_playback", "tts_end", "note_save", "hotwords"}
 NUMBERS = {"pid", "capture_pid", "rss_kib", "capture_rss_kib", "available_kib", "threads",
            "generation", "queue_depth", "queue_capacity", "queue_dropped_blocks", "queue_overflows", "resets",
            "stale_results", "stale_input_blocks", "audio_gaps", "mic_starts", "duration_s", "stt_duration_s", "error_code",
            "audio_s", "speech_age_s", "dispatch_delay_s", "hotwords_total", "hotwords_selected", "hotwords_tokens", "no_speech_filtered",
            "low_confidence_filtered", "echo_filtered", "direction_samples", "dropped_log_events",
            "callback_jitters", "capture_overflows", "pipe_dropped_blocks", "missing_blocks",
-           "utterance_queue_depth", "utterance_dropped", "inference_wait_s"}
+           "utterance_queue_depth", "utterance_dropped", "inference_wait_s", "output_prepare_s", "leading_trim_s"}
 FLAGS = {"success", "has_text", "direction_known", "clean", "lesson_active"}
 CHOICES = {"microphone": {"ready", "waiting", "connecting", "failed"},
            "direction": {"ready", "waiting", "connecting", "failed", "disabled"},

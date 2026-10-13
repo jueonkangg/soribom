@@ -46,8 +46,12 @@ def summarize(rows):
         lines.append(f"마이크 장애 원인 {reason}: {count}건")
     tts = [row for row in rows if row["event"] == "tts_end"]
     lines.append(f"말하기 완료 {len(tts)}건, 실패 {sum(not row.get('success') for row in tts)}건")
-    for event, title in [("tts_synthesis", "말하기 합성"), ("tts_playback", "말하기 요청→재생 제출")]:
+    for event, title in [("tts_output_ready", "스피커 연결 확인·복구"), ("tts_synthesis", "말하기 합성"), ("tts_playback", "말하기 요청→재생 제출")]:
         values = [row["duration_s"] for row in rows if row["event"] == event and "duration_s" in row]
+        if values:
+            lines.append(f"{title} 초: 중앙 {statistics.median(values):.3f}, 최대 {max(values):.3f}")
+    for key, title in [("output_prepare_s", "합성 완료→재생 제출"), ("leading_trim_s", "음성 앞 조용한 구간 제거")]:
+        values = [row[key] for row in rows if row["event"] == "tts_playback" and key in row]
         if values:
             lines.append(f"{title} 초: 중앙 {statistics.median(values):.3f}, 최대 {max(values):.3f}")
     errors = Counter((row.get("stage", row["event"]), row["error_type"])

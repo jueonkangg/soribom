@@ -117,6 +117,59 @@ class SpeakerTests(unittest.TestCase):
         self.speaker._synthesize.assert_called_once_with("안녕하세요.")
         self.output.OutputStream.assert_not_called()
 
+    def test_quiet_trim_preserves_small_initial_consonant_and_padding(self):
+        samples = np.zeros(1000, dtype=np.float32)
+        samples[180:200] = 0.0002
+        samples[200:] = 0.5
+        trimmed, seconds = self.module.trim_leading_quiet(samples, 1000)
+        self.assertAlmostEqual(seconds, 0.12)
+        np.testing.assert_array_equal(trimmed, samples[120:])
+        self.assertEqual(trimmed[60], samples[180])
+
+    def test_quiet_trim_caps_removal_and_leaves_early_or_silent_audio(self):
+        samples = np.zeros(1000, dtype=np.float32)
+        samples[700:] = 0.5
+        trimmed, seconds = self.module.trim_leading_quiet(samples, 1000)
+        self.assertEqual(seconds, 0.2)
+        np.testing.assert_array_equal(trimmed, samples[200:])
+        for unchanged in (np.zeros(1000), np.ones(1000), np.zeros(0),
+                          np.array([np.nan]), np.r_[np.zeros(80), np.ones(920)]):
+            result, seconds = self.module.trim_leading_quiet(unchanged, 1000)
+            self.assertIs(result, unchanged)
+            self.assertEqual(seconds, 0)
+
+    def test_phase_timing_excludes_connection_check_and_reports_trim(self):
+        clock = [0.0]
+        self.speaker.pulse_output = Mock()
+        def prepare(**kwargs):
+            clock[0] += 5.0
+        def synthesize(text):
+            clock[0] += 1.5
+            return np.r_[np.zeros(180), np.ones(820)].astype(np.float32), 1000
+        def play(samples, rate, on_start):
+            self.assertEqual(len(samples), 880)
+            clock[0] += 0.02
+            on_start()
+        self.speaker.pulse_output.prepare.side_effect = prepare
+        self.speaker._synthesize.side_effect = synthesize
+        self.speaker.pulse_output.play.side_effect = play
+        with patch.object(self.module.time, "monotonic", side_effect=lambda: clock[0]):
+            self.speaker.say("문장")
+        events = {call.args[0]: call.kwargs for call in self.speaker.on_event.call_args_list}
+        self.assertEqual(events['tts_output_ready']['duration_s'], 5.0)
+        self.assertEqual(events['tts_synthesis']['duration_s'], 1.5)
+        self.assertAlmostEqual(events['tts_playback']['duration_s'], 6.52)
+        self.assertAlmostEqual(events['tts_playback']['output_prepare_s'], 0.02)
+        self.assertAlmostEqual(events['tts_playback']['leading_trim_s'], 0.12)
+
+    def test_quiet_trim_can_be_disabled(self):
+        self.speaker.cfg['trim_leading_quiet'] = False
+        self.speaker.pulse_output = Mock()
+        samples = np.r_[np.zeros(180), np.ones(820)].astype(np.float32)
+        self.speaker._synthesize.return_value = samples, 1000
+        self.speaker.say("문장")
+        self.assertIs(self.speaker.pulse_output.play.call_args.args[0], samples)
+
     def test_pulse_output_failure_releases_pause_and_next_request_succeeds(self):
         pulse = Mock()
         self.speaker.pulse_output = pulse
