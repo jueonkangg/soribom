@@ -29,6 +29,7 @@ def main() -> None:
     cfg = load_config()
     diagnostics = DiagnosticRecorder(cfg.get("diagnostics", {}))
     ui = SoribomUI(cfg)
+    ui.on_caption_layout = lambda **values: diagnostics.record("caption_layout", **values)
     audio = AudioBuffer(cfg["audio"].get("queue_max_blocks", 100))
     pending = UtteranceBuffer(cfg["stt"].get("queue_max_utterances", 4),
                               cfg["stt"].get("queue_max_age_seconds", 6),

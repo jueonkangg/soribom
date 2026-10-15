@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot, QEvent
-from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QShortcut
+from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QShortcut, QTextCursor
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QTextEdit, QPlainTextEdit, QVBoxLayout, QWidget,
@@ -250,8 +250,9 @@ class NoteEmailDialog(QDialog):
 
 class CaptionView(QPlainTextEdit):
     """창 크기에 맞춰 배치하며 최신 자막으로 자동 스크롤한다."""
-    def __init__(self, history_blocks):
+    def __init__(self, history_blocks, history_characters=40000):
         super().__init__()
+        self.history_characters = max(1, int(history_characters))
         self.setReadOnly(True)
         self.setUndoRedoEnabled(False)
         self.setMaximumBlockCount(history_blocks)
@@ -264,8 +265,19 @@ class CaptionView(QPlainTextEdit):
     def setText(self, text):
         self.setPlainText(text)
 
-    def append_caption(self, text):
-        self.appendPlainText(text)
+    def append_caption(self, text, continue_paragraph=False):
+        if continue_paragraph and not self.document().isEmpty():
+            cursor = QTextCursor(self.document())
+            cursor.movePosition(QTextCursor.MoveOperation.End)
+            cursor.insertText(" " + text)
+        else:
+            self.appendPlainText(text)
+        # 같은 방향의 발화가 한 문단에 계속 쌓여도 메모리 보관량은 제한한다.
+        excess = self.document().characterCount() - 1 - self.history_characters
+        if excess > 0:
+            cursor = QTextCursor(self.document())
+            cursor.setPosition(excess, QTextCursor.MoveMode.KeepAnchor)
+            cursor.removeSelectedText()
         bar = self.verticalScrollBar()
         bar.setValue(bar.maximum())
 
@@ -291,6 +303,7 @@ class SoribomUI(QObject):
         self.on_send_note = self._email_not_connected
         self._email_dialog = None
         self.on_reconnect = lambda: None
+        self.on_caption_layout = lambda **values: None
         self.on_retry_models = lambda: None
         self._device_state = ("preparing", "waiting", "")
         self._models_ready = True
@@ -310,6 +323,9 @@ class SoribomUI(QObject):
         # 어디까지가 방금 대화인지 알기 어렵다. 묶음을 눈으로 나눠 준다.
         self.gap_seconds = ui.get("gap_seconds", 30)
         self._last_caption_at = None        # 마지막 자막이 뜬 시각 (없으면 아직 첫 자막)
+        self._last_caption_angle = None
+        self.caption_direction_break_degrees = max(
+            0.1, min(180.0, float(ui.get("caption_direction_break_degrees", 5))))
 
         # 색 테마를 여기서 정한다. 아래에서 위젯을 만들 때 이 색을 읽어가므로
         # 반드시 위젯보다 '먼저' 불러야 한다.
@@ -398,7 +414,8 @@ class SoribomUI(QObject):
         # 왼쪽 열: 자막(위로 쌓임) + 소리 알림 박스(아래, 평소 숨김)
         left = QVBoxLayout()
         left.setSpacing(12)
-        self.caption_label = CaptionView(self.max_lines)
+        self.caption_label = CaptionView(
+            self.max_lines, ui.get("caption_history_characters", 40000))
         self.caption_label.setText("마이크 연결을 확인하고 있습니다.")
         self.caption_label.setStyleSheet(style["caption"])
         left.addWidget(self.caption_label, stretch=1)
@@ -582,16 +599,36 @@ class SoribomUI(QObject):
     @Slot(str, object)
     def _update(self, text: str, angle) -> None:
         """메인 스레드에서 실행: 자막과 방향을 화면에 반영한다."""
+        # 장치가 끊겼거나 방향 표본이 없으면 이전 화자의 문단에 묶지 않는다.
+        if (self._device_state[:2] != ("ready", "ready")
+                or not isinstance(angle, (int, float)) or not math.isfinite(angle)):
+            angle = None
+        else:
+            angle %= 360
         if text:
             now = time.monotonic()
+            first_caption = not self._lines
             if not self._lines:
                 self.caption_label.clear()
             # 앞 자막과 gap_seconds 이상 떨어져 있으면 빈 줄로 묶음을 나눈다.
             gap = (self._last_caption_at is not None
                    and now - self._last_caption_at >= self.gap_seconds)
+            difference = None
+            if angle is not None and self._last_caption_angle is not None:
+                difference = abs((angle - self._last_caption_angle + 180) % 360 - 180)
+            continue_paragraph = (not gap and difference is not None
+                                  and difference < self.caption_direction_break_degrees)
+            reason = ("first" if first_caption else "pause" if gap else
+                      "unknown" if difference is None else
+                      "same_direction" if continue_paragraph else "direction_change")
+            self.on_caption_layout(
+                direction_angle=angle, direction_difference=difference,
+                direction_threshold=self.caption_direction_break_degrees,
+                paragraph_break=not continue_paragraph, layout_reason=reason)
             if gap:
                 self._lines.append("")
             self._last_caption_at = now
+            self._last_caption_angle = angle
 
             self._lines.append(text)
             self._lines = self._lines[-self.max_lines:]
@@ -599,10 +636,12 @@ class SoribomUI(QObject):
             # 여백만 만들 뿐이라 버린다.
             while self._lines and self._lines[0] == "":
                 self._lines.pop(0)
-            self.caption_label.append_caption(("\n" if gap else "") + text)
+            self.caption_label.append_caption(
+                ("\n" if gap else "") + text, continue_paragraph=continue_paragraph)
         self.dial.set_angle(angle if self._device_state[:2] == ("ready", "ready") else None)
         if self._device_state[:2] == ("ready", "ready"):
-            self.dial_title.setText("화자 방향 (미확정)" if angle is None else "화자 방향")
+            self.dial_title.setText("화자 방향 (미확정)" if angle is None
+                                    else f"화자 방향 · {angle:.1f}°")
 
     def show_device_status(self, microphone, direction, detail=""):
         self._devices_changed.emit(microphone, direction, detail)
@@ -612,6 +651,7 @@ class SoribomUI(QObject):
         self._device_state = (microphone, direction, detail)
         if microphone != "ready" or direction != "ready":
             self.dial.set_angle(None)
+            self._last_caption_angle = None
         if not self._lines:
             self.caption_label.setText(
                 "소리봄 준비 완료 — 말하면 자막이 나옵니다."
@@ -657,6 +697,7 @@ class SoribomUI(QObject):
         if mic == "model_failed":
             self.reconnect_button.setText("모델 준비 재시도")
         self.dial_title.setText(("화자 방향 (미확정)" if self._lines and self.dial._angle is None
+                                 else f"화자 방향 · {self.dial._angle:.1f}°" if self.dial._angle is not None
                                  else "화자 방향") if mic == doa == "ready"
                                 else "방향 표시 꺼짐" if doa == "disabled" else "방향 확인 불가")
 
