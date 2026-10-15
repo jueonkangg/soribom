@@ -86,6 +86,20 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertFalse(row["paragraph_break"])
         self.assertNotIn("비공개", recorder.path.read_text())
 
+    def test_decode_and_drop_reason_metrics_exclude_private_fields(self):
+        recorder = self.recorder()
+        recorder.start()
+        recorder.record("caption", decode_calls=2, decode_sampling_calls=1,
+                        decode_duration_s=0.7, language_detection_s=0.1, text="비공개 음성")
+        recorder.record("resources", utterance_capacity_dropped=1, utterance_expired=0)
+        recorder.close()
+        rows = self.read(recorder)
+        caption = next(row for row in rows if row["event"] == "caption")
+        resource = next(row for row in rows if "utterance_capacity_dropped" in row)
+        self.assertEqual(caption["decode_sampling_calls"], 1)
+        self.assertEqual(resource["utterance_expired"], 0)
+        self.assertNotIn("비공개", recorder.path.read_text())
+
     def test_speech_phase_metrics_are_saved_without_original_text(self):
         recorder = self.recorder()
         recorder.start()
@@ -132,15 +146,20 @@ class DiagnosticsTests(unittest.TestCase):
         spec.loader.exec_module(module)
         rows = [{"session": "s", "time": "2026-10-12", "event": "session_start"},
                 {"session": "s", "time": "2026-10-12", "event": "resources",
-                 "rss_kib": 102400, "queue_dropped_blocks": 5},
+                 "rss_kib": 102400, "queue_dropped_blocks": 5,
+                 "utterance_capacity_dropped": 1, "utterance_expired": 0},
                 {"session": "s", "time": "2026-10-12", "event": "caption",
-                 "has_text": True, "duration_s": 0.5},
+                 "has_text": True, "duration_s": 0.5,
+                 "decode_calls": 2, "decode_sampling_calls": 1, "decode_duration_s": 0.4},
                 {"session": "s", "time": "2026-10-12", "event": "error",
                  "stage": "caption", "error_type": "RuntimeError"},
                 {"session": "s", "time": "2026-10-12", "event": "session_end", "clean": True}]
         report = module.summarize(rows)
         self.assertIn("100.0", report)
         self.assertIn("queue_dropped_blocks: 5", report)
+        self.assertIn("utterance_capacity_dropped: 1", report)
+        self.assertIn("utterance_expired: 0", report)
+        self.assertIn("decode_sampling_calls: 합계 1.000", report)
         self.assertIn("caption/RuntimeError: 1건", report)
         self.assertIn("종료: 정상", report)
 

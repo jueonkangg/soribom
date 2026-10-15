@@ -15,6 +15,30 @@ import time
 from faster_whisper import WhisperModel
 
 
+class DecodeMetrics:
+    """기존 디코더에 그대로 위임하면서 재시도 비용만 수치로 센다."""
+    def __init__(self, backend):
+        self.backend = backend
+        self.reset()
+
+    def reset(self):
+        self.calls = 0
+        self.sampling_calls = 0
+        self.seconds = 0.0
+
+    def __getattr__(self, name):
+        return getattr(self.backend, name)
+
+    def generate(self, *args, **kwargs):
+        self.calls += 1
+        self.sampling_calls += int(kwargs.get("sampling_temperature", 0) > 0)
+        began = time.monotonic()
+        try:
+            return self.backend.generate(*args, **kwargs)
+        finally:
+            self.seconds += time.monotonic() - began
+
+
 class Transcriber:
     def __init__(self, cfg: dict) -> None:
         self.cfg = cfg
@@ -40,6 +64,8 @@ class Transcriber:
             compute_type=cfg["compute_type"],
             cpu_threads=cfg.get("cpu_threads", 0),
         )
+        self.decode_metrics = DecodeMetrics(self.model.model)
+        self.model.model = self.decode_metrics
         self._apply_vocab()
 
         # 지표 측정(자막 지연): 마지막 전사에 걸린 시간(초).
@@ -92,12 +118,19 @@ class Transcriber:
         """발화 한 덩어리를 자막 문자열로 바꾼다. (환각 방어 포함)"""
         start = time.monotonic()
         self.last_filter_counts = {"no_speech_filtered": 0, "low_confidence_filtered": 0, "echo_filtered": 0}
+        metrics = getattr(self, "decode_metrics", None)
+        if metrics is not None:
+            metrics.reset()
+        self.last_decode_stats = {}
+        detection_seconds = 0.0
         # 전사 중 과목을 바꿔도 해당 발화의 힌트와 필터 기준은 같아야 한다.
         keywords = tuple(self.keywords)
         language = self.language if self.subject == "english" else "ko"
         if language is None:
             # 감지 후보 중 한국어/영어만 비교해 다른 언어로 전사되는 것을 막는다.
+            began = time.monotonic()
             _, _, probabilities = self.model.detect_language(chunk)
+            detection_seconds = time.monotonic() - began
             scores = dict(probabilities or [])
             language = max(("ko", "en"), key=lambda code: scores.get(code, 0.0))
         self.last_language = language
@@ -109,6 +142,9 @@ class Transcriber:
             hotwords=", ".join(keywords) if keywords else None,
             vad_filter=False,                  # 이미 VAD로 걸렀으니 중복하지 않는다
             condition_on_previous_text=False,  # 짧은 발화에서 반복/환각을 줄인다
+            # 기본값은 최대 6온도×후보 5개다. 첫 경로를 유지하고 복구 시도만 제한한다.
+            temperature=self.cfg.get("temperatures", [0.0, 0.2]),
+            best_of=self.cfg.get("best_of", 1),
         )
         # 신뢰도 필터: 무음/저신뢰 세그먼트(환각 위험)는 버린다.
         parts = []
@@ -133,6 +169,11 @@ class Transcriber:
         text = " ".join(parts).strip()
 
         self.last_sec = time.monotonic() - start
+        self.last_decode_stats = {"language_detection_s": detection_seconds}
+        if metrics is not None:
+            self.last_decode_stats.update(decode_calls=metrics.calls,
+                                          decode_sampling_calls=metrics.sampling_calls,
+                                          decode_duration_s=metrics.seconds)
         return text
 
 

@@ -5,13 +5,15 @@ import time
 
 
 class UtteranceBuffer:
-    def __init__(self, capacity=4, max_age_seconds=6, speech_capacity=32):
+    def __init__(self, capacity=4, max_age_seconds=0, speech_capacity=32):
         self.capacity = max(1, int(capacity))
-        self.max_age = max(1, float(max_age_seconds))
+        self.max_age = max(0, float(max_age_seconds))
         self.items = deque()
         self.condition = threading.Condition()
         self.closed = False
         self.dropped = 0
+        self.capacity_dropped = 0
+        self.expired = 0
         self.speech_capacity = max(self.capacity, int(speech_capacity))
         self.speech_paused = False
 
@@ -31,6 +33,7 @@ class UtteranceBuffer:
             if len(self.items) >= capacity:
                 self.items.popleft()
                 self.dropped += 1
+                self.capacity_dropped += 1
             self.items.append((generation, chunk, ranges, subject, time.monotonic(), retained))
             self.condition.notify()
 
@@ -43,13 +46,15 @@ class UtteranceBuffer:
                     return None
                 item = self.items.popleft()
                 end = item[2][-1][1] if item[2] else item[4]
-                if item[5] or time.monotonic() - end <= self.max_age:
+                if self.max_age == 0 or item[5] or time.monotonic() - end <= self.max_age:
                     return item[:4]
                 self.dropped += 1
+                self.expired += 1
 
     def stats(self):
         with self.condition:
-            return {"utterance_queue_depth": len(self.items), "utterance_dropped": self.dropped}
+            return {"utterance_queue_depth": len(self.items), "utterance_dropped": self.dropped,
+                    "utterance_capacity_dropped": self.capacity_dropped, "utterance_expired": self.expired}
 
     def close(self):
         with self.condition:

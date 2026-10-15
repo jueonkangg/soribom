@@ -22,7 +22,9 @@ NUMBERS = {"pid", "capture_pid", "rss_kib", "capture_rss_kib", "available_kib", 
            "callback_jitters", "capture_overflows", "pipe_dropped_blocks", "missing_blocks",
            "utterance_queue_depth", "utterance_dropped", "inference_wait_s", "output_prepare_s", "leading_trim_s",
            "direction_angle", "direction_difference", "direction_threshold",
-           "remaining_tools", "available_before_kib", "available_after_kib"}
+           "remaining_tools", "available_before_kib", "available_after_kib",
+           "utterance_capacity_dropped", "utterance_expired", "decode_calls", "decode_sampling_calls",
+           "decode_duration_s", "language_detection_s"}
 FLAGS = {"success", "has_text", "direction_known", "clean", "lesson_active", "paragraph_break"}
 CHOICES = {"microphone": {"ready", "waiting", "connecting", "failed"},
            "direction": {"ready", "waiting", "connecting", "failed", "disabled"},

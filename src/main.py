@@ -41,7 +41,7 @@ def main(close_development_tools=False) -> None:
     ui.startup_window = loading
     audio = AudioBuffer(cfg["audio"].get("queue_max_blocks", 100))
     pending = UtteranceBuffer(cfg["stt"].get("queue_max_utterances", 4),
-                              cfg["stt"].get("queue_max_age_seconds", 6),
+                              cfg["stt"].get("queue_max_age_seconds", 0),
                               cfg["stt"].get("speech_queue_max_utterances", 32))
     inference_gate = InferenceGate()
     def device_status(microphone, direction, detail=""):
@@ -208,6 +208,7 @@ def main(close_development_tools=False) -> None:
                             for alert in events.detect_in_text(text):
                                 ui.show_alert(alert)
                         counts = getattr(stt, "last_filter_counts", {})
+                        decode_stats = getattr(stt, "last_decode_stats", {})
                         diagnostics.record("caption", generation=generation, has_text=bool(text),
                                            direction_known=angle is not None,
                                            duration_s=time.monotonic() - started,
@@ -216,7 +217,8 @@ def main(close_development_tools=False) -> None:
                                            inference_wait_s=wait[0],
                                            speech_age_s=started + wait[0] - speech_end if speech_end else None,
                                            dispatch_delay_s=time.monotonic() - speech_end if speech_end else None,
-                                           **(counts if isinstance(counts, dict) else {}))
+                                           **(counts if isinstance(counts, dict) else {}),
+                                           **(decode_stats if isinstance(decode_stats, dict) else {}))
 
                     # 전사 도중 연결이 끊겼으면 그 결과를 새 연결의 기록에 섞지 않는다.
                     audio.publish(generation, publish)

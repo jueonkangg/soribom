@@ -35,6 +35,63 @@ class TranscriberFilterTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(self.transcribe(self.segment(text)), text)
 
+    def test_default_retry_budget_and_legacy_settings_can_be_restored(self):
+        self.transcribe(self.segment("함도유 학생, 질문이 있나요?"))
+        options = self.stt.model.transcribe.call_args.kwargs
+        self.assertEqual(options["temperature"], [0.0, 0.2])
+        self.assertEqual(options["best_of"], 1)
+        self.assertEqual(options["beam_size"], 1)
+        self.stt.cfg.update(temperatures=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0], best_of=5)
+        self.transcribe(self.segment("수업을 시작합니다."))
+        self.assertEqual(self.stt.model.transcribe.call_args.kwargs["best_of"], 5)
+        self.assertEqual(len(self.stt.model.transcribe.call_args.kwargs["temperature"]), 6)
+
+    def test_decoder_metrics_forward_backend_results_and_reset(self):
+        backend = Mock()
+        backend.device = "cuda"
+        backend.generate.return_value = ["결과"]
+        metrics = self.module.DecodeMetrics(backend)
+        self.assertEqual(metrics.device, "cuda")
+        self.assertEqual(metrics.generate("입력", beam_size=1), ["결과"])
+        metrics.generate("입력", sampling_temperature=0.2)
+        self.assertEqual((metrics.calls, metrics.sampling_calls), (2, 1))
+        self.assertGreaterEqual(metrics.seconds, 0)
+        backend.generate.side_effect = ValueError("비공개 오류")
+        with self.assertRaises(ValueError):
+            metrics.generate("입력")
+        self.assertEqual(metrics.calls, 3)
+        metrics.reset()
+        self.assertEqual((metrics.calls, metrics.sampling_calls, metrics.seconds), (0, 0, 0))
+
+    def test_installed_library_fallback_really_obeys_retry_budget(self):
+        # 모델 파일이나 GPU 없이 설치된 라이브러리의 실제 재시도 루프를 실행한다.
+        from faster_whisper import WhisperModel
+        model = WhisperModel.__new__(WhisperModel)
+        model.max_length = 448
+        model.time_precision = 0.02
+        model.logger = Mock()
+        backend = Mock()
+        backend.generate.return_value = [SimpleNamespace(
+            sequences_ids=[[1, 2]], scores=[-2.0], no_speech_prob=0.1)]
+        model.model = self.module.DecodeMetrics(backend)
+        tokenizer = Mock()
+        tokenizer.decode.return_value = "시험 문장"
+        for temperatures, best_of, expected_calls in (
+                ([0.0, 0.2, 0.4, 0.6, 0.8, 1.0], 5, 6), ([0.0, 0.2], 1, 2)):
+            options = SimpleNamespace(
+                temperatures=temperatures, best_of=best_of, beam_size=1, patience=1,
+                max_initial_timestamp=1, max_new_tokens=None, length_penalty=1,
+                repetition_penalty=1, no_repeat_ngram_size=0, suppress_blank=True,
+                suppress_tokens=[], compression_ratio_threshold=2.4,
+                log_prob_threshold=-1.0, no_speech_threshold=0.6)
+            model.model.reset()
+            backend.generate.reset_mock()
+            model.generate_with_fallback(None, [], tokenizer, options)
+            self.assertEqual(model.model.calls, expected_calls)
+            self.assertEqual(model.model.sampling_calls, expected_calls - 1)
+            self.assertEqual(backend.generate.call_args_list[0].kwargs["beam_size"], 1)
+            self.assertEqual(backend.generate.call_args_list[-1].kwargs["num_hypotheses"], best_of)
+
     def test_weak_keyword_lists_are_removed(self):
         for no_speech, logprob in [(0.6, -0.2), (0.1, -1.0)]:
             with self.subTest(no_speech=no_speech, logprob=logprob):

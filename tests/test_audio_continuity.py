@@ -87,7 +87,7 @@ class ContinuityTests(unittest.TestCase):
         q = UtteranceBuffer(2)
         for i in range(100):
             q.put(0, i, [], "science")
-        self.assertEqual(q.stats(), {"utterance_queue_depth": 2, "utterance_dropped": 98})
+        self.assertEqual(q.stats(), {"utterance_queue_depth": 2, "utterance_dropped": 98, "utterance_capacity_dropped": 98, "utterance_expired": 0})
         self.assertEqual(q.get()[1], 98)
         self.assertEqual(q.get()[1], 99)
         q.close()
@@ -99,6 +99,8 @@ class ContinuityTests(unittest.TestCase):
         q.put(0, "fresh", [], "science")
         self.assertEqual(q.get()[1], "fresh")
         self.assertEqual(q.dropped, 1)
+        self.assertEqual(q.stats()["utterance_expired"], 1)
+        self.assertEqual(q.stats()["utterance_capacity_dropped"], 0)
         finished = threading.Event()
         def wait():
             self.assertIsNone(q.get())
@@ -108,6 +110,16 @@ class ContinuityTests(unittest.TestCase):
         q.close()
         self.assertTrue(finished.wait(1))
         worker.join()
+
+    def test_long_transcription_does_not_expire_following_utterances_by_default(self):
+        q = UtteranceBuffer(4)
+        with patch("stt.pipeline.time.monotonic", return_value=100):
+            q.put(0, "먼저 말한 문장", [(99, 100)], "science")
+            q.put(0, "다음 문장", [(100, 101)], "science")
+        with patch("stt.pipeline.time.monotonic", return_value=120):
+            self.assertEqual([q.get()[1] for _ in range(2)], ["먼저 말한 문장", "다음 문장"])
+        self.assertEqual(q.dropped, 0)
+        self.assertEqual(q.expired, 0)
 
     def test_error_categories_do_not_return_exception_messages(self):
         self.assertEqual(error_category(RuntimeError("CUDA out of memory private")), "memory")
@@ -133,5 +145,5 @@ class ContinuityTests(unittest.TestCase):
         for i in range(3):
             q.put(0, i, [], "science")
         q.hold_for_speech(False)
-        self.assertEqual(q.stats(), {"utterance_queue_depth": 2, "utterance_dropped": 1})
+        self.assertEqual(q.stats(), {"utterance_queue_depth": 2, "utterance_dropped": 1, "utterance_capacity_dropped": 1, "utterance_expired": 0})
         self.assertEqual([q.get()[1] for _ in range(2)], [1, 2])

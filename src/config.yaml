@@ -47,7 +47,7 @@ vad:
 stt:
   warmup: true             # 첫 실제 발화 전에 추론 메모리/커널을 준비, 결과는 게시하지 않음
   queue_max_utterances: 4     # VAD는 추론 중에도 계속 입력을 소비한다
-  queue_max_age_seconds: 6   # 너무 오래 기다린 발화는 유실 카운터에 남기고 제외
+  queue_max_age_seconds: 0   # 시간만으로 삭제하지 않음. 양수면 이전처럼 발화 종료 후 수명 제한
   speech_queue_max_utterances: 32  # 말하기 중/이후 대기 발화는 시간 제한 없이 순서대로 처리, 개수 제한 유지
   # small 단일 패스로 확정. 원래 2-패스(small→medium) 설계였으나 실측으로 폐기:
   #  (1) medium은 8GB 공유메모리에 앱과 함께 올리면 OOM(예산 총 150만원 제약),
@@ -76,6 +76,8 @@ stt:
   compute_type: "int8"
   device: "cuda"
   beam_size: 1             # 1 = 가장 빠름. 정확도가 더 필요하면 올리되 느려진다
+  temperatures: [0.0, 0.2] # 첫 탐색 유지, 저신뢰 복구는 한 번만. 시간 상한 자체는 아님
+  best_of: 1              # 복구 시 후보 수. 기존 라이브러리 기본값 5로 인한 긴 꼬리 지연 제한
   cpu_threads: 0           # 0 = 자동 (device: cpu 로 폴백할 때만 의미 있음)
 
 doa:

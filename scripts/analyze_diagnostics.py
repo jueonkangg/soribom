@@ -34,12 +34,16 @@ def summarize(rows):
         if values:
             lines.append(f"{title} 초: 중앙 {statistics.median(values):.3f}, "
                          f"95백분위 {values[math.ceil(len(values)*0.95)-1]:.3f}, 최대 {max(values):.3f}")
-    for key in ["queue_dropped_blocks", "queue_overflows", "stale_input_blocks", "stale_results", "audio_gaps", "callback_jitters", "capture_overflows", "pipe_dropped_blocks", "utterance_dropped", "mic_starts", "dropped_log_events"]:
+    for key in ["queue_dropped_blocks", "queue_overflows", "stale_input_blocks", "stale_results", "audio_gaps", "callback_jitters", "capture_overflows", "pipe_dropped_blocks", "utterance_dropped", "utterance_capacity_dropped", "utterance_expired", "mic_starts", "dropped_log_events"]:
         values = [row[key] for row in rows if isinstance(row.get(key), (int, float))]
         if values:
             lines.append(f"{key}: {max(values)}")
     for key in ["no_speech_filtered", "low_confidence_filtered", "echo_filtered"]:
         lines.append(f"{key}: {sum(row.get(key, 0) for row in captions)} 세그먼트")
+    for key in ["decode_calls", "decode_sampling_calls", "decode_duration_s", "language_detection_s"]:
+        values = [row[key] for row in captions if isinstance(row.get(key), (int, float))]
+        if values:
+            lines.append(f"{key}: 합계 {sum(values):.3f}, 최대 {max(values):.3f}")
     lines.append(f"마이크 장애 {events['mic_failure']}건, 수동 재시도 {events['retry']}건")
     for row in rows:
         if row['event'] != 'startup_cleanup':
