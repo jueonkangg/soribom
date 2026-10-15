@@ -13,7 +13,14 @@ def load_config(path: str = None) -> dict:
         return yaml.safe_load(f)
 
 
-def main() -> None:
+def main(close_development_tools=False) -> None:
+    # 모델과 장치 모듈을 읽기 전에 작은 창부터 그린다.
+    from PySide6.QtWidgets import QApplication
+    from ui.loading import LoadingWindow
+    app = QApplication.instance() or QApplication([])
+    loading = LoadingWindow()
+    loading.show_centered()
+    app.processEvents()
     # 녹음 자식 프로세스가 이 모듈을 읽어도 Qt/GPU 모델을 불러오지 않도록
     # 무거운 모듈은 main 안에서만 import 한다.
     from audio.recovery import AudioBuffer, DeviceController
@@ -30,6 +37,8 @@ def main() -> None:
     diagnostics = DiagnosticRecorder(cfg.get("diagnostics", {}))
     ui = SoribomUI(cfg)
     ui.on_caption_layout = lambda **values: diagnostics.record("caption_layout", **values)
+
+    ui.startup_window = loading
     audio = AudioBuffer(cfg["audio"].get("queue_max_blocks", 100))
     pending = UtteranceBuffer(cfg["stt"].get("queue_max_utterances", 4),
                               cfg["stt"].get("queue_max_age_seconds", 6),
@@ -63,6 +72,7 @@ def main() -> None:
     initialization_lock = threading.Lock()
     initialization_running = False
     models_initialized = False
+    tools_closed = False
     ui.on_reconnect = devices.retry
     ui.on_summarize = notes.build_summary
     ui.on_note_snapshot = notes.build_email_transcript
@@ -74,12 +84,32 @@ def main() -> None:
     ui.set_models_ready(False, "자막·말하기 모델을 준비하고 있습니다.")
 
     def initialize():
-        nonlocal speaker, initialization_running, models_initialized
+        nonlocal speaker, initialization_running, models_initialized, tools_closed
         operation = "vad_load"
         failure_detail = None
         try:
+            loading.set_stage(0, "개발 실행: 브라우저와 Codex를 유지합니다.")
+            if close_development_tools and not tools_closed:
+                from startup import stop_development_tools
+                operation = "startup_cleanup"
+                loading.set_stage(0, "브라우저와 Codex를 종료해 메모리를 확보합니다.")
+                before = resource_sample().get("available_kib")
+                began = time.monotonic()
+                remaining = stop_development_tools(stopped.is_set)
+                diagnostics.record("startup_cleanup", duration_s=time.monotonic() - began,
+                                   remaining_tools=remaining, available_before_kib=before,
+                                   available_after_kib=resource_sample().get("available_kib"))
+                tools_closed = True
+                if remaining:
+                    loading.set_stage(0, "일부 도구가 종료되지 않았습니다. 준비를 계속합니다.")
+                    ui.show_alert("일부 개발 도구가 종료되지 않았습니다. 메모리가 부족하면 직접 닫아주세요.")
+            if stopped.is_set():
+                return
+            loading.set_stage(1)
+            operation = "vad_load"
             vad = VoiceActivityDetector(cfg["vad"])
             operation = "stt_load"
+            loading.set_stage(2)
             from stt.transcriber import Transcriber
             stt = Transcriber(cfg["stt"])
             if stopped.is_set():
@@ -90,6 +120,7 @@ def main() -> None:
             stt.set_extra_terms(build_name_hotwords(cfg["events"].get("student_names", [])))
             if cfg["stt"].get("warmup", False):
                 operation = "stt_warmup"
+                loading.set_stage(3)
                 import numpy as np
                 began = time.monotonic()
                 inference_gate.run(stt.transcribe, np.zeros(cfg["audio"].get("sample_rate", 16000), dtype=np.float32))
@@ -98,6 +129,7 @@ def main() -> None:
             if stopped.is_set():
                 return
             operation = "tts_load"
+            loading.set_stage(4)
             from tts.speaker import Speaker
             speaker = Speaker(cfg["tts"])
             speaker.on_event = diagnostics.record
@@ -105,6 +137,7 @@ def main() -> None:
             speaker.on_speech_pause = pending.hold_for_speech
             if cfg["tts"].get("warmup", False):
                 operation = "tts_warmup"
+                loading.set_stage(5)
                 began = time.monotonic()
                 speaker.warmup()
                 diagnostics.record("models_warmup", stage="tts", duration_s=time.monotonic() - began)
@@ -196,6 +229,7 @@ def main() -> None:
                                        error_category=error_category(exc), error_type=type(exc).__name__)
                     ui.show_alert("자막 처리가 중단됐습니다. 앱을 다시 실행해주세요.")
             operation = "devices_start"
+            loading.set_stage(6, "마이크와 방향 연결을 시작합니다. 연결 상태는 메인 화면에서 확인할 수 있습니다.")
             devices.start()
             threading.Thread(target=guarded_lane, args=(vad_lane, "vad"), name="vad", daemon=True).start()
             threading.Thread(target=guarded_lane, args=(caption_lane, "publish"), name="captions", daemon=True).start()
@@ -216,10 +250,10 @@ def main() -> None:
                 speaker = None
             if stopped.is_set():
                 return
-            stage_name = {"vad_load": "음성 구간 감지", "stt_load": "자막 모델",
+            stage_name = {"startup_cleanup": "개발 도구 정리", "vad_load": "음성 구간 감지", "stt_load": "자막 모델",
                           "stt_warmup": "자막 모델 첫 실행", "tts_load": "말하기 모델",
                           "tts_warmup": "말하기 모델 첫 실행", "devices_start": "장치 시작"}[operation]
-            detail = f"{stage_name} 준비에 실패했습니다. 모델 준비 재시도를 눌러주세요."
+            detail = f"{stage_name} 준비에 실패했습니다. 다시 준비하기를 눌러주세요."
             if category in ("memory", "cuda"):
                 detail += " 메모리·GPU 상태를 확인하고 다른 무거운 앱을 닫아주세요."
             failure_detail = detail
@@ -231,6 +265,7 @@ def main() -> None:
             if failure_detail is not None and not stopped.is_set():
                 ui.set_models_ready(False, failure_detail)
                 ui.show_device_status("model_failed", "waiting", failure_detail)
+                loading.fail(failure_detail)
 
     def retry_models():
         nonlocal initializer, initialization_running
@@ -242,6 +277,7 @@ def main() -> None:
             initializer = threading.Thread(target=initialize, name="model-loading", daemon=True)
             initializer.start()
     ui.on_retry_models = retry_models
+    loading.on_retry = retry_models
     retry_models()
     clean = False
     try:
@@ -263,7 +299,11 @@ def main() -> None:
             raise
         finally:
             diagnostics.close(clean=clean)
+            loading.finish()
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--close-development-tools", action="store_true")
+    main(close_development_tools=parser.parse_args().close_development_tools)

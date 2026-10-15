@@ -41,6 +41,13 @@ def summarize(rows):
     for key in ["no_speech_filtered", "low_confidence_filtered", "echo_filtered"]:
         lines.append(f"{key}: {sum(row.get(key, 0) for row in captions)} 세그먼트")
     lines.append(f"마이크 장애 {events['mic_failure']}건, 수동 재시도 {events['retry']}건")
+    for row in rows:
+        if row['event'] != 'startup_cleanup':
+            continue
+        lines.append(f"개발 도구 정리: {row.get('duration_s', 0):.3f}초, 미종료 {row.get('remaining_tools', 0)}개")
+        before, after = row.get('available_before_kib'), row.get('available_after_kib')
+        if isinstance(before, (int, float)) and isinstance(after, (int, float)):
+            lines.append(f"정리 전후 가용 메모리 MiB: {before/1024:.1f} → {after/1024:.1f}")
     failures = Counter(row.get("failure_reason", "unknown") for row in rows if row["event"] == "mic_failure")
     for reason, count in failures.items():
         lines.append(f"마이크 장애 원인 {reason}: {count}건")

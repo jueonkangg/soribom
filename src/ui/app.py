@@ -307,6 +307,8 @@ class SoribomUI(QObject):
         self.on_retry_models = lambda: None
         self._device_state = ("preparing", "waiting", "")
         self._models_ready = True
+        self.startup_window = None
+        self._running = False
         self._speaking = False
         self._speech_failed = False
         self._note_failed = False
@@ -721,6 +723,9 @@ class SoribomUI(QObject):
         self.subject_box.setEnabled(ready)
         if not ready:
             self._update_devices("preparing", "waiting", message)
+        elif self.startup_window is not None and self._running:
+            self.window.showFullScreen()
+            self.startup_window.finish()
 
     def show_caption(self, text: str, angle: float = None, tentative: bool = False) -> None:
         """자막과 화자 방향을 화면에 띄운다. (tentative는 단일패스라 안 씀)
@@ -888,7 +893,11 @@ class SoribomUI(QObject):
 
     def run(self) -> None:
         """전체화면으로 띄우고 이벤트 루프를 돈다. (ESC로 종료)"""
-        self.window.showFullScreen()
+        self._running = True
+        if self.startup_window is None or self._models_ready:
+            self.window.showFullScreen()
+            if self.startup_window is not None:
+                self.startup_window.finish()
         self.app.exec()
 
 

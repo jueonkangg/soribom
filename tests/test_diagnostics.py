@@ -102,6 +102,18 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertNotIn('samples', playback)
         self.assertNotIn('비공개', recorder.path.read_text())
 
+    def test_cleanup_records_only_counts_and_memory_without_process_arguments(self):
+        recorder = self.recorder()
+        recorder.start()
+        recorder.record('startup_cleanup', duration_s=0.3, remaining_tools=1,
+                        available_before_kib=100, available_after_kib=200,
+                        argv='비공개 명령 인수')
+        recorder.close()
+        row = next(row for row in self.read(recorder) if row['event'] == 'startup_cleanup')
+        self.assertEqual(row['remaining_tools'], 1)
+        self.assertEqual(row['available_after_kib'], 200)
+        self.assertNotIn('비공개', recorder.path.read_text())
+
     def test_full_queue_drops_diagnostics_without_blocking(self):
         recorder = self.recorder()
         for _ in range(1000):

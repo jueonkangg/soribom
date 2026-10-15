@@ -180,7 +180,13 @@ TTS 음성을 교실 벽 스피커로 내보내면 반 친구들이 **누가 말
 속도: sherpa-onnx를 **GPU(CUDA)로 소스 빌드**해 Jetson GPU에서 32스텝을 ~1.5초에 합성한다(실시간).
 GPU 초기화가 메모리 부족으로 실패하면 `speaker.py` 가 자동으로 CPU로 폴백한다(느리지만 소리는 난다).
 GPU 빌드는 pip 기본 휠이 아니라 별도로 만든 것이다 — 재현법은 `src/requirements.txt` 주석 참고.
-⚠️ Jetson은 CPU/GPU가 8GB를 공유한다. STT(GPU)+TTS(GPU)를 같이 올리므로, 데모 땐 브라우저 등을 꺼 메모리를 비운다.
+⚠️ Jetson은 CPU/GPU가 8GB를 공유한다. 바탕화면 런처는 독립 세션으로 로딩 창을 띄우고
+브라우저·Codex 앱/CLI를 정상 종료한 뒤 모델을 준비한다. 다른 작업이 없는 CLI 터미널 셸만
+닫고 다른 터미널은 보존한다. `bash scripts/소리봄-실행.sh --keep-development-tools` 또는
+직접 `src/main.py` 실행은 개발 도구를 유지한다. 검증 중 실제 종료를 무심코 실행하지 않는다.
+실제 준비 단계·실패 재시도·완료 전환은 `ui/loading.py`, 종료 대상 선택은 `startup.py`다.
+종료 대기 3초 뒤에도 남은 앱을 강제 종료하지 않으며, 진단 `startup_cleanup`에 미종료 수와
+가용 메모리를 기록한다. 2026-10-14 도구 유지 시험의 실제 CUDA OOM은 해결 확정하지 않는다.
 
 ### 수업 기록은 전체 전사로
 

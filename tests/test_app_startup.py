@@ -141,13 +141,15 @@ class AppStartupTests(unittest.TestCase):
             self.assertTrue(predicate())
         def run_screen():
             wait_for(lambda: ui._device_state[0] == "model_failed")
+            self.assertTrue(ui.startup_window.retry.isVisible())
+            self.assertIn("준비에 실패", ui.startup_window.status.text())
             self.assertFalse(ui.input_box.isEnabled())
             self.assertTrue(ui.reconnect_button.isEnabled())
             self.assertEqual(ui.reconnect_button.text(), "모델 준비 재시도")
             self.assertIn("메모리", ui.connection_label.text())
             device.start.assert_not_called()
             speaker.assert_not_called()
-            ui.reconnect_button.click()
+            ui.startup_window.retry.click()
             self.assertTrue(second_started.wait(1))
             self.assertFalse(ui.reconnect_button.isEnabled())
             for _ in range(20):
