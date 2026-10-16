@@ -1015,3 +1015,20 @@ guhyeon에서 이름 알림 대상·부분 일치와 hotwords 잘림을 수정�
 
 - 후속 검증: 전체 자동 테스트 183개 통과. 사용자가 최신 업데이트 전체의 정상 작동을
   확인하고 doyu 커밋·푸시와 main 병합을 요청했다. 로컬 기록 폴더 연결도 Git 제외한다.
+
+### [2026-10-17] 상단 남성·여성 TTS 목소리 선택
+- 사용자 요청: 학생이 편한 목소리를 직접 선택하도록 과목 옆에 남성 목소리·여성 목소리
+  버튼을 추가했다. 선택은 배경색과 체크 상태로 표시하며 사용자의 성별 정보는 수집하지 않는다.
+- 기존 Supertonic 모델 하나를 공유하고 sid만 변경한다. 여성 F1=0, 남성 M1=5.
+  모델·패키지 추가 없이 기존 CUDA 32스텝을 유지한다. 기본값은 기존 여성 F1이며,
+  실행 중 선택은 메모리에만 유지되고 다음 실행은 config의 tts.sid를 따른다.
+- 공식 변환 코드는 voice_styles JSON 이름순으로 화자를 병합한다:
+  https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/supertonic/generate_voices_bin.py
+  로컬 voice.bin의 sid 0/5 데이터를 공식 Supertonic-3 F1/M1 JSON과 각각 비교해
+  style_ttl·style_dp의 float32 바이너리 전체 일치를 확인했다.
+  https://huggingface.co/Supertone/supertonic-3/tree/main/voice_styles
+- 합성·재생 중 버튼을 잠그고 백엔드도 다른 스레드의 화자 변경을 거절한다.
+  다음 문장 타이핑·자막 갱신은 유지한다. 준비 중 비활성화와 테마 변경도 반영했다.
+- 자동 테스트 전체 187개 통과. 실제 CUDA 모델 하나로 동일 한국어 문장을 두 목소리로
+  생성해 44.1kHz·유효 파형 확인(각 약 2.4초). 화면 배치도 1920×1080에서 확인했다.
+  이후 사용자가 앱 실사용 테스트 완료를 확인하고 doyu 커밋·푸시와 main 병합을 요청했다.

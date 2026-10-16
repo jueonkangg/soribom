@@ -124,7 +124,8 @@ tts:
   # 모델 경로 (repo 루트 기준 상대경로). 실제 파일은 .gitignore(models/)로 커밋 제외.
   model_dir: "models/supertonic-3-int8"
 
-  # 화자 (0~9). 청취 비교로 sid0 확정.
+  # 시작 목소리: 0=여성 F1, 5=남성 M1. 상단에서 실행 중 변경 가능.
+  # 기존 청취 비교로 선택한 여성 F1을 기본값으로 유지한다.
   sid: 0
 
   # 연산 장치. cuda = Jetson GPU(sherpa-onnx GPU 빌드 필요, 이미 .venv에 설치됨).

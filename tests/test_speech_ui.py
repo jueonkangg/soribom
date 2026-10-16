@@ -48,6 +48,7 @@ class SpeechUITests(unittest.TestCase):
             self.ui.set_models_ready(True)
             self.assertFalse(self.ui.speak_button.isEnabled())
             self.assertTrue(self.ui.input_box.isEnabled())
+            self.assertTrue(all(not button.isEnabled() for button in self.ui.voice_buttons))
             self.ui.show_caption("말하기 중에도 새 자막")
             self.assertIn("새 자막", self.ui.caption_label.text())
             self.assertEqual(calls, ["질문이 있습니다"])
@@ -57,6 +58,29 @@ class SpeechUITests(unittest.TestCase):
             self.wait_for(lambda: not self.ui._speaking)
         self.assertEqual(self.ui.input_box.text(), "")
         self.assertTrue(self.ui.speak_button.isEnabled())
+        self.assertTrue(all(button.isEnabled() for button in self.ui.voice_buttons))
+
+    def test_voice_buttons_are_exclusive_and_follow_model_readiness(self):
+        calls = []
+        self.ui.on_voice_change = calls.append
+        male, female = self.ui.voice_buttons
+        self.assertTrue(female.isChecked())
+        male.click()
+        self.assertTrue(male.isChecked())
+        self.assertFalse(female.isChecked())
+        female.click()
+        self.assertEqual(calls, [5, 0])
+        self.ui.set_models_ready(False)
+        male.click()
+        self.assertEqual(calls, [5, 0])
+        self.ui.set_models_ready(True)
+        male.click()
+        self.assertEqual(calls, [5, 0, 5])
+
+    def test_configured_male_voice_is_selected_initially(self):
+        ui = SoribomUI({"tts": {"sid": 5}})
+        self.addCleanup(ui.window.close)
+        self.assertEqual(ui.voice_group.checkedId(), 5)
 
     def test_editing_next_sentence_during_playback_preserves_it_and_allows_next_enter(self):
         release = threading.Event()

@@ -114,6 +114,17 @@ class Speaker:
 
         self.sample_rate = self.tts.sample_rate
 
+    def set_voice(self, sid: int) -> None:
+        """모델을 다시 올리지 않고 다음 발화의 목소리를 바꾼다."""
+        if type(sid) is not int or not 0 <= sid <= 9:
+            raise ValueError("지원하지 않는 목소리입니다.")
+        if not self._speech_lock.acquire(blocking=False):
+            raise RuntimeError("말하기가 끝난 뒤 목소리를 변경해주세요.")
+        try:
+            self.sid = sid
+        finally:
+            self._speech_lock.release()
+
     def synthesize(self, text: str):
         with self._speech_lock:
             self.last_inference_wait = 0.0

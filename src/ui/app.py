@@ -19,7 +19,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot, QEvent
 from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QShortcut, QTextCursor
 from PySide6.QtWidgets import (
-    QApplication, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
+    QApplication, QButtonGroup, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QTextEdit, QPlainTextEdit, QVBoxLayout, QWidget,
 )
 
@@ -299,6 +299,7 @@ class SoribomUI(QObject):
         self.on_summarize = lambda: "요약 기능이 연결되지 않았습니다."
         # 과목 드롭다운이 부를 콜백. main 에서 Transcriber.set_subject 로 연결.
         self.on_subject_change = lambda subject: None
+        self.on_voice_change = lambda sid: None
         self.on_note_snapshot = lambda: ""
         self.on_send_note = self._email_not_connected
         self._email_dialog = None
@@ -378,6 +379,25 @@ class SoribomUI(QObject):
         self.subject_box.setStyleSheet(style["subject_box"])
         self.subject_box.currentIndexChanged.connect(self._on_subject_changed)
         header_row.addWidget(self.subject_box)
+
+        self.voice_label = QLabel("말하기 목소리")
+        self.voice_label.setStyleSheet(style["subj_label"])
+        header_row.addWidget(self.voice_label)
+        self.voice_group = QButtonGroup(self.window)
+        self.voice_group.setExclusive(True)
+        self.voice_buttons = []
+        initial_sid = cfg.get("tts", {}).get("sid", 0)
+        for label, sid in (("남성 목소리", 5), ("여성 목소리", 0)):
+            button = QPushButton(label)
+            button.setCheckable(True)
+            button.setChecked((sid == 5) == (initial_sid >= 5))
+            button.setAccessibleName(label)
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.setStyleSheet(style["voice_button"])
+            self.voice_group.addButton(button, sid)
+            self.voice_buttons.append(button)
+            header_row.addWidget(button)
+        self.voice_group.idClicked.connect(self._on_voice_changed)
 
         self.summary_button = QPushButton("수업 기록 보기")
         self.summary_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -532,6 +552,13 @@ class SoribomUI(QObject):
                 f"background: {PILL_BG}; color: {PILL_INK}; border: none; border-radius: 13px; "
                 f"padding: 8px 18px; font-size: {int(f * 0.42)}px; font-weight: 700;"
             ),
+            "voice_button": (
+                f"QPushButton {{ background: transparent; color: #FFFFFF; border: 1px solid #CBD5E1; "
+                f"border-radius: 8px; padding: 8px 12px; font-size: {int(f * 0.42)}px; }}"
+                f"QPushButton:checked {{ background: {PILL_BG}; color: {PILL_INK}; "
+                f"border: 2px solid {PILL_BG}; font-weight: 700; }}"
+                "QPushButton:disabled { color: #94A3B8; border-color: #64748B; }"
+            ),
             "caption": f"color: {INK}; font-size: {f}px; font-weight: 600; background: transparent; border: none; padding: 0;",
             "alert": (
                 f"background: {ALERT_BG}; color: {INK}; border: 1px solid {ALERT_LINE}; "
@@ -586,6 +613,9 @@ class SoribomUI(QObject):
         self.title.setStyleSheet(style["title"])
         self.subj_label.setStyleSheet(style["subj_label"])
         self.subject_box.setStyleSheet(style["subject_box"])
+        self.voice_label.setStyleSheet(style["subj_label"])
+        for button in self.voice_buttons:
+            button.setStyleSheet(style["voice_button"])
         self.summary_button.setStyleSheet(style["summary_button"])
         self.email_button.setStyleSheet(style["summary_button"])
         self._render_connection()
@@ -746,6 +776,8 @@ class SoribomUI(QObject):
         self.speak_button.setEnabled(ready and not self._speaking)
         self.input_box.setEnabled(ready)
         self.subject_box.setEnabled(ready)
+        for button in self.voice_buttons:
+            button.setEnabled(ready and not self._speaking)
         if not ready:
             self._update_devices("preparing", "waiting", message)
         elif self.startup_window is not None and self._running:
@@ -873,6 +905,10 @@ class SoribomUI(QObject):
         self.note_status.setText(message)
         self._render_operation_status()
 
+    def _on_voice_changed(self, sid: int) -> None:
+        self.on_voice_change(sid)
+        self.input_box.setFocus()
+
     def _on_enter(self) -> None:
         """합성·재생은 한 번에 하나만. 성공한 문장만 입력칸에서 지운다."""
         if not self._models_ready or self._speaking:
@@ -890,6 +926,8 @@ class SoribomUI(QObject):
         self._speech_text = text
         self._speech_failed = False
         self.speak_button.setEnabled(False)
+        for button in self.voice_buttons:
+            button.setEnabled(False)
         self.input_box.setEnabled(True)
         self.speak_button.setText("말하는 중…")
         self.speech_status.setText("말하기가 끝나면 보관한 음성을 인식합니다. 다음 문장을 입력할 수 있습니다.")
@@ -918,6 +956,8 @@ class SoribomUI(QObject):
             self.input_box.clear()
         self.speak_button.setText("말하기 ▶")
         self.speak_button.setEnabled(self._models_ready)
+        for button in self.voice_buttons:
+            button.setEnabled(self._models_ready)
         self.input_box.setEnabled(self._models_ready)
         self.speech_status.setText(message)
         self._render_operation_status()

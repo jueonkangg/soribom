@@ -184,6 +184,7 @@ def main(close_development_tools=False) -> None:
                 diagnostics.record("models_cancelled")
                 return
             ui.on_speak = speaker.say
+            ui.on_voice_change = speaker.set_voice
             def change_subject(subject):
                 stt.set_subject(subject)
                 notes.set_subject(subject)
