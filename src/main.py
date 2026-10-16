@@ -73,6 +73,8 @@ def main(close_development_tools=False) -> None:
     initialization_running = False
     models_initialized = False
     tools_closed = False
+    audio_prepared = False
+    audio_warning = None
     ui.on_reconnect = devices.retry
     ui.on_summarize = notes.build_summary
     ui.on_note_snapshot = notes.build_email_transcript
@@ -84,7 +86,7 @@ def main(close_development_tools=False) -> None:
     ui.set_models_ready(False, "자막·말하기 모델을 준비하고 있습니다.")
 
     def initialize():
-        nonlocal speaker, initialization_running, models_initialized, tools_closed
+        nonlocal speaker, initialization_running, models_initialized, tools_closed, audio_prepared, audio_warning
         operation = "vad_load"
         failure_detail = None
         try:
@@ -103,6 +105,28 @@ def main(close_development_tools=False) -> None:
                 if remaining:
                     loading.set_stage(0, "일부 도구가 종료되지 않았습니다. 준비를 계속합니다.")
                     ui.show_alert("일부 개발 도구가 종료되지 않았습니다. 메모리가 부족하면 직접 닫아주세요.")
+            if stopped.is_set():
+                return
+            if (not audio_prepared and cfg["tts"].get("startup_recovery", False)
+                    and cfg["tts"].get("output_backend") == "pulse"):
+                from audio.output_recovery import prepare_system_output
+                operation = "audio_startup"
+                loading.set_stage(0, "무선 절전을 확인하고 스피커 오디오를 다시 준비합니다.")
+                began = time.monotonic()
+                try:
+                    output_status = prepare_system_output(cfg["tts"], stopped.is_set)
+                except Exception as exc:
+                    diagnostics.record("error", stage="initialize", operation="audio_startup",
+                                       error_type=type(exc).__name__)
+                    output_status = {"speaker_ready": False, "wifi_checked": False}
+                diagnostics.record("audio_startup", duration_s=time.monotonic() - began, **output_status)
+                audio_prepared = True
+                if not output_status["speaker_ready"]:
+                    audio_warning = "스피커 연결을 확인하지 못했습니다. 전원을 확인해주세요. 자막은 사용할 수 있습니다."
+                elif output_status["wifi_checked"] and not output_status["wifi_power_save_off"]:
+                    audio_warning = "Wi-Fi 절전 해제를 확인하지 못했습니다. 스피커 잡음이 있으면 연결 설정을 확인해주세요."
+                elif not output_status.get("audio_profile_reset", False):
+                    audio_warning = "스피커 오디오 초기화를 완료하지 못했습니다. 잡음이 나면 다른 재생을 멈춘 뒤 앱을 다시 실행해주세요."
             if stopped.is_set():
                 return
             loading.set_stage(1)
@@ -238,6 +262,8 @@ def main(close_development_tools=False) -> None:
             threading.Thread(target=guarded_lane, args=(caption_lane, "publish"), name="captions", daemon=True).start()
             models_initialized = True
             ui.set_models_ready(True)
+            if audio_warning:
+                ui.show_alert(audio_warning)
             diagnostics.record("models_ready", provider=getattr(speaker, "provider", None))
         except Exception as exc:
             category = error_category(exc)
@@ -253,7 +279,7 @@ def main(close_development_tools=False) -> None:
                 speaker = None
             if stopped.is_set():
                 return
-            stage_name = {"startup_cleanup": "개발 도구 정리", "vad_load": "음성 구간 감지", "stt_load": "자막 모델",
+            stage_name = {"startup_cleanup": "개발 도구 정리", "audio_startup": "스피커 연결", "vad_load": "음성 구간 감지", "stt_load": "자막 모델",
                           "stt_warmup": "자막 모델 첫 실행", "tts_load": "말하기 모델",
                           "tts_warmup": "말하기 모델 첫 실행", "devices_start": "장치 시작"}[operation]
             detail = f"{stage_name} 준비에 실패했습니다. 다시 준비하기를 눌러주세요."

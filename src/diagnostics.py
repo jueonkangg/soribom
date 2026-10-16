@@ -13,7 +13,7 @@ import uuid
 
 EVENTS = {"session_start", "session_end", "resources", "device_status", "mic_start",
           "mic_failure", "audio_gap", "retry", "error", "models_ready", "models_cancelled",
-          "caption", "caption_layout", "callback_jitter", "models_warmup", "startup_cleanup", "inference_wait", "tts_start", "tts_output_ready", "tts_synthesis", "tts_playback", "tts_end", "note_save", "hotwords"}
+          "caption", "caption_layout", "callback_jitter", "models_warmup", "startup_cleanup", "audio_startup", "inference_wait", "tts_start", "tts_output_ready", "tts_synthesis", "tts_playback", "tts_end", "note_save", "hotwords"}
 NUMBERS = {"pid", "capture_pid", "rss_kib", "capture_rss_kib", "available_kib", "threads",
            "generation", "queue_depth", "queue_capacity", "queue_dropped_blocks", "queue_overflows", "resets",
            "stale_results", "stale_input_blocks", "audio_gaps", "mic_starts", "duration_s", "stt_duration_s", "error_code",
@@ -25,7 +25,8 @@ NUMBERS = {"pid", "capture_pid", "rss_kib", "capture_rss_kib", "available_kib", 
            "remaining_tools", "available_before_kib", "available_after_kib",
            "utterance_capacity_dropped", "utterance_expired", "decode_calls", "decode_sampling_calls",
            "decode_duration_s", "language_detection_s", "pause_s"}
-FLAGS = {"success", "has_text", "direction_known", "clean", "lesson_active", "paragraph_break"}
+FLAGS = {"success", "has_text", "direction_known", "clean", "lesson_active", "paragraph_break",
+         "wifi_checked", "wifi_power_save_off", "speaker_ready", "audio_profile_reset", "audio_recovery_skipped"}
 CHOICES = {"microphone": {"ready", "waiting", "connecting", "failed"},
            "direction": {"ready", "waiting", "connecting", "failed", "disabled"},
            "stage": {"initialize", "caption", "mic", "direction", "shutdown", "tts"},
@@ -33,7 +34,7 @@ CHOICES = {"microphone": {"ready", "waiting", "connecting", "failed"},
 CHOICES["failure_reason"] = {"capture_error", "process_exit", "input_timeout", "driver_error"}
 CHOICES["subject"] = {"korean", "math", "science", "english", "economics"}
 CHOICES["operation"] = {"transcribe", "vad", "publish", "output",
-                        "vad_load", "stt_load", "tts_load", "stt_warmup", "tts_warmup", "devices_start", "startup_cleanup"}
+                        "vad_load", "stt_load", "tts_load", "stt_warmup", "tts_warmup", "devices_start", "startup_cleanup", "audio_startup"}
 CHOICES["error_category"] = {"memory", "cuda", "input", "unknown"}
 CHOICES["layout_reason"] = {"first", "pause", "unknown", "same_direction", "direction_change"}
 CHOICES["pause_source"] = {"audio", "display", "unknown"}

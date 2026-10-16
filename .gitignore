@@ -50,7 +50,7 @@ CONTEXT.local.md
 *.wav
 
 # ── 수업 요약 결과 (실제 수업 내용 가능성) ──
-notes/
+/notes
 diagnostics/
 
 # ── 임시/로그/메모 파일 (커밋 안 함) ──

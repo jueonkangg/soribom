@@ -32,8 +32,8 @@ class NoteBuilder:
         self.subject = subject
 
         # 저장 위치. config 가 상대경로면 repo 루트 기준으로 푼다(실행 위치 무관).
-        out = cfg.get("output_dir", "./notes")
-        out_path = Path(out)
+        out = cfg.get("output_dir", "~/Desktop/소리봄 수업 기록")
+        out_path = Path(out).expanduser()
         if not out_path.is_absolute():
             repo_root = Path(__file__).resolve().parents[2]
             out_path = repo_root / out_path

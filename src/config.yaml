@@ -146,6 +146,7 @@ tts:
   #   특정 출력을 고정하려면 sounddevice 장치 인덱스/이름을 적는다.
   output_device: null
   output_backend: "pulse"  # 재연결 후 오래된 PortAudio 스트림을 재사용하지 않는다
+  startup_recovery: true   # 로딩 중 절전 확인·Bose 오디오 재준비 (Bluetooth 전체 연결은 유지)
   output_sink: "bluez_output.C8_7B_23_EF_4E_9A.a2dp-sink"
   bluetooth_address: "C8:7B:23:EF:4E:9A"  # 출력이 없으면 이 스피커만 제한 시간 내 재연결
   output_latency: "high"  # 출력 여유 버퍼를 유지하며 스트림을 재사용
@@ -212,4 +213,4 @@ summary:
   #   요약(추출)이 아니라 전체 기록 — 없는 말을 지어내지 않는다.
   enabled: true            # 버튼은 항상 동작. enabled 는 자동/종료 파일 저장 여부.
   autosave_seconds: 30     # 변경된 기록만 같은 수업 파일에 저장. 정상 종료 시 마지막 내용 저장.
-  output_dir: "./notes"    # repo 루트 기준. 실제 수업 내용이라 커밋하지 않는다(.gitignore)
+  output_dir: "~/Desktop/소리봄 수업 기록"  # 바탕화면에 저장. 실제 수업 내용은 커밋하지 않는다.

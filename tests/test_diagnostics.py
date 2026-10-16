@@ -103,6 +103,18 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(resource["utterance_expired"], 0)
         self.assertNotIn("비공개", recorder.path.read_text())
 
+    def test_audio_startup_logs_only_flags_without_device_or_network_details(self):
+        recorder = self.recorder()
+        recorder.start()
+        recorder.record("audio_startup", speaker_ready=True, audio_profile_reset=True,
+                        wifi_checked=True, wifi_power_save_off=True,
+                        address="비공개 장치", ssid="비공개 무선망")
+        recorder.close()
+        row = next(row for row in self.read(recorder) if row["event"] == "audio_startup")
+        self.assertTrue(row["audio_profile_reset"])
+        self.assertTrue(row["wifi_power_save_off"])
+        self.assertNotIn("비공개", recorder.path.read_text())
+
     def test_speech_phase_metrics_are_saved_without_original_text(self):
         recorder = self.recorder()
         recorder.start()

@@ -34,6 +34,16 @@ class NoteAutosaveTests(unittest.TestCase):
         self.assertIn("첫 문장", path.read_text())
         self.assertEqual(len(list(self.folder.glob("*.txt"))), 2)
 
+    def test_desktop_default_and_home_path_save_outside_repository(self):
+        with patch.dict("os.environ", {"HOME": str(self.folder)}):
+            for cfg in ({}, {"output_dir": "~/Desktop/소리봄 수업 기록"}):
+                notes = NoteBuilder(cfg)
+                notes.add("바탕화면에 저장할 수업", 0)
+                path = notes.save()
+                self.assertEqual(path.parent, self.folder / "Desktop" / "소리봄 수업 기록")
+                self.assertIn("바탕화면에 저장할 수업", path.read_text())
+                self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+
     def test_weekday_and_selected_subject_match_preview_and_saved_file(self):
         self.notes.started_at = datetime(2026, 10, 11, 10, 30)
         self.notes.set_subject("math")
