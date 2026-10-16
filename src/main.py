@@ -202,7 +202,8 @@ def main(close_development_tools=False) -> None:
                     # 표본 집계 중에도 마이크 워커가 음성을 큐에 넣을 수 있게 한다.
                     angle = devices.direction_for(generation, speech_ranges)
                     def publish():
-                        ui.show_caption(text, angle=angle)
+                        ui.show_caption(text, angle=angle, speech_ranges=speech_ranges,
+                                        generation=generation)
                         notes.add(text, angle=angle, subject=subject)
                         if cfg["events"].get("enabled"):
                             for alert in events.detect_in_text(text):

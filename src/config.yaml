@@ -166,6 +166,7 @@ ui:
   # 대화가 이만큼(초) 끊겼다 다시 시작되면 자막 사이에 빈 줄을 하나 넣는다.
   #   (엔터 두 번과 같은 간격) 쉬는 시간과 수업이 한 덩어리로 붙어 보이지 않게.
   gap_seconds: 30
+  caption_pause_break_seconds: 2  # 실제 음성 사이 무음이 이 시간 이상이면 새 문단 (모든 과목)
   caption_history_blocks: 200  # 화면에는 현재 글꼴·창 크기로 들어가는 만큼 표시
   caption_history_characters: 40000  # 같은 방향의 긴 문단도 메모리 사용량 제한
   caption_direction_break_degrees: 5  # 직전 발화와 이 각도 이상 달라지면 새 문단

@@ -24,7 +24,7 @@ NUMBERS = {"pid", "capture_pid", "rss_kib", "capture_rss_kib", "available_kib", 
            "direction_angle", "direction_difference", "direction_threshold",
            "remaining_tools", "available_before_kib", "available_after_kib",
            "utterance_capacity_dropped", "utterance_expired", "decode_calls", "decode_sampling_calls",
-           "decode_duration_s", "language_detection_s"}
+           "decode_duration_s", "language_detection_s", "pause_s"}
 FLAGS = {"success", "has_text", "direction_known", "clean", "lesson_active", "paragraph_break"}
 CHOICES = {"microphone": {"ready", "waiting", "connecting", "failed"},
            "direction": {"ready", "waiting", "connecting", "failed", "disabled"},
@@ -36,6 +36,7 @@ CHOICES["operation"] = {"transcribe", "vad", "publish", "output",
                         "vad_load", "stt_load", "tts_load", "stt_warmup", "tts_warmup", "devices_start", "startup_cleanup"}
 CHOICES["error_category"] = {"memory", "cuda", "input", "unknown"}
 CHOICES["layout_reason"] = {"first", "pause", "unknown", "same_direction", "direction_change"}
+CHOICES["pause_source"] = {"audio", "display", "unknown"}
 
 
 def process_rss(pid):

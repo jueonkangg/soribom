@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import sys
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -74,6 +75,65 @@ class CaptionGroupingTests(unittest.TestCase):
             self.ui.show_caption("이전", 10)
             self.ui.show_caption("이후", 10)
         self.assertEqual(self.ui.caption_label.text(), "이전\n\n이후")
+
+    def test_english_two_second_silence_breaks_even_when_results_arrive_together(self):
+        events = []
+        self.ui.on_caption_layout = lambda **values: events.append(values)
+        with patch("ui.app.time.monotonic", return_value=200):
+            self.ui.show_caption("What did you learn?", 10,
+                                 speech_ranges=[(100, 101)], generation=0)
+            self.ui.show_caption("Was it difficult?", 10,
+                                 speech_ranges=[(103, 104)], generation=0)
+        self.assertEqual(self.ui.caption_label.text(), "What did you learn?\nWas it difficult?")
+        self.assertEqual(events[-1]["layout_reason"], "pause")
+        self.assertEqual(events[-1]["pause_s"], 2)
+        self.assertEqual(events[-1]["pause_source"], "audio")
+
+    def test_slow_recognition_without_audio_pause_does_not_split_paragraph(self):
+        with patch("ui.app.time.monotonic", side_effect=[200, 240]):
+            self.ui.show_caption("첫 설명", 10, speech_ranges=[(100, 101)], generation=0)
+            self.ui.show_caption("계속 설명", 10, speech_ranges=[(101.5, 103)], generation=0)
+        self.assertEqual(self.ui.caption_label.text(), "첫 설명 계속 설명")
+
+    def test_short_pause_and_same_direction_still_join(self):
+        self.ui.show_caption("Hello.", 359, speech_ranges=[(100, 101)], generation=0)
+        self.ui.show_caption("Good morning.", 1, speech_ranges=[(102.99, 104)], generation=0)
+        self.assertEqual(self.ui.caption_label.text(), "Hello. Good morning.")
+
+    def test_audio_long_pause_keeps_blank_line_and_uses_last_speech_range(self):
+        self.ui.show_caption("이전 설명", 10, speech_ranges=[(100, 101), (102, 103)], generation=0)
+        self.ui.show_caption("이후 설명", 10, speech_ranges=[(133, 134)], generation=0)
+        self.assertEqual(self.ui.caption_label.text(), "이전 설명\n\n이후 설명")
+
+    def test_pause_threshold_is_configurable(self):
+        ui = SoribomUI({"ui": {"caption_pause_break_seconds": 3}})
+        self.addCleanup(ui.window.close)
+        ui.show_device_status("ready", "ready")
+        ui.show_caption("One.", 10, speech_ranges=[(100, 101)], generation=0)
+        ui.show_caption("Two.", 10, speech_ranges=[(103, 104)], generation=0)
+        ui.show_caption("Three.", 10, speech_ranges=[(107, 108)], generation=0)
+        self.assertEqual(ui.caption_label.text(), "One. Two.\nThree.")
+
+    def test_new_generation_does_not_compare_old_audio_clock(self):
+        self.ui.show_caption("이전 연결", 10, speech_ranges=[(100, 101)], generation=0)
+        self.ui.show_caption("새 연결", 10, speech_ranges=[(200, 201)], generation=1)
+        self.assertEqual(self.ui.caption_label.text(), "이전 연결\n새 연결")
+
+    def test_filtered_speech_is_not_mistaken_for_silence(self):
+        self.ui.show_caption("첫 설명", 10, speech_ranges=[(100, 101)], generation=0)
+        self.ui.show_caption("", 90, speech_ranges=[(102, 103)], generation=0)
+        self.ui.show_caption("다음 설명", 10, speech_ranges=[(104, 105)], generation=0)
+        self.assertEqual(self.ui.caption_label.text(), "첫 설명 다음 설명")
+
+    def test_worker_signal_preserves_audio_timing(self):
+        def captions():
+            self.ui.show_caption("First.", 10, speech_ranges=[(100, 101)], generation=0)
+            self.ui.show_caption("Second.", 10, speech_ranges=[(104, 105)], generation=0)
+        thread = threading.Thread(target=captions)
+        thread.start()
+        thread.join()
+        self.app.processEvents()
+        self.assertEqual(self.ui.caption_label.text(), "First.\nSecond.")
 
     def test_threshold_is_configurable(self):
         ui = SoribomUI({"ui": {"caption_direction_break_degrees": 10}})

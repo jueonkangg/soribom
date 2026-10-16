@@ -284,7 +284,7 @@ class CaptionView(QPlainTextEdit):
 
 class SoribomUI(QObject):
     # 워커 스레드 → 메인 스레드로 (자막, 방향)을 안전하게 넘기는 통로.
-    _caption_arrived = Signal(str, object)   # (text, angle 또는 None)
+    _caption_arrived = Signal(str, object, object)   # text, angle, 발화 시각 또는 None
     _alert_arrived = Signal(str)             # 소리 이벤트 알림(이름 호명 등)
     _devices_changed = Signal(str, str, str)
     _models_changed = Signal(bool, str)
@@ -324,7 +324,9 @@ class SoribomUI(QObject):
         # (엔터를 두 번 친 것과 같은 간격) 쉬는 시간과 수업이 한 덩어리로 붙어 보이면
         # 어디까지가 방금 대화인지 알기 어렵다. 묶음을 눈으로 나눠 준다.
         self.gap_seconds = ui.get("gap_seconds", 30)
+        self.caption_pause_break_seconds = max(0.1, float(ui.get("caption_pause_break_seconds", 2)))
         self._last_caption_at = None        # 마지막 자막이 뜬 시각 (없으면 아직 첫 자막)
+        self._last_speech_timing = None     # (음성 끝 시각, 연결 세대)
         self._last_caption_angle = None
         self.caption_direction_break_degrees = max(
             0.1, min(180.0, float(ui.get("caption_direction_break_degrees", 5))))
@@ -598,8 +600,8 @@ class SoribomUI(QObject):
         self._render_operation_status()
         self.dial.update()      # 다이얼은 직접 그리는 위젯이라 '다시 그려라'만 알려주면 된다
 
-    @Slot(str, object)
-    def _update(self, text: str, angle) -> None:
+    @Slot(str, object, object)
+    def _update(self, text: str, angle, timing=None) -> None:
         """메인 스레드에서 실행: 자막과 방향을 화면에 반영한다."""
         # 장치가 끊겼거나 방향 표본이 없으면 이전 화자의 문단에 묶지 않는다.
         if (self._device_state[:2] != ("ready", "ready")
@@ -607,26 +609,48 @@ class SoribomUI(QObject):
             angle = None
         else:
             angle %= 360
+        now = time.monotonic()
+        pause_seconds = None
+        pause_source = "unknown"
+        generation_changed = False
+        if timing is not None:
+            begin, end, generation = timing
+            if self._last_speech_timing is not None:
+                previous_end, previous_generation = self._last_speech_timing
+                generation_changed = generation != previous_generation
+                if not generation_changed:
+                    pause_seconds = max(0.0, begin - previous_end)
+                    pause_source = "audio"
+                    end = max(end, previous_end)
+            # 필터 뒤 빈 자막도 실제 음성이 있었던 시각으로 취급한다.
+            self._last_speech_timing = (end, generation)
+        else:
+            # 시각이 없는 데모 호출만 표시 간격을 사용하며 음성 시각과 섞지 않는다.
+            if self._last_speech_timing is None and self._last_caption_at is not None:
+                pause_seconds = max(0.0, now - self._last_caption_at)
+                pause_source = "display"
+            self._last_speech_timing = None
         if text:
-            now = time.monotonic()
             first_caption = not self._lines
             if not self._lines:
                 self.caption_label.clear()
             # 앞 자막과 gap_seconds 이상 떨어져 있으면 빈 줄로 묶음을 나눈다.
-            gap = (self._last_caption_at is not None
-                   and now - self._last_caption_at >= self.gap_seconds)
+            gap = pause_seconds is not None and pause_seconds >= self.gap_seconds
+            pause_break = (gap or pause_seconds is not None
+                           and pause_seconds >= self.caption_pause_break_seconds)
             difference = None
-            if angle is not None and self._last_caption_angle is not None:
+            if not generation_changed and angle is not None and self._last_caption_angle is not None:
                 difference = abs((angle - self._last_caption_angle + 180) % 360 - 180)
-            continue_paragraph = (not gap and difference is not None
+            continue_paragraph = (not pause_break and difference is not None
                                   and difference < self.caption_direction_break_degrees)
-            reason = ("first" if first_caption else "pause" if gap else
+            reason = ("first" if first_caption else "pause" if pause_break else
                       "unknown" if difference is None else
                       "same_direction" if continue_paragraph else "direction_change")
             self.on_caption_layout(
                 direction_angle=angle, direction_difference=difference,
                 direction_threshold=self.caption_direction_break_degrees,
-                paragraph_break=not continue_paragraph, layout_reason=reason)
+                paragraph_break=not continue_paragraph, layout_reason=reason,
+                pause_s=pause_seconds, pause_source=pause_source)
             if gap:
                 self._lines.append("")
             self._last_caption_at = now
@@ -654,6 +678,7 @@ class SoribomUI(QObject):
         if microphone != "ready" or direction != "ready":
             self.dial.set_angle(None)
             self._last_caption_angle = None
+            self._last_speech_timing = None
         if not self._lines:
             self.caption_label.setText(
                 "소리봄 준비 완료 — 말하면 자막이 나옵니다."
@@ -727,12 +752,19 @@ class SoribomUI(QObject):
             self.window.showFullScreen()
             self.startup_window.finish()
 
-    def show_caption(self, text: str, angle: float = None, tentative: bool = False) -> None:
+    def show_caption(self, text: str, angle: float = None, tentative: bool = False,
+                     *, speech_ranges=None, generation=None) -> None:
         """자막과 화자 방향을 화면에 띄운다. (tentative는 단일패스라 안 씀)
 
         어느 스레드에서 불려도 안전하도록 시그널로만 넘긴다.
         """
-        self._caption_arrived.emit(text, angle)
+        timing = None
+        if speech_ranges:
+            begin, end = speech_ranges[0][0], speech_ranges[-1][1]
+            if (isinstance(begin, (int, float)) and isinstance(end, (int, float))
+                    and math.isfinite(begin) and math.isfinite(end) and end >= begin):
+                timing = (begin, end, generation)
+        self._caption_arrived.emit(text, angle, timing)
 
     @Slot(str)
     def _show_alert(self, text: str) -> None:

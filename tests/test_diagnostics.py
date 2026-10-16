@@ -78,12 +78,15 @@ class DiagnosticsTests(unittest.TestCase):
         recorder.start()
         recorder.record("caption_layout", direction_angle=1.0, direction_difference=2.0,
                         direction_threshold=5, paragraph_break=False,
-                        layout_reason="same_direction", text="비공개 발화")
+                        layout_reason="same_direction", pause_s=0.5,
+                        pause_source="audio", text="비공개 발화")
         recorder.close()
         row = next(row for row in self.read(recorder) if row["event"] == "caption_layout")
         self.assertEqual(row["direction_difference"], 2)
         self.assertEqual(row["layout_reason"], "same_direction")
         self.assertFalse(row["paragraph_break"])
+        self.assertEqual(row["pause_s"], 0.5)
+        self.assertEqual(row["pause_source"], "audio")
         self.assertNotIn("비공개", recorder.path.read_text())
 
     def test_decode_and_drop_reason_metrics_exclude_private_fields(self):
