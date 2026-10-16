@@ -147,7 +147,7 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
   <div class="en">S O U N D S I G H T</div>
   <div class="rule"></div>
   <div class="tag">
-    교실의 모든 소리를, 눈으로 보고 목소리로 전한다<br>
+    교실의 말을 자막으로, 발화 방향을 화살표로, 입력을 목소리로<br>
     <span style="color:var(--muted);font-size:12.5pt">— 청각장애·난청 학생을 위한 완전 오프라인 보조기기</span>
   </div>
   <div class="tag" style="margin-top:16mm;font-size:12.5pt;color:var(--muted)">
@@ -155,15 +155,27 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
   </div>
   <div class="meta">
     팀 제주 BTS · 강주언(리더) · 함도유 · 강구현<br>
-    2026 제8회 한국코드페어 SW공모전<br>
+    2026 제8회 한국코드페어 SW공모전 · 2026-10-17 본선 자료 반영<br>
     NVIDIA Jetson Orin Nano Super 기반
   </div>
+</section>
+<section class="sheet chapter" id="latest-20261017">
+<span class="part-kicker">CURRENT · 2026-10-17</span><h2 class="part">본선 자료 반영 — 현재 구성과 실험 해석</h2>
+<p class="part-sub">main 36922d2와 사용자 제공 본선 수정 도면 기준. 공유 링크 본문은 접근할 수 없어 인용하지 않았습니다.</p>
+<h3>최신 구현을 읽는 기준</h3><p>본문의 개발 일화·과거 측정은 이력입니다. 현재 구성은 <strong>USB 수음/방향 → VAD → 발화 큐 → 같은 다국어 small 모델 → 자막·이름 알림</strong>입니다. 방향 표본은 해당 발화 시각에 맞추고 5° 방향 변화 또는 실제 2초 무음으로 새 문단을 만듭니다. 30초 이상 무음은 빈 줄을 추가합니다.</p>
+<h3>수음·추론·화면을 구분하기</h3><p>Enter 시 이미 진행 중인 전사를 마친 뒤 말하기를 수행하고 새 전사는 잠시 대기합니다. 마이크와 VAD는 계속되며 보관 발화는 순서대로 전사합니다. 일반 4발화/말하기 보관 32발화 제한이 있어 용량 초과·재연결 누락은 진단합니다. 화면이 하나라고 모든 GPU 추론이 동시에 실행되는 것은 아닙니다.</p>
+<h3>기록 보기는 파일 불러오기가 아닙니다</h3><p>수업 기록 보기·이메일 미리보기는 현재 실행 중의 메모리 스냅샷을 사용합니다. 30초 저장과 정상 종료 저장은 별도 경로입니다. 자동 저장 파일은 내부 SSD의 사용자 바탕화면 폴더에 있으며 이전 TXT를 자동으로 앱에 복원하지 않습니다. 이메일은 사용자가 확인한 뒤 선택적으로 전송합니다.</p>
+<h3>수정 실험 v2 — 현재 인용할 결과</h3>
+<table><thead><tr><th>항목</th><th>실제 실시·결과</th></tr></thead><tbody><tr><td>참가자</td><td>동일 23명, 두 시험 모두 100점 만점</td></tr><tr><td>1차</td><td>소리봄 사용·재정정책·먼저</td></tr><tr><td>2차</td><td>미사용·통화정책·나중</td></tr><tr><td>평균</td><td>57.39점 / 46.09점</td></tr><tr><td>대응 평균 차이</td><td>+11.30점, 95% CI 3.89~18.71점</td></tr><tr><td>양측 대응 t검정</td><td>t(22)=3.1636, p=0.004502</td></tr><tr><td>개인별 차이</td><td>14명 높음, 4명 같음, 5명 낮음</td></tr><tr><td>실험 역할</td><td>수업 함도유 / 데이터 정리 강구현 / 분석 강주언</td></tr></tbody></table><p>자료 정정으로 1차 점수 11개 행이 바뀌었습니다. 수정 전 +27.83점·p≈4.84×10⁻¹²는 인용하지 않습니다. 분석은 대학 1학년 수준의 기술통계·대응 t검정·신뢰구간으로 제한합니다.</p>
+<div class="box warn"><span class="box-t">유의한 차이와 인과 효과의 차이</span>주제·시험·순서·기기 조건이 겹쳐 기기만의 인과 효과를 분리할 수 없습니다. 대부분 3M 이어플러그, 일부 ANC 이어폰으로 조건도 통일되지 않았고 실제 난청 학생 표본이 아닙니다. 편의표집·기대/채점 편향·같은 수업의 공통 영향도 남습니다. 기기를 먼저 쓴 것이 학습 편향 제거를 보장하지 않습니다.</div>
+<h3>다음 검증</h3><p>원 시험지·채점표를 수정 점수와 대조하고, 주제·순서를 균형 배치한 후속 실험을 설계해야 합니다. 최신 코드의 30~50분 STT/TTS 통합·온도·클럭 시험, 독립 기준 각도의 DOA 평가, 실제 대상자의 사용성 평가가 필요합니다.</p>
+<h3>출처와 적용 범위</h3><p>사용자 제공 소리봄_하드웨어_구성도_본선수정 및 소리봄_시스템_플로우차트_본선수정의 Mermaid·PNG·SVG 원본 6개를 docs/figures의 *-final-20261017.*로 보존했습니다. 본문 그림은 HTML에 포함했습니다. 코드는 src/main.py, src/stt/transcriber.py, src/audio/recovery.py, src/inference.py, src/stt/pipeline.py, src/summary/notes.py, src/tts/speaker.py, src/ui/app.py를 대조했습니다. 통계 근거는 docs/04-experiment.md v2, 측정의 한계는 docs/phase_c_measurements.md와 docs/25-speech-concurrency.md입니다.</p>
 </section>
 
 <!-- ==================== 일러두기 ==================== -->
 <section class="sheet chapter">
   <span class="part-kicker">읽기 전에</span>
-  <h2 class="part">이 책을 어떻게 읽으면 되나요</h2>
+  <h2 class="part">이 책을 어떻게 읽으면 되나요</h2><p><strong>현재 구현은 앞의 본선 업데이트 장을 먼저 확인하세요.</strong> 아래 개발 일화와 과거 측정은 이력이며 현재 성능 보장이 아닙니다. <a href="#latest-20261017">최신 정리</a> · <a href="#final-hardware">현재 하드웨어</a> · <a href="#final-flow">현재 처리 흐름</a></p>
   <p class="part-sub">— 컴퓨터·프로그래밍을 한 번도 안 해본 사람을 위한 안내</p>
 
   <p class="lead">
@@ -262,13 +274,13 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     <div class="stat"><div class="num">⑥</div><div class="lab">양방향 말하기<br>(타이핑 → 목소리)</div></div>
   </div>
 
-  <h3>핵심 성능 (실측)</h3>
+  <h3>과거 측정 예시 — 최신 보장값 아님</h3>
   <div class="stat-row">
-    <div class="stat"><div class="num">0.0%</div><div class="lab">조용할 때 자막 글자 오류</div></div>
-    <div class="stat"><div class="num">0.7%</div><div class="lab">시끄러울 때 자막 글자 오류</div></div>
-    <div class="stat"><div class="num">~0.6초</div><div class="lab">자막 지연</div></div>
-    <div class="stat"><div class="num">~1.8초</div><div class="lab">말하기 지연</div></div>
-    <div class="stat"><div class="num">1.5°</div><div class="lab">방향(DOA) 오차</div></div>
+    <div class="stat"><div class="num">0.0%</div><div class="lab">과거 통제 녹음 CER</div></div>
+    <div class="stat"><div class="num">0.7%</div><div class="lab">과거 잡음 녹음 CER</div></div>
+    <div class="stat"><div class="num">~0.6초</div><div class="lab">과거 전사 처리 시간</div></div>
+    <div class="stat"><div class="num">~1.8초</div><div class="lab">과거 합성 시간</div></div>
+    <div class="stat"><div class="num">1.5°</div><div class="lab">과거 DOA 4방향 기록</div></div>
   </div>
 
   <h3>무엇이 다른가</h3>
@@ -421,20 +433,14 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
   <p class="part-sub">세 가지 기능을, 기술 용어 없이 먼저 그림처럼</p>
 
   <p>
-    소리봄에는 세 가지 기능이 있습니다. 뒤에서 하나씩 깊이 들어가겠지만,
+    소리봄의 핵심은 다음 세 가지이며 이름 알림·수업 기록·이메일도 추가됐습니다. 뒤에서 하나씩 깊이 들어가겠지만,
     여기서는 <strong>“무엇을 하는 물건인지”</strong>만 그림처럼 잡아 두겠습니다.
   </p>
 
   <h3>2.1 기능① — 말을 글자로 (실시간 자막)</h3>
-  <p>
-    누군가 말을 하면, 화면 아래쪽에 <strong>그 말이 큰 글자로</strong> 나타납니다.
-    말이 끝나고 약 <strong>0.6초</strong> 뒤면 글자가 뜹니다. 거의 바로바로입니다.
-  </p>
-  <div class="box analogy"><span class="box-t">🟪 비유로 이해하기</span>
-    유튜브 영상의 <strong>실시간 자동 자막</strong>과 비슷합니다. 다만 소리봄은 그걸
-    <strong>인터넷 없이</strong>, 교실 현장의 이 작은 기기 혼자서 해냅니다.</div>
+<p>교실의 발화를 큰 자막으로 보여 줍니다. <strong>영어 과목은 한국어·영어를 감지해 원문 언어로 전사</strong>하고 나머지 과목은 한국어로 고정합니다. 둘 다 같은 다국어 small 모델을 쓰며 번역 기능이 아닙니다. 과거 약 0.6초는 전사 처리 시간으로, 무음 대기·큐·화면 전달을 포함한 전체 지연의 보장값은 아닙니다.</p>
 
-  <h3>2.2 기능② — 소리가 난 방향을 화살표로 (누가·어디서)</h3>
+<h3>2.2 기능② — 소리가 난 방향을 화살표로 (누가·어디서)</h3>
   <p>
     화면 위쪽에는 <strong>동그란 나침반</strong> 같은 그림이 있습니다. 누군가 말하면,
     그 사람이 있는 <strong>방향으로 파란 화살표가 돕니다.</strong> 앞에서 말하면 화살표가 위(12시)를,
@@ -445,16 +451,9 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     고개를 돌릴 수 있게 합니다. 자막이 <em>무엇을</em>이라면, 이 기능은 <em>어디서</em>입니다.</div>
 
   <h3>2.3 기능⑥ — 타이핑을 목소리로 (양방향 말하기)</h3>
-  <p>
-    화면 맨 아래에는 <strong>글자 입력칸</strong>이 있습니다. 학생이 하고 싶은 말을 타이핑하고
-    엔터를 누르면, 약 <strong>2초</strong> 뒤 기기의 스피커가 <strong>또렷한 한국어 목소리로 대신
-    말해 줍니다.</strong> 발음이 어려워 손을 못 들던 학생이, 자기 생각을 반 전체에 전할 수 있습니다.
-  </p>
-  <div class="box us"><span class="box-t">🟧 소리봄에서는</span>
-    이 기능을 “양방향”이라고 부릅니다. 다른 자막 기기들은 <strong>듣기만(한 방향)</strong> 돕지만,
-    소리봄은 학생이 <strong>말하는 것(반대 방향)</strong>까지 돕기 때문입니다.</div>
+<p>아래 입력칸에 문장을 쓰고 Enter 또는 말하기를 누르면 <strong>학생 자리의 Bose Bluetooth 스피커</strong>가 한국어로 읽습니다. 상단에서 <strong>남성 M1 / 여성 F1</strong>을 선택합니다. 입력은 물리 키보드를 사용하고 터치 모니터는 버튼·과목 등의 조작에 씁니다. 앱에 화면 키보드를 내장한 것은 아닙니다. 현재 STT가 진행 중이면 그 작업을 마친 뒤 TTS를 처리하므로 시작 지연은 부하와 문장 길이에 따라 달라집니다.</p>
 
-  <h3>2.4 그리고 — 세 기능이 한 화면에서 함께</h3>
+<h3>2.4 그리고 — 세 기능이 한 화면에서 함께</h3>
   <p>
     가장 중요한 점: 이 세 가지가 <strong>따로 노는 세 개의 앱</strong>이 아니라,
     <strong>하나의 화면에서 동시에</strong> 돌아갑니다. 위에는 방향 화살표, 가운데·아래에는 자막,
@@ -465,11 +464,11 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
   <figure>
     <!-- 실제 소리봄 화면 스크린샷(초기 목업을 실제 UI로 교체함). -->
     <img src="../docs/figures/ui-real.png" alt="소리봄 실제 화면 — 헤더, 과목 선택, 자막, 방향 나침반, 소리 알림, 말하기 입력칸">
-    <figcaption>소리봄의 <strong>실제 화면</strong>: 위 헤더(제목·<strong>과목 선택</strong>·<strong>수업 기록 보기</strong>),
+    <figcaption>소리봄의 <strong>과거 실제 화면</strong>(최신 상단 목소리·이메일·연결 안내와 차이 있음): 위 헤더(제목·<strong>과목 선택</strong>·<strong>수업 기록 보기</strong>),
       왼쪽에 <strong>자막</strong>(대화록처럼 쌓임), 오른쪽 위 <strong>방향 나침반</strong>,
       아래 <strong>소리 알림</strong>(이름 호명)과 <strong>말하기 입력칸</strong>.</figcaption>
   </figure>
-  <div class="box us"><span class="box-t">🟧 이 화면은 실제 프로그램 스크린샷입니다</span>
+  <div class="box us"><span class="box-t">🟧 이 화면은 과거 버전의 실제 프로그램 스크린샷입니다</span>
     초기에는 손으로 그린 설계 그림(목업)이었지만, 지금 보시는 것은 <strong>실제로 동작하는 프로그램의
     화면</strong>입니다. 헤더의 <strong>‘과목’ 드롭다운</strong>과 <strong>‘수업 기록 보기’</strong> 버튼은 뒤에서 자세히
     설명합니다(15부).</div>
@@ -488,7 +487,7 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
       <em>“광합성은 밤에도 일어나나요?”</em>가 뜬다. 민서는 <strong>대화의 흐름을 놓치지 않았다.</strong></p>
     <p><strong>(3) 민서도 할 말이 생겼다.</strong> 발음이 또렷하지 않아 평소엔 참았지만, 오늘은
       화면 아래 입력칸에 <em>“엽록체가 하는 일을 다시 설명해 주세요”</em>라고 타이핑하고 엔터를 누른다.
-      약 1.8초 뒤, 민서 자리의 스피커가 <strong>또렷한 목소리로 대신 말한다</strong>(<strong>말하기</strong>).
+      합성과 출력 준비를 마치면, 민서 자리의 스피커가 <strong>또렷한 목소리로 대신 말한다</strong>(<strong>말하기</strong>).
       친구들은 소리 나는 방향을 보고 <em>민서가 질문했다는 걸 안다.</em></p>
   </div>
   <div class="box good"><span class="box-t">🟩 이 장면이 말하는 것</span>
@@ -724,13 +723,9 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     이 판단이 우리 작품에서 가장 자랑스러운 부분 중 하나입니다.</div>
 
   <h3>4.4 얼마나 정확하고, 얼마나 빠른가 (측정)</h3>
-  <p>“잘 된다”고 말로만 하지 않고, 실제로 재 봤습니다. 자세한 방법과 표는 11부에 있습니다.</p>
-  <div class="stat-row">
-    <div class="stat"><div class="num">0.0%</div><div class="lab">조용할 때 글자 오류율(CER)</div></div>
-    <div class="stat"><div class="num">0.7%</div><div class="lab">시끄러울 때 글자 오류율</div></div>
-    <div class="stat"><div class="num">~0.6초</div><div class="lab">말 끝난 뒤 자막 뜨기까지</div></div>
-  </div>
-  <h3>4.5 그런데 AI 모델은 대체 어떻게 ‘배우나’</h3>
+<p>이 절의 0.0%·0.7%는 2026년 7월의 조용/잡음 통제 녹음 CER입니다. 약 0.6초는 당시 전사 처리 시간이지 전체 자막 표시 지연이 아닙니다. 6문장·42어절이라는 자료 조건을 함께 제시해야 하며, 현재 정확도·자연 교실 성능으로 일반화하지 않습니다. 최신 기능 확인과 과거 정량 측정은 구분합니다.</p>
+
+<h3>4.5 그런데 AI 모델은 대체 어떻게 ‘배우나’</h3>
   <p>
     Whisper 같은 모델이 소리를 글자로 바꿀 수 있는 이유는 <strong>엄청난 양의 예시로 미리
     공부</strong>했기 때문입니다. 사람이 외국어를 배울 때 수천 개의 예문을 보며 감을 잡듯,
@@ -910,78 +905,18 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     신호 시간 차로 내 위치를 콕 집습니다. 마이크 넷도 같은 원리로 <strong>소리의 출처를 더 정확히</strong>
     좁힙니다.</div>
 
-  <h3>5.5 에코 제거 — 스피커 소리를 마이크가 되받지 않게</h3>
-  <p>
-    소리봄은 스피커로 <strong>말도 합니다</strong>(6부). 그런데 그 소리를 <strong>자기 마이크가 다시
-    주워</strong> 자막으로 만들면 곤란합니다(자기 말을 자기가 받아쓰는 꼴). 그래서 마이크 칩은
-    <strong>“방금 스피커로 내보낸 소리”를 참고</strong>해, 마이크에 들어온 것에서 그 부분을 <strong>빼</strong>줍니다.
-    이것이 <strong>에코(반향) 제거</strong>입니다.
-  </p>
-  <div class="box us"><span class="box-t">🟧 소리봄에서는</span>
-    3부에서 마이크가 <strong>6개의 소리 줄</strong>을 준다고 했죠? 그중 <strong>5번 줄</strong>이 바로
-    “스피커로 나간 참고 소리”입니다. 칩은 이걸 이용해 에코를 지웁니다. — 이 모든 걸 칩이 알아서
-    하니, 우리는 깨끗한 0번 줄만 받아 쓰면 됩니다.</div>
+  <h3>5.5 재생 음성을 마이크가 다시 듣는 경우</h3>
+<p>현재 Bose의 소리를 ReSpeaker가 다시 수음해 자막으로 만들 수 있습니다. 앱은 이를 기록에 남길 수 있도록 허용하지만, 타이핑한 원문과 재인식 결과가 같다고 보장하지 않습니다. Bluetooth 출력의 기준 음성을 마이크 칩에 직접 공급해 완전한 에코 제거를 검증한 구성은 아닙니다. USB 채널의 명칭만으로 Bose 재생이 자동 제거된다고 설명하면 부정확합니다.</p>
 
-  <h3>5.6 ‘앞’이 어디인지는 ‘놓는 방향’이 정한다 — 보정 이야기</h3>
-  <p>
-    마이크가 주는 각도는 <strong>마이크 자신의 기준</strong>입니다. 그런데 소리봄의 마이크는 기기에
-    <strong>나사로 고정돼 있지 않고</strong>, <strong>USB 케이블로 연결해 책상 위에 올려 두는</strong> 방식입니다
-    (마이크는 자체 케이스 안에 들어 있습니다). 그러면 마이크를 <strong>어느 방향으로 돌려 놓느냐</strong>에
-    따라 화면의 ‘앞’이 실제와 어긋날 수 있습니다.
-  </p>
-  <p>
-    그래서 우리는 <strong>간단한 약속</strong>을 정했습니다 — <strong>USB 케이블이 꽂힌 쪽을 항상 ‘뒤’로 두고
-    놓는다.</strong> 이렇게 방향을 하나로 고정해 두면 ‘앞’이 늘 같은 쪽이 되어, <strong>보정을 한 번만 해
-    두면 계속 유효</strong>합니다.
-  </p>
-  <div class="box term"><span class="box-t">⬛ 용어 — 보정(캘리브레이션)</span>
-    측정 기준을 <strong>실제와 맞도록 조정</strong>하는 것. 저울의 영점을 맞추는 것과 같습니다.
-    소리봄은 <strong>USB 쪽을 ‘뒤’로 두는 약속</strong> 아래에서 앞/좌/우/뒤로 소리를 내어 ‘앞’ 기준 각도를 한 번 맞춥니다(설정 파일의 한 값만 바꿈).</div>
-  <div class="box good"><span class="box-t">🟩 측정 완료 — 평균 1.5°</span>
-    <strong>USB 쪽을 뒤로 둔 상태</strong>에서 네 방향으로 소리를 내어 재어 <strong>평균 오차 1.5°</strong>를 확인했습니다.
-    처음엔 오차가 컸는데, 원인은 <strong>측정하는 학생이 정확한 각도에 서지 못한 것</strong>이었습니다.
-    <strong>마이크 보드의 LED로 실제 방향을 확인</strong>해 그 각도에 정확히 서서 다시 재자 1.5°로
-    좁혀졌습니다(자세히는 5.7과 11.6).</div>
+<h3>5.6 ‘앞’이 어디인지는 ‘놓는 방향’이 정한다 — 보정 이야기</h3>
+<p>화면 방향은 <code>(front_offset - mic_angle) % 360</code>으로 계산합니다. 현재 front_offset은 90입니다. 마이크를 돌리거나 설치 위치를 바꾸면 화면의 앞 기준도 확인해야 합니다. 케이블 방향을 일정하게 두는 것은 재현성을 위한 설치 약속이지 정확도를 보장하는 장치는 아닙니다. 설정 변경은 앱 재실행 후 적용됩니다.</p>
 
-  <h3>5.7 마이크의 LED가 방향을 알려 준다 — 정확한 보정의 열쇠</h3>
-  <p>
-    소리봄 마이크(ReSpeaker) 윗면에는 <strong>LED 링(작은 불빛 여러 개)</strong>이 둘러 있습니다.
-    누가 말하면, 그 <strong>소리가 온 방향의 LED가 켜집니다.</strong> 즉 마이크 스스로 “지금 이쪽에서
-    소리가 나요”를 불빛으로 보여 주는 것입니다.
-  </p>
-  <div class="box us"><span class="box-t">🟧 소리봄에서는 — 이 LED가 보정을 정확하게 만들었다</span>
-    방향(DOA)을 정확히 재려면 <strong>‘정확히 앞·오·뒤·왼’ 위치에 서서</strong> 말해야 합니다. 그런데
-    사람이 눈대중으로 서면 <strong>실제로는 조금씩 비뚤어져</strong> 오차가 커집니다. 이때 <strong>마이크
-    보드의 LED</strong>가 결정적이었습니다. LED가 가리키는 방향을 보며 <strong>진짜 그 방향에 정확히
-    섰는지 확인</strong>하고 자세를 맞춰 다시 재니, 값이 안정되고 오차가 <strong>평균 1.5°</strong>로 좁혀졌습니다.</div>
-  <div class="box good"><span class="box-t">🟩 실제로 겪은 일 — 문제는 ‘서는 위치’였다</span>
-    처음 측정에서 오차가 <strong>28~64°</strong>로 크고 잴 때마다 값이 달랐습니다. 원인은 기계가 아니라
-    <strong>측정하는 학생이 정확한 각도에 서지 못한 것</strong>이었습니다. <strong>LED를 기준으로 실제
-    방향을 확인</strong>하고 정확히 선 뒤 다시 재자 <strong>1.5°</strong>로 회복됐습니다. → 그래서 마이크
-    윗면(구멍·LED)은 <strong>마이크 케이스 밖으로 보이게</strong> 두어야 합니다(LED 확인 + 소리 유입).</div>
+<h3>5.7 LED 보조 확인과 독립적인 방향 검증의 차이</h3>
+<p>마이크 LED는 설치 상태를 확인하는 보조 정보입니다. 과거 LED를 보며 위치를 정한 4방향 평가에서 평균 1.5°가 기록됐지만 <strong>기기 자신의 LED는 독립적인 정답 기준이 아닙니다.</strong> 위치 선정과 케이스 노출에 관한 기록도 달라 오차 원인을 하나로 확정할 수 없습니다. 바닥 각도 표시 등 별도 기준으로 여러 거리·화자·각도를 반복 평가해야 합니다.</p>
 
-  <h3>5.8 화살표가 덜덜 떨지 않게 — 부드럽게 만들기</h3>
-  <p>
-    칩이 주는 방향 값은 <strong>순간순간 조금씩 흔들립니다</strong>(같은 사람이 말해도 몇 도씩 왔다
-    갔다). 그대로 화면에 그리면 화살표가 <strong>덜덜 떨려</strong> 보기 어지럽습니다. 그래서 값을
-    <strong>부드럽게</strong> 만들어 화살표가 <strong>스르륵</strong> 따라가게 합니다. 이걸 <strong>평활화</strong>라고 합니다.
-  </p>
-  <div class="box term"><span class="box-t">⬛ 용어 — 평활화(스무딩)</span>
-    갑자기 튀는 값을 <strong>이전 값과 섞어</strong> 완만하게 만드는 것. 새 값으로 <strong>확 바꾸지 않고</strong>
-    조금씩 이동시켜, 떨림을 없애면서도 방향 변화는 따라가게 합니다.</div>
-  <div class="box analogy"><span class="box-t">🟪 비유로 이해하기</span>
-    자동차 <strong>서스펜션(완충 장치)</strong>과 같습니다. 길이 울퉁불퉁해도(값이 튀어도) 차체는
-    <strong>부드럽게</strong> 갑니다. 대신 너무 물렁하면 반응이 느리니, <strong>적당한 정도</strong>로 맞춥니다
-    (소리봄은 설정값 0.3).</div>
-  <div class="box us"><span class="box-t">🟧 소리봄에서는</span>
-    평활화 덕분에 화살표가 <strong>떨지 않고 자연스럽게</strong> 방향을 가리킵니다. 또 <strong>목소리가 있을
-    때만</strong> 갱신하므로(5.3), 조용할 때 제멋대로 돌지도 않습니다. 작은 배려가 <strong>보기 편한 화면</strong>을
-    만듭니다.</div>
+<h3>5.8 현재 방식 — 실제 발화와 방향 표본을 연결하기</h3>
+<p>방향 워커가 원본 각도를 시각과 함께 모으고, 이번 발화의 실제 음성 구간 안에 있는 표본만 고릅니다. 원형 중심을 구하므로 359°와 1°를 평균 180°로 잘못 처리하지 않습니다. 기본 표본 2개 이상·합의도 70% 이상을 요구하고 부족·상충하면 미확정으로 표시합니다. <strong>현재 통합 앱은 이전 값과 섞는 0.3 EMA 경로가 아닙니다.</strong> 이 설정은 개별 측정의 current()에 남아 있습니다.</p>
 
-  <div class="box good"><span class="box-t">🟩 5부 정리</span>
-    방향 = 마이크 4개에 소리가 <strong>도착한 시간 차</strong>로 계산. 그 복잡한 계산과 빔포밍은
-    <strong>마이크 칩이 스스로</strong> 하고, 컴퓨터는 <strong>각도 숫자만 받아</strong> 화면 화살표로 보여 준다.
-    시끄러워도 정확한 자막의 비밀도 여기(빔포밍)에 있었다.</div>
 </section>
 
 <!-- ==================== 6부 ==================== -->
@@ -1029,43 +964,12 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     <strong>기기 안에서 도는</strong> TTS여야 했습니다. 그래서 어려워도 오프라인 후보만 팠습니다.</div>
 
   <h3>6.3 빠르게 만들기 — GPU로 실시간 합성</h3>
-  <p>
-    좋은 목소리를 골랐더니 이번엔 <strong>속도</strong>가 문제였습니다. 품질을 높이면(합성 단계를 32번
-    반복하면) 목소리는 좋아지지만, 컴퓨터의 일반 계산장치(CPU)로는 한 문장에 <strong>9초</strong>나
-    걸렸습니다. 말하고 9초를 기다릴 수는 없죠.
-  </p>
-  <p>
-    해결책은 <strong>GPU</strong>였습니다. GPU는 <strong>같은 계산을 한꺼번에 대량으로</strong> 처리하는 데
-    특화된 장치라, 그림·AI 계산에 강합니다. 소리봄 기기(Jetson)에는 GPU가 들어 있습니다.
-  </p>
-  <div class="box term"><span class="box-t">⬛ 용어 — CPU와 GPU</span>
-    <strong>CPU</strong> = 이것저것 순서대로 처리하는 <strong>만능 일꾼</strong>(똑똑하지만 한 번에 조금씩).
-    <strong>GPU</strong> = 단순 계산을 <strong>수천 개 동시에</strong> 처리하는 <strong>대군</strong>(AI·그래픽에 강함).</div>
-  <div class="box analogy"><span class="box-t">🟪 비유로 이해하기</span>
-    벽에 페인트를 칠할 때, CPU는 <strong>붓 한 자루로 꼼꼼히</strong>, GPU는 <strong>롤러 수백 개로 한 번에</strong>
-    칠하는 것과 같습니다. AI 계산처럼 “같은 일을 엄청 많이”일 때 GPU가 압도적으로 빠릅니다.</div>
-  <p>
-    다만 GPU로 이 TTS를 돌리려면 <strong>도구를 직접 다시 빌드(조립)</strong>해야 했습니다
-    (일반 배포판은 GPU를 못 켜 놓은 상태였습니다). 이 작업을 <strong>강주언</strong>이 진행해,
-    결국 <strong>가장 좋은 품질(32단계)로도 한 문장을 약 1.8초</strong>에 만들어 내는 데 성공했습니다.
-    <strong>실시간</strong>입니다.
-  </p>
-  <div class="stat-row">
-    <div class="stat"><div class="num">~1.8초</div><div class="lab">타이핑 → 소리까지(평균)</div></div>
-    <div class="stat"><div class="num">32단계</div><div class="lab">최고 품질로도 실시간</div></div>
-    <div class="stat"><div class="num">44.1kHz</div><div class="lab">음악급 고음질 출력</div></div>
-  </div>
+<p>Jetson의 CUDA 경로로 Supertonic v3 int8 모델을 실행합니다. 사용자 청취에서 16스텝보다 32스텝이 명확하고 자연스러워 <strong>32스텝</strong>을 유지했습니다. 모델 출력을 낮은 주파수로 바꾸는 대신 기존 44.1kHz를 사용합니다. 합성 시간은 문장·워밍업·자원 상태에 따라 변하며, 과거 약 1.8초를 모든 요청의 Enter→스피커 시작 시간으로 쓰지 않습니다.</p><div class="box warn"><span class="box-t">확인 범위와 한계</span>GPU 추론 대기·합성·출력 준비·Bluetooth 버퍼를 구분해야 합니다. 코드 로그의 재생 시작은 실제 첫 소리를 마이크로 측정한 값과 다릅니다.</div>
 
-  <h3>6.4 만약 GPU가 힘들면 — 자동으로 CPU로 (폴백)</h3>
-  <p>
-    소리봄 기기는 CPU와 GPU가 <strong>메모리 8GB를 나눠</strong> 씁니다. 다른 게 메모리를 많이 쓰면
-    GPU가 켜지지 않을 수 있습니다. 그럴 때 앱이 죽어 버리면 안 되겠죠. 그래서
-    <strong>GPU가 실패하면 자동으로 CPU로 갈아타</strong> 소리는 나게 했습니다(느려질 뿐).
-  </p>
-  <div class="box term"><span class="box-t">⬛ 용어 — 폴백(fallback)</span>
-    원래 방법이 안 될 때 <strong>“그래도 돌아가는 대비책”</strong>으로 자동으로 넘어가는 것.
-    “A가 안 되면 B라도.” 시연 중 사고를 막는 안전장치입니다.</div>
-  <h3>6.5 컴퓨터는 어떻게 ‘목소리’를 만드나</h3>
+<h3>6.4 만약 GPU가 힘들면 — 자동으로 CPU로 (폴백)</h3>
+<p>TTS 모델을 GPU로 초기화하다 실패하면 CPU 초기화를 다시 시도합니다. CPU에서는 32스텝이 더 느립니다. 실행 중 모든 GPU 오류를 자동으로 CPU로 옮기는 기능은 아니고 CPU 초기화도 실패할 수 있으므로 모델 준비 실패 안내와 재시도 경로가 필요합니다. 소리가 반드시 난다고 보장하지 않습니다.</p>
+
+<h3>6.5 컴퓨터는 어떻게 ‘목소리’를 만드나</h3>
   <p>
     글자를 목소리로 바꾸는 건 생각보다 여러 단계입니다. 아주 크게 보면 이렇습니다.
   </p>
@@ -1104,25 +1008,13 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
   </p>
   <div class="box good"><span class="box-t">🟩 왜 이 고생이 가치 있었나</span>
     “느리지만 되는 것”에서 멈추지 않고 <strong>“빠르면서 좋은 것”</strong>까지 밀어붙인 결과,
-    시연에서 <strong>타이핑하면 약 1.8초 안에 또렷한 목소리</strong>가 나오는 자연스러운 경험이 됐습니다.
+    당시 <strong>특정 문장의 합성 약 1.8초</strong>를 확인했습니다. 현재 전체 시작 지연과는 구분합니다.
     그리고 혹시 몰라 <strong>CPU 폴백</strong>(6.4)까지 넣어, 무대에서도 안전합니다.</div>
 
-  <h3>6.7 목소리 10명 중 하나를 고른 이야기</h3>
-  <p>
-    쓰기로 한 모델에는 <strong>서로 다른 목소리 10명</strong>이 들어 있습니다. 우리는 같은 문장을
-    여러 목소리로 만들어 <strong>직접 들어 보고</strong>, 학생이 오래 들어도 편하고 <strong>발음이 또렷한</strong>
-    목소리를 골랐습니다(설정의 <code>sid</code> 값 하나로 바꿉니다).
-  </p>
-  <div class="box us"><span class="box-t">🟧 어떻게 골랐나</span>
-    “좋다/아니다”를 감으로만 정하지 않고, <strong>여러 후보를 나란히 듣고 비교</strong>해 정했습니다.
-    또 <strong>다듬기 단계 수</strong>를 8·12·16·32로 바꿔 가며 <strong>어느 정도가 가장 깔끔한지</strong>도
-    귀로 비교했습니다. 결론은 <strong>가장 또렷한 목소리 + 최고 품질(32단계)</strong>, 그리고 그걸
-    <strong>GPU로 실시간</strong>화(6.6)였습니다.</div>
-  <div class="box easy"><span class="box-t">🟦 왜 목소리 선택이 중요한가</span>
-    자막은 틀려도 눈치채기 쉽지만, <strong>어색한 목소리</strong>는 <strong>듣는 사람을 지치게</strong> 합니다.
-    학생의 ‘목소리 대역’이니, <strong>편안하고 또렷한</strong> 것이 무엇보다 중요했습니다.</div>
+  <h3>6.7 사용자가 직접 고르는 남성·여성 목소리</h3>
+<p>모델에는 10개 화자 스타일이 있으며 현재 UI는 <strong>남성 M1(sid=5), 여성 F1(sid=0)</strong> 두 버튼을 제공합니다. 성별이나 연령을 입력받아 자동 배정하지 않고 사용자가 편한 목소리를 고릅니다. 모델은 하나만 유지해 전환 시 중복 적재하지 않습니다. 합성·재생 중에는 선택을 잠그고 다음 문장 타이핑은 유지합니다. 다음 실행에서는 설정의 시작 목소리로 돌아갑니다.</p>
 
-  <h3>6.8 목소리는 왜 44.1kHz 고음질인가</h3>
+<h3>6.8 목소리는 왜 44.1kHz 고음질인가</h3>
   <p>
     3부에서 자막용 소리는 <strong>16kHz</strong>면 충분하다고 했죠(사람 말을 ‘알아듣기’엔 충분). 그런데
     말하기(TTS)는 반대로 <strong>사람이 ‘듣기 좋게’</strong> 만들어야 합니다. 그래서 소리봄의 TTS는
@@ -1157,7 +1049,7 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
   <div class="box good"><span class="box-t">🟩 6부 정리</span>
     글자→목소리 = <strong>TTS</strong>. 오프라인 한국어 목소리로 <strong>Supertonic</strong>을 골랐고,
     <strong>GPU를 직접 켜서</strong> 최고 품질로도 <strong>~1.8초 실시간</strong>을 달성. 혹시 GPU가 막히면
-    <strong>CPU로 자동 폴백</strong>해 소리는 반드시 난다. 이제 “왜 이렇게까지 오프라인을 고집했나”(7부)로.</div>
+    <strong>CPU로 자동 폴백</strong>해 CPU 준비·출력 실패 가능성은 남는다. 이제 “왜 이렇게까지 오프라인을 고집했나”(7부)로.</div>
 </section>
 
 <!-- ==================== 7부 ==================== -->
@@ -1245,28 +1137,14 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
   </p>
 
   <figure>
-    <img src="../docs/figures/hardware.svg" alt="소리봄 하드웨어 구성도 — 마이크, 연산 보드, 화면, 스피커, 저장장치의 연결">
-    <figcaption>소리봄 하드웨어 구성. 소리는 마이크로 들어와 Jetson에서 처리되고, 화면·스피커로 나갑니다.</figcaption>
+    <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iDQogICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPg0KPHN2ZyB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgd2lkdGg9IjUwNHB0IiBoZWlnaHQ9IjM0NS42cHQiIHZpZXdCb3g9IjAgMCA1MDQgMzQ1LjYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIj4NCiA8bWV0YWRhdGE+DQogIDxyZGY6UkRGIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6Y2M9Imh0dHA6Ly9jcmVhdGl2ZWNvbW1vbnMub3JnL25zIyIgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4NCiAgIDxjYzpXb3JrPg0KICAgIDxkYzp0eXBlIHJkZjpyZXNvdXJjZT0iaHR0cDovL3B1cmwub3JnL2RjL2RjbWl0eXBlL1N0aWxsSW1hZ2UiLz4NCiAgICA8ZGM6ZGF0ZT4yMDI2LTEwLTE3VDAyOjQxOjE5LjQzMzQwNjwvZGM6ZGF0ZT4NCiAgICA8ZGM6Zm9ybWF0PmltYWdlL3N2Zyt4bWw8L2RjOmZvcm1hdD4NCiAgICA8ZGM6Y3JlYXRvcj4NCiAgICAgPGNjOkFnZW50Pg0KICAgICAgPGRjOnRpdGxlPk1hdHBsb3RsaWIgdjMuMTEuMiwgaHR0cHM6Ly9tYXRwbG90bGliLm9yZy88L2RjOnRpdGxlPg0KICAgICA8L2NjOkFnZW50Pg0KICAgIDwvZGM6Y3JlYXRvcj4NCiAgIDwvY2M6V29yaz4NCiAgPC9yZGY6UkRGPg0KIDwvbWV0YWRhdGE+DQogPGRlZnM+DQogIDxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+KntzdHJva2UtbGluZWpvaW46IHJvdW5kOyBzdHJva2UtbGluZWNhcDogYnV0dH08L3N0eWxlPg0KIDwvZGVmcz4NCiA8ZyBpZD0iZmlndXJlXzEiPg0KICA8ZyBpZD0icGF0Y2hfMSI+DQogICA8cGF0aCBkPSJNIDAgMzQ1LjYgDQpMIDUwNCAzNDUuNiANCkwgNTA0IDAgDQpMIDAgMCANCnoNCiIgc3R5bGU9ImZpbGw6ICNmZmZmZmYiLz4NCiAgPC9nPg0KICA8ZyBpZD0iYXhlc18xIj4NCiAgIDxnIGlkPSJwYXRjaF8yIj4NCiAgICA8cGF0aCBkPSJNIDEyLjg1MiAxMDAuMDQ0MSANCkwgMTQzLjM4OCAxMDAuMDQ0MSANClEgMTQ2LjkxNiAxMDAuMDQ0MSAxNDYuOTE2IDEwMy41NzIxMDQgDQpMIDE0Ni45MTYgMTU4LjUwODE1OSANClEgMTQ2LjkxNiAxNjIuMDM2MTYyIDE0My4zODggMTYyLjAzNjE2MiANCkwgMTIuODUyIDE2Mi4wMzYxNjIgDQpRIDkuMzI0IDE2Mi4wMzYxNjIgOS4zMjQgMTU4LjUwODE1OSANCkwgOS4zMjQgMTAzLjU3MjEwNCANClEgOS4zMjQgMTAwLjA0NDEgMTIuODUyIDEwMC4wNDQxIA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMwZmVjZDMxODIpIiBzdHlsZT0iZmlsbDogI2ZmZmZmZjsgc3Ryb2tlOiAjMzMzMzMzOyBzdHJva2UtbGluZWpvaW46IG1pdGVyIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfMyI+DQogICAgPHBhdGggZD0iTSAxNzkuMTcyIDEyMC4yMDQxMiANCkwgMzE0Ljc0OCAxMjAuMjA0MTIgDQpRIDMxOC4yNzYgMTIwLjIwNDEyIDMxOC4yNzYgMTIzLjczMjEyNCANCkwgMzE4LjI3NiAyMDguOTA4MjA5IA0KUSAzMTguMjc2IDIxMi40MzYyMTIgMzE0Ljc0OCAyMTIuNDM2MjEyIA0KTCAxNzkuMTcyIDIxMi40MzYyMTIgDQpRIDE3NS42NDQgMjEyLjQzNjIxMiAxNzUuNjQ0IDIwOC45MDgyMDkgDQpMIDE3NS42NDQgMTIzLjczMjEyNCANClEgMTc1LjY0NCAxMjAuMjA0MTIgMTc5LjE3MiAxMjAuMjA0MTIgDQp6DQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiAjZWVlZWVlOyBzdHJva2U6ICMzMzMzMzM7IHN0cm9rZS1saW5lam9pbjogbWl0ZXIiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJwYXRjaF80Ij4NCiAgICA8cGF0aCBkPSJNIDM0MC40NTIgOS4zMjQwMDkgDQpMIDQ5MS4xNDggOS4zMjQwMDkgDQpRIDQ5NC42NzYgOS4zMjQwMDkgNDk0LjY3NiAxMi44NTIwMTMgDQpMIDQ5NC42NzYgNzIuODI4MDczIA0KUSA0OTQuNjc2IDc2LjM1NjA3NiA0OTEuMTQ4IDc2LjM1NjA3NiANCkwgMzQwLjQ1MiA3Ni4zNTYwNzYgDQpRIDMzNi45MjQgNzYuMzU2MDc2IDMzNi45MjQgNzIuODI4MDczIA0KTCAzMzYuOTI0IDEyLjg1MjAxMyANClEgMzM2LjkyNCA5LjMyNDAwOSAzNDAuNDUyIDkuMzI0MDA5IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMwZmVjZDMxODIpIiBzdHlsZT0iZmlsbDogI2ZmZmZmZjsgc3Ryb2tlOiAjMzMzMzMzOyBzdHJva2UtbGluZWpvaW46IG1pdGVyIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfNSI+DQogICAgPHBhdGggZD0iTSAzNTAuNTMyIDE0NS40MDQxNDUgDQpMIDQ5MS4xNDggMTQ1LjQwNDE0NSANClEgNDk0LjY3NiAxNDUuNDA0MTQ1IDQ5NC42NzYgMTQ4LjkzMjE0OSANCkwgNDk0LjY3NiAyMDMuODY4MjA0IA0KUSA0OTQuNjc2IDIwNy4zOTYyMDcgNDkxLjE0OCAyMDcuMzk2MjA3IA0KTCAzNTAuNTMyIDIwNy4zOTYyMDcgDQpRIDM0Ny4wMDQgMjA3LjM5NjIwNyAzNDcuMDA0IDIwMy44NjgyMDQgDQpMIDM0Ny4wMDQgMTQ4LjkzMjE0OSANClEgMzQ3LjAwNCAxNDUuNDA0MTQ1IDM1MC41MzIgMTQ1LjQwNDE0NSANCnoNCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMGZlY2QzMTgyKSIgc3R5bGU9ImZpbGw6ICNmZmZmZmY7IHN0cm9rZTogIzMzMzMzMzsgc3Ryb2tlLWxpbmVqb2luOiBtaXRlciIvPg0KICAgPC9nPg0KICAgPGcgaWQ9InBhdGNoXzYiPg0KICAgIDxwYXRoIGQ9Ik0gMTIuODUyIDIzNi4xMjQyMzYgDQpMIDE0My4zODggMjM2LjEyNDIzNiANClEgMTQ2LjkxNiAyMzYuMTI0MjM2IDE0Ni45MTYgMjM5LjY1MjI0IA0KTCAxNDYuOTE2IDI4NC41MDgyODUgDQpRIDE0Ni45MTYgMjg4LjAzNjI4OCAxNDMuMzg4IDI4OC4wMzYyODggDQpMIDEyLjg1MiAyODguMDM2Mjg4IA0KUSA5LjMyNCAyODguMDM2Mjg4IDkuMzI0IDI4NC41MDgyODUgDQpMIDkuMzI0IDIzOS42NTIyNCANClEgOS4zMjQgMjM2LjEyNDIzNiAxMi44NTIgMjM2LjEyNDIzNiANCnoNCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMGZlY2QzMTgyKSIgc3R5bGU9ImZpbGw6ICNmZmZmZmY7IHN0cm9rZTogIzMzMzMzMzsgc3Ryb2tlLWxpbmVqb2luOiBtaXRlciIvPg0KICAgPC9nPg0KICAgPGcgaWQ9InBhdGNoXzciPg0KICAgIDxwYXRoIGQ9Ik0gMTc5LjE3MiAyNzYuNDQ0Mjc2IA0KTCAzMTQuNzQ4IDI3Ni40NDQyNzYgDQpRIDMxOC4yNzYgMjc2LjQ0NDI3NiAzMTguMjc2IDI3OS45NzIyOCANCkwgMzE4LjI3NiAzMjQuODI4MzI1IA0KUSAzMTguMjc2IDMyOC4zNTYzMjggMzE0Ljc0OCAzMjguMzU2MzI4IA0KTCAxNzkuMTcyIDMyOC4zNTYzMjggDQpRIDE3NS42NDQgMzI4LjM1NjMyOCAxNzUuNjQ0IDMyNC44MjgzMjUgDQpMIDE3NS42NDQgMjc5Ljk3MjI4IA0KUSAxNzUuNjQ0IDI3Ni40NDQyNzYgMTc5LjE3MiAyNzYuNDQ0Mjc2IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMwZmVjZDMxODIpIiBzdHlsZT0iZmlsbDogI2ZmZmZmZjsgc3Ryb2tlOiAjMzMzMzMzOyBzdHJva2UtbGluZWpvaW46IG1pdGVyIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfOCI+DQogICAgPHBhdGggZD0iTSAzNTAuNTMyIDI2Ni4zNjQyNjYgDQpMIDQ5MS4xNDggMjY2LjM2NDI2NiANClEgNDk0LjY3NiAyNjYuMzY0MjY2IDQ5NC42NzYgMjY5Ljg5MjI3IA0KTCA0OTQuNjc2IDMyNC44MjgzMjUgDQpRIDQ5NC42NzYgMzI4LjM1NjMyOCA0OTEuMTQ4IDMyOC4zNTYzMjggDQpMIDM1MC41MzIgMzI4LjM1NjMyOCANClEgMzQ3LjAwNCAzMjguMzU2MzI4IDM0Ny4wMDQgMzI0LjgyODMyNSANCkwgMzQ3LjAwNCAyNjkuODkyMjcgDQpRIDM0Ny4wMDQgMjY2LjM2NDI2NiAzNTAuNTMyIDI2Ni4zNjQyNjYgDQp6DQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiAjZmZmZmZmOyBzdHJva2U6ICMzMzMzMzM7IHN0cm9rZS1saW5lam9pbjogbWl0ZXIiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJwYXRjaF85Ij4NCiAgICA8cGF0aCBkPSJNIDE0OC4xNTcwNTEgMTMxLjA0MDEzMSANClEgMTYxLjI3Njk5IDEzMS4wNDAxMzEgMTczLjI3ODg5NiAxMzEuMDQwMTMxIA0KIiBjbGlwLXBhdGg9InVybCgjcDMwZmVjZDMxODIpIiBzdHlsZT0iZmlsbDogbm9uZTsgc3Ryb2tlOiAjNDQ0NDQ0OyBzdHJva2UtbGluZWNhcDogcm91bmQiLz4NCiAgICA8cGF0aCBkPSJNIDE2OC44Nzg4OTYgMTI4Ljg0MDEzMSANCkwgMTczLjI3ODg5NiAxMzEuMDQwMTMxIA0KTCAxNjguODc4ODk2IDEzMy4yNDAxMzEgDQp6DQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiAjNDQ0NDQ0OyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgPC9nPg0KICAgPGcgaWQ9InBhdGNoXzEwIj4NCiAgICA8cGF0aCBkPSJNIDI0OC45NjE2NjUgNDAuMzIwMDQgDQpRIDI5Mi4zMjA0MjMgNDAuMzIwMDQgMzM0LjU2MTE0NyA0MC4zMjAwNCANCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMGZlY2QzMTgyKSIgc3R5bGU9ImZpbGw6IG5vbmU7IHN0cm9rZTogIzQ0NDQ0NDsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kIi8+DQogICAgPHBhdGggZD0iTSAzMzAuMTYxMTQ3IDM4LjEyMDA0IA0KTCAzMzQuNTYxMTQ3IDQwLjMyMDA0IA0KTCAzMzAuMTYxMTQ3IDQyLjUyMDA0IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMwZmVjZDMxODIpIiBzdHlsZT0iZmlsbDogIzQ0NDQ0NDsgc3Ryb2tlOiAjNDQ0NDQ0OyBzdHJva2UtbGluZWNhcDogcm91bmQiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJwYXRjaF8xMSI+DQogICAgPHBhdGggZD0iTSAzMTkuNTE3MDUxIDE3Ni40MDAxNzYgDQpRIDMzMi42MzY5OSAxNzYuNDAwMTc2IDM0NC42Mzg4OTYgMTc2LjQwMDE3NiANCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMGZlY2QzMTgyKSIgc3R5bGU9ImZpbGw6IG5vbmU7IHN0cm9rZTogIzQ0NDQ0NDsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kIi8+DQogICAgPHBhdGggZD0iTSAzNDAuMjM4ODk2IDE3NC4yMDAxNzYgDQpMIDM0NC42Mzg4OTYgMTc2LjQwMDE3NiANCkwgMzQwLjIzODg5NiAxNzguNjAwMTc2IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMwZmVjZDMxODIpIiBzdHlsZT0iZmlsbDogIzQ0NDQ0NDsgc3Ryb2tlOiAjNDQ0NDQ0OyBzdHJva2UtbGluZWNhcDogcm91bmQiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJwYXRjaF8xMiI+DQogICAgPHBhdGggZD0iTSAxNzMuMzYzMjAzIDIwMS42MDAyMDIgDQpRIDE3My44ODA3MDQgMjAxLjYwMDIwMiAxNzMuMjgwMTcxIDIwMS42MDAyMDIgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgIDxwYXRoIGQ9Ik0gMTY4Ljg4MDE3MSAxOTkuNDAwMjAyIA0KTCAxNzMuMjgwMTcxIDIwMS42MDAyMDIgDQpMIDE2OC44ODAxNzEgMjAzLjgwMDIwMiANCnoNCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMGZlY2QzMTgyKSIgc3R5bGU9ImZpbGw6ICM0NDQ0NDQ7IHN0cm9rZTogIzQ0NDQ0NDsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfMTMiPg0KICAgIDxwYXRoIGQ9Ik0gMjQ2Ljk2IDI3NS4xOTY3NjQgDQpRIDI0Ni45NiAyNDQuNDM2NzQ5IDI0Ni45NiAyMTQuNzk0NzY4IA0KIiBjbGlwLXBhdGg9InVybCgjcDMwZmVjZDMxODIpIiBzdHlsZT0iZmlsbDogbm9uZTsgc3Ryb2tlOiAjNDQ0NDQ0OyBzdHJva2UtbGluZWNhcDogcm91bmQiLz4NCiAgICA8cGF0aCBkPSJNIDI0NC43NiAyMTkuMTk0NzY4IA0KTCAyNDYuOTYgMjE0Ljc5NDc2OCANCkwgMjQ5LjE2IDIxOS4xOTQ3NjggDQp6DQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiAjNDQ0NDQ0OyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgPC9nPg0KICAgPGcgaWQ9InBhdGNoXzE0Ij4NCiAgICA8cGF0aCBkPSJNIDQ1OC42NCA3OC42MzY4NzYgDQpRIDQ1OC42NCA3OC4xMTkzNzQgNDU4LjY0IDc4LjcxOTkwNiANCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMGZlY2QzMTgyKSIgc3R5bGU9ImZpbGw6IG5vbmU7IHN0cm9rZS1kYXNoYXJyYXk6IDMuNywxLjY7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgIDxwYXRoIGQ9Ik0gNDU2LjQ0IDgzLjExOTkwNiANCkwgNDU4LjY0IDc4LjcxOTkwNiANCkwgNDYwLjg0IDgzLjExOTkwNiANCnoNCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMGZlY2QzMTgyKSIgc3R5bGU9ImZpbGw6ICM0NDQ0NDQ7IHN0cm9rZS1kYXNoYXJyYXk6IDMuNywxLjY7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgPC9nPg0KICAgPGcgaWQ9ImxpbmUyZF8xIj4NCiAgICA8cGF0aCBkPSJNIDI0Ni45NiAxMjAuOTYwMTIxIA0KTCAyNDYuOTYgNDAuMzIwMDQgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiBzcXVhcmUiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJsaW5lMmRfMiI+DQogICAgPHBhdGggZD0iTSAxNDYuMTYgMjYyLjA4MDI2MiANCkwgMTcxLjM2IDI2Mi4wODAyNjIgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiBzcXVhcmUiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJsaW5lMmRfMyI+DQogICAgPHBhdGggZD0iTSAxNzEuMzYgMjYyLjA4MDI2MiANCkwgMTcxLjM2IDIwMS42MDAyMDIgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiBzcXVhcmUiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJsaW5lMmRfNCI+DQogICAgPHBhdGggZD0iTSA0ODguODggMjY3LjEyMDI2NyANCkwgNDk4Ljk2IDI2Ny4xMjAyNjcgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2UtZGFzaGFycmF5OiAzLjcsMS42OyBzdHJva2UtZGFzaG9mZnNldDogMDsgc3Ryb2tlOiAjNDQ0NDQ0Ii8+DQogICA8L2c+DQogICA8ZyBpZD0ibGluZTJkXzUiPg0KICAgIDxwYXRoIGQ9Ik0gNDk4Ljk2IDI2Ny4xMjAyNjcgDQpMIDQ5OC45NiA4MC42NDAwODEgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzBmZWNkMzE4MikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2UtZGFzaGFycmF5OiAzLjcsMS42OyBzdHJva2UtZGFzaG9mZnNldDogMDsgc3Ryb2tlOiAjNDQ0NDQ0Ii8+DQogICA8L2c+DQogICA8ZyBpZD0ibGluZTJkXzYiPg0KICAgIDxwYXRoIGQ9Ik0gNDk4Ljk2IDgwLjY0MDA4MSANCkwgNDU4LjY0IDgwLjY0MDA4MSANCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMGZlY2QzMTgyKSIgc3R5bGU9ImZpbGw6IG5vbmU7IHN0cm9rZS1kYXNoYXJyYXk6IDMuNywxLjY7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2U6ICM0NDQ0NDQiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJ0ZXh0XzEiPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDMuMTA5MzU5IDEyNS44NjEwMzcpIj5yZVNwZWFrZXIgdjMuMDwvdGV4dD4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM3LjAxNjg0NCAxNDMuMTMwNzU2KSI+7IiY7J2MICsg67Cp7ZalIOy2lOyglTwvdGV4dD4NCiAgIDwvZz4NCiAgIDxnIGlkPSJ0ZXh0XzIiPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXdlaWdodDogNzAwOyBmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAyLjUzMDI2NiAxNTQuMzU2MjQ0KSI+SmV0c29uIE9yaW4gTmFubzwvdGV4dD4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC13ZWlnaHQ6IDcwMDsgZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwOC4xODMwNDcgMTcwLjQ1MDAyNikiPuydjOyEsSDsnbjsi50gwrcg7ZWp7ISxPC90ZXh0Pg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXdlaWdodDogNzAwOyBmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjA2Ljc4MjY4OCAxODYuMjgwNDYzKSI+64K067aAIFNTROyXkCDquLDroZ08L3RleHQ+DQogICA8L2c+DQogICA8ZyBpZD0idGV4dF8zIj4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM3Ny41MTk5MjIgMzguOTUwMzQpIj4xNS427J247LmYIOuqqOuLiO2EsDwvdGV4dD4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM3Ny4yNTA3ODEgNTQuODUwMzQpIj7snpDrp4kgwrcg7YSw7LmYIOyhsOyekTwvdGV4dD4NCiAgIDwvZz4NCiAgIDxnIGlkPSJ0ZXh0XzQiPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzkxLjY3NzU3OCAxNzIuNTEwNDczKSI+Qm9zZSDsiqTtlLzsu6Q8L3RleHQ+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzODAuMDEzNDM3IDE4OC40MTA0NzMpIj7snoXroKXtlZwg7KeI66y4IOyerOyDnTwvdGV4dD4NCiAgIDwvZz4NCiAgIDxnIGlkPSJ0ZXh0XzUiPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDkuNzU2NzE5IDI1OC4xOTA1NTkpIj7rrLzrpqwg7YKk67O065OcPC90ZXh0Pg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTUuMDU2NzE5IDI3NC4wOTA1NTkpIj7sp4jrrLgg7J6F66ClPC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfNiI+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnOyB0ZXh0LWFuY2hvcjogbWlkZGxlIiB4PSIyNDYuOTYiIHk9IjMwNi40NjA1OTkiIHRyYW5zZm9ybT0icm90YXRlKC0wIDI0Ni45NiAzMDYuNDYwNTk5KSI+64+Z67SJIOyghOybkCDslrTrjJHthLA8L3RleHQ+DQogICA8L2c+DQogICA8ZyBpZD0idGV4dF83Ij4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM4Ny44NDQxODcgMjkzLjUxMikiPlVTQi1DIOy2qeyghOq4sDwvdGV4dD4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM5Mi40NzY3MTkgMzA5LjM3MDU5NCkiPuuqqOuLiO2EsCDsoITsm5A8L3RleHQ+DQogICA8L2c+DQogICA8ZyBpZD0idGV4dF84Ij4NCiAgICA8ZyBpZD0icGF0Y2hfMTUiPg0KICAgICA8cGF0aCBkPSJNIDE1MC41MjgyMzQgMTA3LjM2NTEwMSANCkwgMTcyLjAzMTc2NiAxMDcuMzY1MTAxIA0KTCAxNzIuMDMxNzY2IDk0LjIzNTEwMSANCkwgMTUwLjUyODIzNCA5NC4yMzUxMDEgDQp6DQoiIHN0eWxlPSJmaWxsOiAjZmZmZmZmIi8+DQogICAgPC9nPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjFweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJzsgdGV4dC1hbmNob3I6IG1pZGRsZSIgeD0iMTYxLjI4IiB5PSIxMDMuODI4MTI4IiB0cmFuc2Zvcm09InJvdGF0ZSgtMCAxNjEuMjggMTAzLjgyODEyOCkiPlVTQjwvdGV4dD4NCiAgIDwvZz4NCiAgIDxnIGlkPSJ0ZXh0XzkiPg0KICAgIDxnIGlkPSJwYXRjaF8xNiI+DQogICAgIDxwYXRoIGQ9Ik0gMTkzLjgxMDg3NSA4Ny4yMTUwNzYgDQpMIDI1OS43ODkxMjUgODcuMjE1MDc2IA0KTCAyNTkuNzg5MTI1IDYzLjk4NTA3NiANCkwgMTkzLjgxMDg3NSA2My45ODUwNzYgDQp6DQoiIHN0eWxlPSJmaWxsOiAjZmZmZmZmIi8+DQogICAgPC9nPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjFweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTk4LjY2OTEzMyA3My41NzgxMDMpIj5EUCDihpIgSERNSTwvdGV4dD4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC1zaXplOiAxMC4xcHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE5NS4zMjU4NzUgODMuNjc4MTAzKSI+4oaSIG1pbmkgSERNSTwvdGV4dD4NCiAgIDwvZz4NCiAgIDxnIGlkPSJ0ZXh0XzEwIj4NCiAgICA8ZyBpZD0icGF0Y2hfMTciPg0KICAgICA8cGF0aCBkPSJNIDM3NC40MjE4NDQgMTI3LjUyNTEyMSANCkwgNDIxLjg5ODE1NiAxMjcuNTI1MTIxIA0KTCA0MjEuODk4MTU2IDExNC4zOTUxMjEgDQpMIDM3NC40MjE4NDQgMTE0LjM5NTEyMSANCnoNCiIgc3R5bGU9ImZpbGw6ICNmZmZmZmYiLz4NCiAgICA8L2c+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuMXB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnOyB0ZXh0LWFuY2hvcjogbWlkZGxlIiB4PSIzOTguMTYiIHk9IjEyMy45ODgxNDgiIHRyYW5zZm9ybT0icm90YXRlKC0wIDM5OC4xNiAxMjMuOTg4MTQ4KSI+Qmx1ZXRvb3RoPC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfMTEiPg0KICAgIDxnIGlkPSJwYXRjaF8xOCI+DQogICAgIDxwYXRoIGQ9Ik0gMjM1LjM0NSAyNDguNzU5MjQ0IA0KTCAyNTguNTc1IDI0OC43NTkyNDQgDQpMIDI1OC41NzUgMjM1LjA4MTI0IA0KTCAyMzUuMzQ1IDIzNS4wODEyNCANCnoNCiIgc3R5bGU9ImZpbGw6ICNmZmZmZmYiLz4NCiAgICA8L2c+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuMXB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnOyB0ZXh0LWFuY2hvcjogbWlkZGxlIiB4PSIyNDYuOTYiIHk9IjI0NS4yMjIyNzEiIHRyYW5zZm9ybT0icm90YXRlKC0wIDI0Ni45NiAyNDUuMjIyMjcxKSI+7KCE7JuQPC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfMTIiPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwcHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyc7IHRleHQtYW5jaG9yOiBtaWRkbGUiIHg9IjM3OCIgeT0iMjMxLjg0MDIzMiIgdHJhbnNmb3JtPSJyb3RhdGUoLTAgMzc4IDIzMS44NDAyMzIpIj7siqTtlLzsu6QgVVNCIOyXsOqysOydgCDstqnsoITsmqk8L3RleHQ+DQogICA8L2c+DQogIDwvZz4NCiA8L2c+DQogPGRlZnM+DQogIDxjbGlwUGF0aCBpZD0icDMwZmVjZDMxODIiPg0KICAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjUwNCIgaGVpZ2h0PSIzNDUuNiIvPg0KICA8L2NsaXBQYXRoPg0KIDwvZGVmcz4NCjwvc3ZnPg0K" alt="소리봄 하드웨어 구성도 — 마이크, 연산 보드, 화면, 스피커, 저장장치의 연결">
+    <figcaption>2026-10-17 사용자 제공 본선 수정 구성도. Bose USB는 충전, 음성은 Bluetooth입니다. 터치 데이터는 Jetson과 별도 USB로 연결합니다.</figcaption>
   </figure>
 
-  <h3>8.1 핵심 부품 다섯 가지</h3>
-  <table>
-    <thead><tr><th>부품</th><th>쉬운 설명</th><th>왜 필요한가</th></tr></thead>
-    <tbody>
-      <tr><td><strong>Jetson Orin Nano</strong><br>(연산 보드)</td><td>손바닥만 한 작은 AI 컴퓨터. GPU가 들어 있음</td><td>자막·방향·말하기를 <strong>인터넷 없이</strong> 이 안에서 다 계산</td></tr>
-      <tr><td><strong>ReSpeaker 마이크</strong><br>(4채널)</td><td>마이크 4개 + 방향 계산 전용 칩</td><td>소리를 받고, <strong>방향(DOA)·빔포밍</strong>을 칩이 처리(5부)</td></tr>
-      <tr><td><strong>터치 모니터</strong></td><td>자막을 보여 주고, 손가락으로 입력</td><td>자막·화살표 표시 + 말하기 문장 입력</td></tr>
-      <tr><td><strong>NVMe SSD</strong></td><td>빠른 저장장치</td><td>운영체제·AI 모델을 저장(모델이 큼)</td></tr>
-      <tr><td><strong>스피커 + 앰프</strong></td><td>소리를 내보내는 부품</td><td>TTS가 만든 목소리를 <strong>학생 자리에서</strong> 재생(6부)</td></tr>
-    </tbody>
-  </table>
+  <h3 id="final-hardware">8.1 핵심 부품 다섯 가지</h3>
+<table><thead><tr><th>부품</th><th>실제 역할</th></tr></thead><tbody><tr><td>Jetson Orin Nano Super</td><td>STT·TTS 실행과 UI·기록 관리. 방향 각도 자체는 마이크 칩이 계산</td></tr><tr><td>ReSpeaker v3.0</td><td>USB 수음과 방향 값 제공</td></tr><tr><td>15.6인치 터치 모니터 + 물리 키보드</td><td>영상과 터치 조작, 키보드로 질문 입력</td></tr><tr><td>내부 NVMe SSD</td><td>M.2 장착. OS·모델·수업 TXT 저장</td></tr><tr><td>Bose SoundLink Mini</td><td>Bluetooth로 합성 음성 재생. Jetson USB는 충전용</td></tr></tbody></table>
 
-  <div class="box us"><span class="box-t">🟧 소리봄에서는 — 스피커를 왜 ‘단말에’ 두나</span>
-    TTS 목소리를 <strong>교실 벽 스피커</strong>로 내보내면, 반 친구들은 “누가 말한 거지?” 하고 헷갈립니다.
-    대신 <strong>그 학생 자리의 기기</strong>에서 소리가 나면, 친구들이 <strong>소리 나는 방향을 보고
-    누가 말했는지</strong> 자연스럽게 압니다. 이건 기술이 아니라 <strong>배려에서 나온 설계</strong>입니다.</div>
-
-  <h3>8.2 부품 조달 — 재고와의 싸움 (주도: 강주언)</h3>
+<h3>8.2 부품 조달 — 재고와의 싸움 (주도: 강주언)</h3>
   <p>
     부품을 <strong>어떤 걸, 어디서, 언제 도착하게 살지</strong>를 조사하는 일은 생각보다 중요합니다.
     개발 기간이 <strong>며칠짜리 단거리</strong>라, 부품 하나가 <strong>배송 1주일</strong>이면 그걸로
@@ -1334,29 +1212,10 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     <li>초기 설정에는 <strong>유선 키보드</strong>가 필요합니다(블루투스 키보드는 처음엔 페어링이 안 됩니다).</li>
     <li>아주 작은 나사는 <strong>정밀 드라이버</strong>로. 막 조이면 나사머리가 뭉갭니다.</li>
   </ul>
-  <h3>8.5 스피커는 어떻게 연결하나 — 두 가지 길</h3>
-  <p>소리봄이 목소리를 내보내는 방법은 두 가지입니다. 둘 다 준비해 두었습니다.</p>
-  <table>
-    <thead><tr><th>방법</th><th>쉬운 설명</th><th>장단점</th></tr></thead>
-    <tbody>
-      <tr><td><strong>블루투스 스피커</strong></td><td>선 없이 무선으로 연결</td><td>준비가 간단하고 이동이 자유로움(시연에 사용). 배터리·페어링 필요.</td></tr>
-      <tr><td><strong>내장 스피커(I2S 앰프)</strong></td><td>작은 앰프+스피커를 기기에 직접 배선</td><td>단말에 딱 붙어 완성도 높음. 배선·설정이 필요(계획된 최종형).</td></tr>
-    </tbody>
-  </table>
-  <div class="box term"><span class="box-t">⬛ 용어 — I2S / 앰프</span>
-    <strong>앰프</strong>는 작은 소리 신호를 <strong>스피커가 울릴 만큼 키워 주는</strong> 부품입니다.
-    <strong>I2S</strong>는 컴퓨터가 앰프에게 소리를 <strong>디지털로 곧장 전달</strong>하는 배선 방식입니다.
-    선 몇 가닥(소리 데이터·박자 신호·전원·접지)을 정해진 자리에 연결하면 됩니다.</div>
-  <div class="box analogy"><span class="box-t">🟪 비유로 이해하기</span>
-    앰프는 <strong>목소리를 키워 주는 확성기</strong>, I2S는 그 확성기에게 <strong>정확한 박자에 맞춰
-    소리를 넘겨 주는 약속된 손짓</strong>입니다. 박자(신호)가 어긋나면 소리가 깨지므로, 배선 자리를
-    정확히 맞추는 게 중요합니다.</div>
-  <div class="box us"><span class="box-t">🟧 소리봄에서는</span>
-    시연은 준비가 간단한 <strong>블루투스 스피커</strong>로 진행하고, 측정과 검증도 이 상태에서 마쳤습니다.
-    최종 완성형으로는 <strong>내장 스피커(I2S)</strong> 배선을 계획해 두었습니다(14부). 두 경우 모두
-    설정 파일에서 <strong>‘소리 나갈 장치’ 한 줄</strong>만 지정하면 됩니다.</div>
+  <h3>8.5 현재 스피커 — Bluetooth 음성, USB 충전</h3>
+<p>현재 동작하는 출력은 <strong>Bose SoundLink Mini의 Bluetooth 음성</strong>입니다. Jetson과 스피커를 USB로 연결한 것은 충전이며 USB 오디오 출력이 아닙니다. 과거 I2S 앰프·스피커 제작은 정상 동작하지 않아 전환한 이력으로 남깁니다. 충전 여부나 케이블 배치만으로 잡음 원인을 확정하지 않습니다.</p><div class="box warn"><span class="box-t">확인 범위와 한계</span>스피커 USB를 뽑아도 배터리와 Bluetooth 연결이 유지되면 재생할 수 있습니다. 충전 연결과 음성 연결을 각각 점검하세요.</div>
 
-  <h3>8.6 전원과 열 — 작은 컴퓨터의 사정</h3>
+<h3>8.6 전원과 열 — 작은 컴퓨터의 사정</h3>
   <p>
     이 작은 컴퓨터는 <strong>전용 전원 어댑터(19V)</strong>로 켜집니다. 화면 충전기와 <strong>다르니</strong>
     바꿔 꽂으면 안 됩니다. 또, 성능을 최대로 쓰려면 <strong>고성능 모드</strong>를 켜야 합니다
@@ -1415,23 +1274,9 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     실제로 통한 순간입니다. (조사·주문은 강주언 주도, 조립은 다 함께 — 8.2)</div>
 
   <h3>8.10 부품들은 어떻게 이어지나</h3>
-  <p>소리봄의 부품들은 각자 알맞은 방식으로 두뇌(Jetson)에 연결됩니다.</p>
-  <table>
-    <thead><tr><th>부품</th><th>연결</th><th>왜 그 방식</th></tr></thead>
-    <tbody>
-      <tr><td>마이크</td><td><strong>USB</strong></td><td>선 하나로 소리·전원·방향값을 다 주고받음. 꽂으면 바로 인식.</td></tr>
-      <tr><td>화면</td><td><strong>영상선 + 터치용 USB</strong></td><td>영상선은 그림만, 터치는 별도 USB. (이 두뇌는 HDMI가 없어 변환 젠더 필요)</td></tr>
-      <tr><td>저장장치(SSD)</td><td><strong>내장(M.2)</strong></td><td>보드 안에 꽂아 가장 빠르게. OS·모델을 여기 둠.</td></tr>
-      <tr><td>스피커(시연)</td><td><strong>블루투스(무선)</strong></td><td>선 없이 간단·이동 자유. 페어링만 하면 끝.</td></tr>
-      <tr><td>내장 스피커(최종형)</td><td><strong>I2S(직접 배선)</strong></td><td>앰프+스피커를 40핀에 직접. 단말에 딱 붙는 완성형(8.5).</td></tr>
-    </tbody>
-  </table>
-  <div class="box easy"><span class="box-t">🟦 왜 마이크는 USB, 스피커는 무선인가</span>
-    마이크는 <strong>방향 데이터까지</strong> 정확히 주고받아야 해서 <strong>선(USB)</strong>이 안정적이고,
-    스피커는 <strong>소리만</strong> 내보내면 되니 <strong>무선(블루투스)</strong>으로도 충분합니다. 각자
-    <strong>필요에 맞는</strong> 연결을 고른 것입니다.</div>
+<table><thead><tr><th>연결</th><th>전달하는 것</th></tr></thead><tbody><tr><td>ReSpeaker → Jetson USB</td><td>음성·방향 데이터와 장치 전원</td></tr><tr><td>물리 키보드 → Jetson</td><td>질문 타이핑</td></tr><tr><td>Jetson DP → HDMI 젠더 → HDMI–mini HDMI → 모니터</td><td>영상</td></tr><tr><td>모니터 ↔ Jetson 별도 USB</td><td>터치 데이터. 영상선·충전기만 연결해서 터치되는 것은 아님</td></tr><tr><td>USB-C 충전기 → 모니터</td><td>모니터 전원</td></tr><tr><td>Jetson → Bose Bluetooth</td><td>합성 음성</td></tr><tr><td>Jetson → Bose USB</td><td>충전. 오디오 전달 아님</td></tr><tr><td>Jetson 내부 M.2 ↔ NVMe SSD</td><td>OS·모델·기록의 내부 저장</td></tr><tr><td>동봉 전원 어댑터 → Jetson</td><td>보드 전원. 다른 선을 연결한 뒤 마지막에 연결</td></tr></tbody></table><p>첨부 PNG와 Mermaid는 같은 구성을 다른 수준으로 요약합니다. 그림에서 생략된 터치 USB·입력 장치와 음성/전원선의 구분은 위 표를 기준으로 읽습니다.</p>
 
-  <h3>8.11 조립 실전기 — 정말 힘들었던 세 가지</h3>
+<h3>8.11 조립 실전기 — 정말 힘들었던 세 가지</h3>
   <p>
     부품을 사서 꽂기만 하면 끝이 아니었습니다. 예상 못 한 데서 계속 막혔고, 그때마다 방법을 찾아
     넘었습니다. 가장 힘들었던 세 가지를 솔직하게 남깁니다.
@@ -1509,11 +1354,9 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     확실히 동작하는 것</strong>이 목표였습니다.</div>
 
   <h3>결정 ⑦ 수업 기록은 ‘지어내지 않고 있는 그대로’</h3>
-  <p><strong>왜:</strong> 수업 내용을 남길 때 <strong>없는 말을 지어내면</strong> 학습 자료로 못 믿습니다.
-    자연스러운 요약은 글을 새로 쓰는 LLM이 필요한데 기기 성능상 무리라, <strong>모든 발화를 있는
-    그대로 기록</strong>하는 방식으로 확정했습니다(15부). 지어내지 않으니 믿을 수 있습니다.</p>
+<p>추출식 요약의 누락과 생성 모델의 자원·사실성 문제를 고려해 전체 전사를 남기기로 했습니다. 다만 STT 오인식·필터 누락이 기록에도 반영되므로 원래 발화를 완벽히 복원한 자료는 아닙니다. 현재는 자동 저장·미리보기·선택적 이메일을 제공하고 별도 생성 요약은 구현하지 않았습니다.</p>
 
-  <h3>결정 ⑧ 일부러 ‘안 한’ 것들</h3>
+<h3>결정 ⑧ 일부러 ‘안 한’ 것들</h3>
   <p>
     무엇을 <strong>안 하기로</strong> 정하는 것도 중요한 결정입니다. 욕심을 내면 다 무너지기 때문입니다.
   </p>
@@ -1566,32 +1409,11 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     식당에 비유하면, <strong>audio</strong>는 재료를 받는 곳, <strong>stt/tts</strong>는 요리사,
     <strong>ui</strong>는 손님에게 내는 홀, <strong>main.py</strong>는 이 모두를 지휘하는 <strong>매니저</strong>입니다.</div>
 
-  <h3>10.2 네 개의 ‘레인’이 동시에 달린다</h3>
-  <p>
-    소리봄은 여러 일이 <strong>동시에</strong> 일어나야 합니다(말 들으면서, 방향 보면서, 타이핑 받으면서).
-    그래서 일을 <strong>여러 레인(길)</strong>으로 나눠 나란히 달리게 합니다. 육상 트랙에서 여러 선수가
-    <strong>각자 레인에서 동시에</strong> 뛰는 것과 같습니다.
-  </p>
-  <ul>
-    <li><strong>레인 A(자막):</strong> 소리 받기 → 구간 자르기 → 글자로 → 화면에.</li>
-    <li><strong>레인 B(방향):</strong> 마이크 칩에서 각도 읽기 → 화면 화살표 돌리기.</li>
-    <li><strong>말하기:</strong> 학생이 타이핑+엔터 → 목소리 만들어 스피커로.</li>
-    <li>(레인 C·D는 <strong>다음 단계 기능</strong>이라 지금은 꺼 둠 — 14부)</li>
-  </ul>
-  <div class="box term"><span class="box-t">⬛ 용어 — 스레드(thread)</span>
-    한 프로그램 안에서 <strong>여러 일을 동시에</strong> 진행하는 ‘일꾼 갈래’. 소리봄은 자막·방향 등을
-    각각의 스레드(레인)로 돌려 <strong>서로 안 기다리게</strong> 합니다.</div>
-  <div class="box warn"><span class="box-t">🟥 함정 — 화면은 한 곳에서만 고쳐야</span>
-    여러 레인이 <strong>동시에 화면을 건드리면</strong> 프로그램이 꼬입니다. 그래서 “자막 갱신은 반드시
-    <strong>화면 담당(메인) 쪽에서</strong>”라는 규칙을 두고, 다른 레인은 <strong>신호만 보내</strong>게 했습니다.
-    (도유가 UI를 그렇게 안전하게 설계했습니다.)</div>
+  <h3>10.2 수음은 계속, GPU 추론은 순서 조정</h3>
+<p>수음은 녹음 자식 프로세스 하나에서 처리하고 VAD·STT·방향 읽기·말하기·저장은 역할별 워커로 나눕니다. 화면 변경은 Qt 신호로 메인 스레드에 넘깁니다. <strong>모든 추론을 동시에 실행하는 구조는 아닙니다.</strong> STT와 TTS는 공유 GPU의 순서를 조정합니다. Enter 시 진행 중 전사를 마친 뒤 TTS를 수행하고, 그동안 수음·VAD는 계속해 새 발화를 유한 큐에 보관합니다. 말하기 후 순서대로 전사를 재개합니다.</p><p>일반 대기는 4발화, 말하기 보관 경로는 32발화이며 시간 만료 삭제는 기본 해제했습니다. 용량 초과·재연결에는 누락될 수 있습니다. 전사 결과와 발화 시각을 함께 넘겨 실제 무음·방향 변화로 문단을 구분합니다.</p>
 
-  <figure>
-    <img src="../docs/figures/system-flow.svg" alt="소리봄 전체 처리 흐름 — 마이크에서 자막·방향·말하기까지의 데이터 흐름도">
-    <figcaption>소리봄의 전체 흐름. 소리가 어떻게 들어와 자막·방향이 되고, 타이핑이 어떻게 목소리가 되는지 한눈에.</figcaption>
-  </figure>
-
-  <h3>10.3 설정은 코드가 아니라 config.yaml에</h3>
+<figure id="final-flow"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iDQogICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPg0KPHN2ZyB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgd2lkdGg9IjUwNHB0IiBoZWlnaHQ9IjQzMnB0IiB2aWV3Qm94PSIwIDAgNTA0IDQzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiPg0KIDxtZXRhZGF0YT4NCiAgPHJkZjpSREYgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczpjYz0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjIiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPg0KICAgPGNjOldvcms+DQogICAgPGRjOnR5cGUgcmRmOnJlc291cmNlPSJodHRwOi8vcHVybC5vcmcvZGMvZGNtaXR5cGUvU3RpbGxJbWFnZSIvPg0KICAgIDxkYzpkYXRlPjIwMjYtMTAtMTdUMDI6NDE6MTkuNTQ4MjYyPC9kYzpkYXRlPg0KICAgIDxkYzpmb3JtYXQ+aW1hZ2Uvc3ZnK3htbDwvZGM6Zm9ybWF0Pg0KICAgIDxkYzpjcmVhdG9yPg0KICAgICA8Y2M6QWdlbnQ+DQogICAgICA8ZGM6dGl0bGU+TWF0cGxvdGxpYiB2My4xMS4yLCBodHRwczovL21hdHBsb3RsaWIub3JnLzwvZGM6dGl0bGU+DQogICAgIDwvY2M6QWdlbnQ+DQogICAgPC9kYzpjcmVhdG9yPg0KICAgPC9jYzpXb3JrPg0KICA8L3JkZjpSREY+DQogPC9tZXRhZGF0YT4NCiA8ZGVmcz4NCiAgPHN0eWxlIHR5cGU9InRleHQvY3NzIj4qe3N0cm9rZS1saW5lam9pbjogcm91bmQ7IHN0cm9rZS1saW5lY2FwOiBidXR0fTwvc3R5bGU+DQogPC9kZWZzPg0KIDxnIGlkPSJmaWd1cmVfMSI+DQogIDxnIGlkPSJwYXRjaF8xIj4NCiAgIDxwYXRoIGQ9Ik0gMCA0MzIgDQpMIDUwNCA0MzIgDQpMIDUwNCAwIA0KTCAwIDAgDQp6DQoiIHN0eWxlPSJmaWxsOiAjZmZmZmZmIi8+DQogIDwvZz4NCiAgPGcgaWQ9ImF4ZXNfMSI+DQogICA8ZyBpZD0icGF0Y2hfMiI+DQogICAgPHBhdGggZD0iTSAxMi44NTIgOS4zMjQwMDkgDQpMIDIyNC4wMjggOS4zMjQwMDkgDQpRIDIyNy41NTYgOS4zMjQwMDkgMjI3LjU1NiAxMi44NTIwMTMgDQpMIDIyNy41NTYgNDcuNjI4MDQ4IA0KUSAyMjcuNTU2IDUxLjE1NjA1MSAyMjQuMDI4IDUxLjE1NjA1MSANCkwgMTIuODUyIDUxLjE1NjA1MSANClEgOS4zMjQgNTEuMTU2MDUxIDkuMzI0IDQ3LjYyODA0OCANCkwgOS4zMjQgMTIuODUyMDEzIA0KUSA5LjMyNCA5LjMyNDAwOSAxMi44NTIgOS4zMjQwMDkgDQp6DQoiIGNsaXAtcGF0aD0idXJsKCNwMzFhYWQ2OWMwZikiIHN0eWxlPSJmaWxsOiAjZWVlZWVlOyBzdHJva2U6ICMzMzMzMzM7IHN0cm9rZS1saW5lam9pbjogbWl0ZXIiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJwYXRjaF8zIj4NCiAgICA8cGF0aCBkPSJNIDEyLjg1MiA3OS44ODQwOCANCkwgMjI0LjAyOCA3OS44ODQwOCANClEgMjI3LjU1NiA3OS44ODQwOCAyMjcuNTU2IDgzLjQxMjA4MyANCkwgMjI3LjU1NiAxMjguMjY4MTI4IA0KUSAyMjcuNTU2IDEzMS43OTYxMzIgMjI0LjAyOCAxMzEuNzk2MTMyIA0KTCAxMi44NTIgMTMxLjc5NjEzMiANClEgOS4zMjQgMTMxLjc5NjEzMiA5LjMyNCAxMjguMjY4MTI4IA0KTCA5LjMyNCA4My40MTIwODMgDQpRIDkuMzI0IDc5Ljg4NDA4IDEyLjg1MiA3OS44ODQwOCANCnoNCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMWFhZDY5YzBmKSIgc3R5bGU9ImZpbGw6ICNmZmZmZmY7IHN0cm9rZTogIzMzMzMzMzsgc3Ryb2tlLWxpbmVqb2luOiBtaXRlciIvPg0KICAgPC9nPg0KICAgPGcgaWQ9InBhdGNoXzQiPg0KICAgIDxwYXRoIGQ9Ik0gMTIuODUyIDE2NS41NjQxNjYgDQpMIDIyNC4wMjggMTY1LjU2NDE2NiANClEgMjI3LjU1NiAxNjUuNTY0MTY2IDIyNy41NTYgMTY5LjA5MjE2OSANCkwgMjI3LjU1NiAyNDQuMTg4MjQ0IA0KUSAyMjcuNTU2IDI0Ny43MTYyNDggMjI0LjAyOCAyNDcuNzE2MjQ4IA0KTCAxMi44NTIgMjQ3LjcxNjI0OCANClEgOS4zMjQgMjQ3LjcxNjI0OCA5LjMyNCAyNDQuMTg4MjQ0IA0KTCA5LjMyNCAxNjkuMDkyMTY5IA0KUSA5LjMyNCAxNjUuNTY0MTY2IDEyLjg1MiAxNjUuNTY0MTY2IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMxYWFkNjljMGYpIiBzdHlsZT0iZmlsbDogI2VlZWVlZTsgc3Ryb2tlOiAjMzMzMzMzOyBzdHJva2UtbGluZWpvaW46IG1pdGVyIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfNSI+DQogICAgPHBhdGggZD0iTSAxMi44NTIgMjg2LjUyNDI4NyANCkwgMjI0LjAyOCAyODYuNTI0Mjg3IA0KUSAyMjcuNTU2IDI4Ni41MjQyODcgMjI3LjU1NiAyOTAuMDUyMjkgDQpMIDIyNy41NTYgMzM0LjkwODMzNSANClEgMjI3LjU1NiAzMzguNDM2MzM4IDIyNC4wMjggMzM4LjQzNjMzOCANCkwgMTIuODUyIDMzOC40MzYzMzggDQpRIDkuMzI0IDMzOC40MzYzMzggOS4zMjQgMzM0LjkwODMzNSANCkwgOS4zMjQgMjkwLjA1MjI5IA0KUSA5LjMyNCAyODYuNTI0Mjg3IDEyLjg1MiAyODYuNTI0Mjg3IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMxYWFkNjljMGYpIiBzdHlsZT0iZmlsbDogI2ZmZmZmZjsgc3Ryb2tlOiAjMzMzMzMzOyBzdHJva2UtbGluZWpvaW46IG1pdGVyIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfNiI+DQogICAgPHBhdGggZD0iTSAxMi44NTIgMzY3LjE2NDM2NyANCkwgMjI0LjAyOCAzNjcuMTY0MzY3IA0KUSAyMjcuNTU2IDM2Ny4xNjQzNjcgMjI3LjU1NiAzNzAuNjkyMzcxIA0KTCAyMjcuNTU2IDQxNS41NDg0MTYgDQpRIDIyNy41NTYgNDE5LjA3NjQxOSAyMjQuMDI4IDQxOS4wNzY0MTkgDQpMIDEyLjg1MiA0MTkuMDc2NDE5IA0KUSA5LjMyNCA0MTkuMDc2NDE5IDkuMzI0IDQxNS41NDg0MTYgDQpMIDkuMzI0IDM3MC42OTIzNzEgDQpRIDkuMzI0IDM2Ny4xNjQzNjcgMTIuODUyIDM2Ny4xNjQzNjcgDQp6DQoiIGNsaXAtcGF0aD0idXJsKCNwMzFhYWQ2OWMwZikiIHN0eWxlPSJmaWxsOiAjZmZmZmZmOyBzdHJva2U6ICMzMzMzMzM7IHN0cm9rZS1saW5lam9pbjogbWl0ZXIiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJwYXRjaF83Ij4NCiAgICA8cGF0aCBkPSJNIDI5NS4wOTIgOS4zMjQwMDkgDQpMIDQ5MS4xNDggOS4zMjQwMDkgDQpRIDQ5NC42NzYgOS4zMjQwMDkgNDk0LjY3NiAxMi44NTIwMTMgDQpMIDQ5NC42NzYgNTcuNzA4MDU4IA0KUSA0OTQuNjc2IDYxLjIzNjA2MSA0OTEuMTQ4IDYxLjIzNjA2MSANCkwgMjk1LjA5MiA2MS4yMzYwNjEgDQpRIDI5MS41NjQgNjEuMjM2MDYxIDI5MS41NjQgNTcuNzA4MDU4IA0KTCAyOTEuNTY0IDEyLjg1MjAxMyANClEgMjkxLjU2NCA5LjMyNDAwOSAyOTUuMDkyIDkuMzI0MDA5IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMxYWFkNjljMGYpIiBzdHlsZT0iZmlsbDogI2ZmZmZmZjsgc3Ryb2tlOiAjMzMzMzMzOyBzdHJva2UtbGluZWpvaW46IG1pdGVyIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfOCI+DQogICAgPHBhdGggZD0iTSAyOTUuMDkyIDE2MC41MjQxNjEgDQpMIDQ5MS4xNDggMTYwLjUyNDE2MSANClEgNDk0LjY3NiAxNjAuNTI0MTYxIDQ5NC42NzYgMTY0LjA1MjE2NCANCkwgNDk0LjY3NiAyMDguOTA4MjA5IA0KUSA0OTQuNjc2IDIxMi40MzYyMTIgNDkxLjE0OCAyMTIuNDM2MjEyIA0KTCAyOTUuMDkyIDIxMi40MzYyMTIgDQpRIDI5MS41NjQgMjEyLjQzNjIxMiAyOTEuNTY0IDIwOC45MDgyMDkgDQpMIDI5MS41NjQgMTY0LjA1MjE2NCANClEgMjkxLjU2NCAxNjAuNTI0MTYxIDI5NS4wOTIgMTYwLjUyNDE2MSANCnoNCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMWFhZDY5YzBmKSIgc3R5bGU9ImZpbGw6ICNmZmZmZmY7IHN0cm9rZTogIzMzMzMzMzsgc3Ryb2tlLWxpbmVqb2luOiBtaXRlciIvPg0KICAgPC9nPg0KICAgPGcgaWQ9InBhdGNoXzkiPg0KICAgIDxwYXRoIGQ9Ik0gMjk1LjA5MiAyNDEuMTY0MjQxIA0KTCA0OTEuMTQ4IDI0MS4xNjQyNDEgDQpRIDQ5NC42NzYgMjQxLjE2NDI0MSA0OTQuNjc2IDI0NC42OTIyNDUgDQpMIDQ5NC42NzYgMjg5LjU0ODI5IA0KUSA0OTQuNjc2IDI5My4wNzYyOTMgNDkxLjE0OCAyOTMuMDc2MjkzIA0KTCAyOTUuMDkyIDI5My4wNzYyOTMgDQpRIDI5MS41NjQgMjkzLjA3NjI5MyAyOTEuNTY0IDI4OS41NDgyOSANCkwgMjkxLjU2NCAyNDQuNjkyMjQ1IA0KUSAyOTEuNTY0IDI0MS4xNjQyNDEgMjk1LjA5MiAyNDEuMTY0MjQxIA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMxYWFkNjljMGYpIiBzdHlsZT0iZmlsbDogI2VlZWVlZTsgc3Ryb2tlOiAjMzMzMzMzOyBzdHJva2UtbGluZWpvaW46IG1pdGVyIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfMTAiPg0KICAgIDxwYXRoIGQ9Ik0gMjk1LjA5MiAzMjYuODQ0MzI3IA0KTCA0OTEuMTQ4IDMyNi44NDQzMjcgDQpRIDQ5NC42NzYgMzI2Ljg0NDMyNyA0OTQuNjc2IDMzMC4zNzIzMyANCkwgNDk0LjY3NiAzNzUuMjI4Mzc1IA0KUSA0OTQuNjc2IDM3OC43NTYzNzkgNDkxLjE0OCAzNzguNzU2Mzc5IA0KTCAyOTUuMDkyIDM3OC43NTYzNzkgDQpRIDI5MS41NjQgMzc4Ljc1NjM3OSAyOTEuNTY0IDM3NS4yMjgzNzUgDQpMIDI5MS41NjQgMzMwLjM3MjMzIA0KUSAyOTEuNTY0IDMyNi44NDQzMjcgMjk1LjA5MiAzMjYuODQ0MzI3IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMxYWFkNjljMGYpIiBzdHlsZT0iZmlsbDogI2ZmZmZmZjsgc3Ryb2tlOiAjMzMzMzMzOyBzdHJva2UtbGluZWpvaW46IG1pdGVyIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfMTEiPg0KICAgIDxwYXRoIGQ9Ik0gMTE1LjkyIDUyLjM5NzEwMyANClEgMTE1LjkyIDY1LjUxNzA1NiAxMTUuOTIgNzcuNTE4OTc0IA0KIiBjbGlwLXBhdGg9InVybCgjcDMxYWFkNjljMGYpIiBzdHlsZT0iZmlsbDogbm9uZTsgc3Ryb2tlOiAjNDQ0NDQ0OyBzdHJva2UtbGluZWNhcDogcm91bmQiLz4NCiAgICA8cGF0aCBkPSJNIDExOC4xMiA3My4xMTg5NzQgDQpMIDExNS45MiA3Ny41MTg5NzQgDQpMIDExMy43MiA3My4xMTg5NzQgDQp6DQoiIGNsaXAtcGF0aD0idXJsKCNwMzFhYWQ2OWMwZikiIHN0eWxlPSJmaWxsOiAjNDQ0NDQ0OyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgPC9nPg0KICAgPGcgaWQ9InBhdGNoXzEyIj4NCiAgICA8cGF0aCBkPSJNIDExNS45MiAxMzMuMDQyNzIxIA0KUSAxMTUuOTIgMTQ4LjY4MDExNCAxMTUuOTIgMTYzLjE5OTQ3NCANCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMWFhZDY5YzBmKSIgc3R5bGU9ImZpbGw6IG5vbmU7IHN0cm9rZTogIzQ0NDQ0NDsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kIi8+DQogICAgPHBhdGggZD0iTSAxMTguMTIgMTU4Ljc5OTQ3NCANCkwgMTE1LjkyIDE2My4xOTk0NzQgDQpMIDExMy43MiAxNTguNzk5NDc0IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMxYWFkNjljMGYpIiBzdHlsZT0iZmlsbDogIzQ0NDQ0NDsgc3Ryb2tlOiAjNDQ0NDQ0OyBzdHJva2UtbGluZWNhcDogcm91bmQiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJwYXRjaF8xMyI+DQogICAgPHBhdGggZD0iTSAxMTUuOTIgMjQ4Ljk2MzQ1MiANClEgMTE1LjkyIDI2Ny4xMjMyNTYgMTE1LjkyIDI4NC4xNjUwMjYgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzFhYWQ2OWMwZikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgIDxwYXRoIGQ9Ik0gMTE4LjEyIDI3OS43NjUwMjYgDQpMIDExNS45MiAyODQuMTY1MDI2IA0KTCAxMTMuNzIgMjc5Ljc2NTAyNiANCnoNCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMWFhZDY5YzBmKSIgc3R5bGU9ImZpbGw6ICM0NDQ0NDQ7IHN0cm9rZTogIzQ0NDQ0NDsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfMTQiPg0KICAgIDxwYXRoIGQ9Ik0gMTE1LjkyIDMzOS42NzczOSANClEgMTE1LjkyIDM1Mi43OTczNDMgMTE1LjkyIDM2NC43OTkyNjEgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzFhYWQ2OWMwZikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgIDxwYXRoIGQ9Ik0gMTE4LjEyIDM2MC4zOTkyNjEgDQpMIDExNS45MiAzNjQuNzk5MjYxIA0KTCAxMTMuNzIgMzYwLjM5OTI2MSANCnoNCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMWFhZDY5YzBmKSIgc3R5bGU9ImZpbGw6ICM0NDQ0NDQ7IHN0cm9rZTogIzQ0NDQ0NDsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kIi8+DQogICA8L2c+DQogICA8ZyBpZD0icGF0Y2hfMTUiPg0KICAgIDxwYXRoIGQ9Ik0gMzkzLjEyIDIxMy42NzcyNjQgDQpRIDM5My4xMiAyMjYuNzk3MjE3IDM5My4xMiAyMzguNzk5MTM1IA0KIiBjbGlwLXBhdGg9InVybCgjcDMxYWFkNjljMGYpIiBzdHlsZT0iZmlsbDogbm9uZTsgc3Ryb2tlOiAjNDQ0NDQ0OyBzdHJva2UtbGluZWNhcDogcm91bmQiLz4NCiAgICA8cGF0aCBkPSJNIDM5NS4zMiAyMzQuMzk5MTM1IA0KTCAzOTMuMTIgMjM4Ljc5OTEzNSANCkwgMzkwLjkyIDIzNC4zOTkxMzUgDQp6DQoiIGNsaXAtcGF0aD0idXJsKCNwMzFhYWQ2OWMwZikiIHN0eWxlPSJmaWxsOiAjNDQ0NDQ0OyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgPC9nPg0KICAgPGcgaWQ9InBhdGNoXzE2Ij4NCiAgICA8cGF0aCBkPSJNIDM5My4xMiAyOTQuMzIyODgyIA0KUSAzOTMuMTIgMzA5Ljk2MDI3NiAzOTMuMTIgMzI0LjQ3OTYzNSANCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMWFhZDY5YzBmKSIgc3R5bGU9ImZpbGw6IG5vbmU7IHN0cm9rZTogIzQ0NDQ0NDsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kIi8+DQogICAgPHBhdGggZD0iTSAzOTUuMzIgMzIwLjA3OTYzNSANCkwgMzkzLjEyIDMyNC40Nzk2MzUgDQpMIDM5MC45MiAzMjAuMDc5NjM1IA0Keg0KIiBjbGlwLXBhdGg9InVybCgjcDMxYWFkNjljMGYpIiBzdHlsZT0iZmlsbDogIzQ0NDQ0NDsgc3Ryb2tlOiAjNDQ0NDQ0OyBzdHJva2UtbGluZWNhcDogcm91bmQiLz4NCiAgIDwvZz4NCiAgIDxnIGlkPSJwYXRjaF8xNyI+DQogICAgPHBhdGggZD0iTSAyNTUuMDQyOTQ5IDMxMi40ODAzMTIgDQpRIDI0MS45MjMwMSAzMTIuNDgwMzEyIDIyOS45MjExMDQgMzEyLjQ4MDMxMiANCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMWFhZDY5YzBmKSIgc3R5bGU9ImZpbGw6IG5vbmU7IHN0cm9rZS1kYXNoYXJyYXk6IDMuNywxLjY7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgIDxwYXRoIGQ9Ik0gMjM0LjMyMTEwNCAzMTQuNjgwMzEyIA0KTCAyMjkuOTIxMTA0IDMxMi40ODAzMTIgDQpMIDIzNC4zMjExMDQgMzEwLjI4MDMxMiANCnoNCiIgY2xpcC1wYXRoPSJ1cmwoI3AzMWFhZDY5YzBmKSIgc3R5bGU9ImZpbGw6ICM0NDQ0NDQ7IHN0cm9rZS1kYXNoYXJyYXk6IDMuNywxLjY7IHN0cm9rZS1kYXNob2Zmc2V0OiAwOyBzdHJva2U6ICM0NDQ0NDQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZCIvPg0KICAgPC9nPg0KICAgPGcgaWQ9ImxpbmUyZF8xIj4NCiAgICA8cGF0aCBkPSJNIDI5Mi4zMiAzNS4yODAwMzUgDQpMIDI1Ny4wNCAzNS4yODAwMzUgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzFhYWQ2OWMwZikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2UtZGFzaGFycmF5OiAzLjcsMS42OyBzdHJva2UtZGFzaG9mZnNldDogMDsgc3Ryb2tlOiAjNDQ0NDQ0Ii8+DQogICA8L2c+DQogICA8ZyBpZD0ibGluZTJkXzIiPg0KICAgIDxwYXRoIGQ9Ik0gMjU3LjA0IDM1LjI4MDAzNSANCkwgMjU3LjA0IDMxMi40ODAzMTIgDQoiIGNsaXAtcGF0aD0idXJsKCNwMzFhYWQ2OWMwZikiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2UtZGFzaGFycmF5OiAzLjcsMS42OyBzdHJva2UtZGFzaG9mZnNldDogMDsgc3Ryb2tlOiAjNDQ0NDQ0Ii8+DQogICA8L2c+DQogICA8ZyBpZD0idGV4dF8xIj4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC13ZWlnaHQ6IDcwMDsgZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyc7IHRleHQtYW5jaG9yOiBtaWRkbGUiIHg9IjExOC40NCIgeT0iMzQuMzAwMzI3IiB0cmFuc2Zvcm09InJvdGF0ZSgtMCAxMTguNDQgMzQuMzAwMzI3KSI+VVNCIOuniOydtO2BrOyXkOyEnCDsnYzshLEg7IiY7KeRPC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfMiI+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1MC4yNjQ2MDkgMTAxLjk1MDQwMykiPlNpbGVybyBWQUTroZwg67Cc7ZmUIOq1rOqwhCDrtoTrpqw8L3RleHQ+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2MC4yNjQyMTkgMTE3Ljg1MDQwMykiPuyLpOygnCDsi5zsnpEgwrcg64GdIOyLnOqwgSDrs7TsobQ8L3RleHQ+DQogICA8L2c+DQogICA8ZyBpZD0idGV4dF8zIj4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC13ZWlnaHQ6IDcwMDsgZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDU3LjMyMjcxOSAxOTQuODAwNTA0KSI+64uk6rWt7Ja0IHNtYWxsIOuqqOuNuOuhnCDsoITsgqw8L3RleHQ+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtd2VpZ2h0OiA3MDA7IGZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2MS4zMjc1MzEgMjEwLjUzNDg3OSkiPuyYgeyWtCDqs7zrqqk6IGtvIC8gZW4g7ISg7YOdPC90ZXh0Pg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXdlaWdodDogNzAwOyBmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDIuNzA0NjU2IDIyNi42MDA1MDQpIj7qt7gg7Jm4OiBrbyDqs6DsoJUgwrcgaG90d29yZHMg7KCB7JqpPC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfNCI+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2NC40MDQ4NDQgMzA4LjYxNjI4MSkiPuyekOuniSDCtyDrsKntlqUgwrcg7J2066aEIOyVjOumvDwvdGV4dD4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQyLjA4Njg3NSAzMjQuNTE2MjgxKSI+7Iuk7KCcIOustOydjOqzvCDrsKntlqXsnLzroZwg66y464uoIOq1rOu2hDwvdGV4dD4NCiAgIDwvZz4NCiAgIDxnIGlkPSJ0ZXh0XzUiPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDEuOTYyNjU2IDM4OS4yMzA2OSkiPjMw7LSIIOyekOuPmSDsoIDsnqUgwrcg6riw66GdIOuLpOyLnCDrs7TquLA8L3RleHQ+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1NC41NTAxNTYgNDA1LjEzMDY5KSI+7J2066mU7J28IOyghOyGoeydgCDsnbjthLDrhLcg7ZWE7JqUPC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfNiI+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMzQuNTMwMTU2IDMxLjQxNjAwNCkiPuuniOydtO2BrOydmCDrsKntlqUg6rCB64+EIOyImOynkTwvdGV4dD4NCiAgICA8dGV4dCBzdHlsZT0iZm9udC1zaXplOiAxMC42cHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMyNy4zNjY4NzUgNDcuMjk1MzAxKSI+67Cc7ZmUIOyLnOqwgeyXkCDrp57strAg7ZGc67O4IOyXsOqysDwvdGV4dD4NCiAgIDwvZz4NCiAgIDxnIGlkPSJ0ZXh0XzciPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzQ2Ljk5MzQzOCAxODIuNTkwNDgzKSI+7IKs7Jqp7J6Q6rCAIOyniOusuCDsnoXroKU8L3RleHQ+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMzYuODA3NSAxOTguNDkwNDgzKSI+64Ko7ISxIMK3IOyXrOyEsSDrqqnshozrpqwg7ISg7YOdPC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfOCI+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtd2VpZ2h0OiA3MDA7IGZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNDAuOTI2NTk0IDI2Mi41MTM0MDgpIj5TdXBlcnRvbmljIOydjOyEsSDtlanshLE8L3RleHQ+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtd2VpZ2h0OiA3MDA7IGZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMjguMzIyNTMxIDI3OS4xMzA1NjQpIj5TVFTsmYAgR1BVIOyCrOyaqSDsiJzshJwg7KGw7KCVPC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfOSI+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuNnB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMzQuMjcwMTI1IDM0OC45MTA2NSkiPkJsdWV0b290aCDsiqTtlLzsu6TroZwg7J6s7IOdPC90ZXh0Pg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjZweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzM3Ljk2Njg3NSAzNjQuODEwNjUpIj7smYTro4wg7ZuEIOyekOuniSDsspjrpqwg6rOE7IaNPC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfMTAiPg0KICAgIDxnIGlkPSJwYXRjaF8xOCI+DQogICAgIDxwYXRoIGQ9Ik0gMjQxIDExOC45MjIwNjkgDQpMIDI2MyAxMTguOTIyMDY5IA0KTCAyNjMgOTYuMDY2NiANCkwgMjQxIDk2LjA2NjYgDQp6DQoiIHN0eWxlPSJmaWxsOiAjZmZmZmZmIi8+DQogICAgPC9nPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwcHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI0MiAxMDUuNjU1NjYzKSI+67Cp7ZalPC90ZXh0Pg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwcHg7IGZvbnQtZmFtaWx5OiAnTWFsZ3VuIEdvdGhpYyciIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI0MiAxMTUuOTIwMTE2KSI+7ZGc67O4PC90ZXh0Pg0KICAgPC9nPg0KICAgPGcgaWQ9InRleHRfMTEiPg0KICAgIDx0ZXh0IHN0eWxlPSJmb250LXNpemU6IDEwLjNweDsgZm9udC1mYW1pbHk6ICdNYWxndW4gR290aGljJyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzM2LjE4ODM1OSA5Ny4wMjA0ODQpIj7snYzshLEg7IiY7KeR6rO8IOuwnO2ZlCDqsJDsp4DripQ8L3RleHQ+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuM3B4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNDEuMzM4MzU5IDExMi40NzA0ODQpIj7soITsgqwg64yA6riwIOykkeyXkOuPhCDqs4Tsho08L3RleHQ+DQogICA8L2c+DQogICA8ZyBpZD0idGV4dF8xMiI+DQogICAgPHRleHQgc3R5bGU9ImZvbnQtc2l6ZTogMTAuMXB4OyBmb250LWZhbWlseTogJ01hbGd1biBHb3RoaWMnOyB0ZXh0LWFuY2hvcjogbWlkZGxlIiB4PSIzOTMuMTIiIHk9IjQwOC4yNDA0MDgiIHRyYW5zZm9ybT0icm90YXRlKC0wIDM5My4xMiA0MDguMjQwNDA4KSI+7ZW17IusIOyymOumrOuKlCDquLDquLAg64K067aA7JeQ7IScIOyImO2WiTwvdGV4dD4NCiAgIDwvZz4NCiAgPC9nPg0KIDwvZz4NCiA8ZGVmcz4NCiAgPGNsaXBQYXRoIGlkPSJwMzFhYWQ2OWMwZiI+DQogICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iNTA0IiBoZWlnaHQ9IjQzMiIvPg0KICA8L2NsaXBQYXRoPg0KIDwvZGVmcz4NCjwvc3ZnPg0K" alt="본선 수정 시스템 흐름 — 실제 발화 시각과 방향 연결, 같은 small 모델의 언어 선택, GPU 순서 조정"><figcaption>사용자 제공 본선 수정 플로우차트(2026-10-17). 전사 대기 중에도 수음·VAD는 계속됩니다. 그림의 기록 다시 보기는 현재 실행 기록이며 과거 파일 자동 복원이 아닙니다.</figcaption></figure>
+<h3>10.3 설정은 코드가 아니라 config.yaml에</h3>
   <p>
     마이크 이름, 샘플레이트, 방향 기준 각도, TTS 목소리 번호, 단어 힌트 같은 <strong>바뀔 수 있는
     값</strong>들은 코드 속에 숨겨 두지 않고 <strong>config.yaml 한 파일에 모아</strong> 뒀습니다.
@@ -1602,71 +1424,34 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
     있습니다. 코드와 설정을 분리하면 <strong>실수도 줄고, 이해도 쉽습니다.</strong></div>
 
   <h3>10.4 프로그램이 켜지면 실제로 벌어지는 일 (한 줄씩)</h3>
-  <p>
-    코드를 몰라도, <strong>소리봄을 켜는 순간</strong> 안에서 무슨 일이 순서대로 일어나는지 말로 풀면
-    이렇습니다.
-  </p>
-  <ol>
-    <li><strong>설정을 읽는다.</strong> <code>config.yaml</code>에서 마이크 이름, 단어 힌트, 목소리 번호
-      등 모든 값을 불러옵니다.</li>
-    <li><strong>화면을 준비한다.</strong> 자막 자리, 방향 나침반, 입력칸이 있는 창을 만듭니다.</li>
-    <li><strong>부품들을 깨운다.</strong> 마이크, 방향 읽기, 음성인식 모델, 음성합성 모델을 하나씩
-      메모리에 올립니다(이때 몇 초 걸립니다 — 모델이 큼).</li>
-    <li><strong>입력칸과 스피커를 연결한다.</strong> “학생이 엔터를 누르면 → 그 문장을 목소리로” 라는
-      연결선을 겁니다.</li>
-    <li><strong>레인들을 출발시킨다.</strong> 자막 레인·방향 레인이 <strong>동시에</strong> 달리기 시작합니다.</li>
-    <li><strong>기다린다.</strong> 이제 말하면 자막·화살표가 반응하고, 타이핑하면 스피커가 말합니다.
-      끌 때(ESC)까지 계속 돕니다.</li>
-  </ol>
-  <div class="box analogy"><span class="box-t">🟪 비유로 이해하기</span>
-    아침에 가게 문을 여는 것과 같습니다. <strong>①메뉴판 확인(설정) ②홀 정리(화면) ③직원 출근시키기
-    (모델 로드) ④주문-주방 연결 ⑤영업 시작(레인) ⑥손님 응대(대기).</strong> 문을 닫을 때까지 이 상태가 유지됩니다.</div>
+<ol><li>화면 중앙에 로고와 준비 단계를 표시하는 로딩 창을 먼저 띄웁니다.</li><li>설정을 읽고 화면·기록·진단·장치 관리 구조를 만듭니다.</li><li>표준 바탕화면 실행기는 지정한 브라우저·Codex 개발 도구를 정상 종료해 메모리를 확보합니다. 저장 안 된 작업은 실행 전에 저장해야 합니다.</li><li>Wi-Fi 절전을 확인·해제 시도하고 Bose 출력 프로필을 재준비합니다. 활성 재생은 보호하고 실패해도 자막 준비는 계속합니다.</li><li>VAD·STT·TTS 모델을 준비하고 설정된 워밍업·출력 준비를 수행합니다.</li><li>메인 화면에서 마이크·방향 상태를 안내하고 자막·말하기·기록을 사용합니다. 모델 실패에는 다시 준비하기, 장치 실패에는 다시 연결 경로가 있습니다.</li></ol>
 
-  <h3>10.5 설정 파일은 이렇게 생겼다 (맛보기)</h3>
-  <p>
-    <code>config.yaml</code>의 일부를 살짝 보면, <strong>사람이 읽을 수 있는 이름=값</strong> 형태라
-    어렵지 않습니다. 코드가 아니라 <strong>‘메모’에 가깝습니다.</strong>
-  </p>
-<pre><code>stt:                     # 자막(음성인식) 설정
-  model: small           # 작은 모델 사용
-  prompt: "광합성, 엽록체, 이산화탄소, 칠판, 수행평가"   # 오늘의 단어 힌트
+<h3>10.5 설정 파일은 이렇게 생겼다 (맛보기)</h3>
+<p>실제 값은 <code>src/config.yaml</code>을 기준으로 합니다. 단어 목록은 <code>src/vocab/</code>와 등록 이름에서 조합하며 아래 예시는 전체 설정이 아닙니다.</p><pre><code>stt:
+  language: auto         # 영어 과목만 ko/en 비교, 나머지는 ko
+  beam_size: 1
+  temperatures: [0.0, 0.2]
+  best_of: 1
+  queue_max_age_seconds: 0  # 시간만으로 대기 발화를 삭제하지 않음
 
-doa:                     # 방향 설정
-  front_offset: 90       # '앞'의 기준 각도(케이스 후 보정)
+doa:
+  front_offset: 90
+  min_samples: 2
+  min_consensus: 0.7
 
-tts:                     # 말하기(음성합성) 설정
-  sid: 0                 # 목소리 번호
-  num_steps: 32          # 품질 단계(높을수록 또렷, GPU라 실시간)
-  provider: cuda         # GPU 사용(실패 시 자동 CPU)</code></pre>
-  <div class="box good"><span class="box-t">🟩 왜 이렇게 두는가</span>
-    수업 전에 <strong>‘오늘의 단어’ 한 줄</strong>만 바꾸면 그날 수업에 맞는 자막이 됩니다. 코드를 몰라도
-    <strong>이 메모만</strong> 고치면 되니, 실제 교실에서 <strong>비개발자도</strong> 운용할 수 있습니다.</div>
+tts:
+  sid: 0                 # 여성 F1. 남성 M1은 5
+  num_steps: 32
+  provider: cuda
+  startup_recovery: true
 
-  <h3>10.6 안 죽는 프로그램 — 곳곳의 안전장치</h3>
-  <p>
-    시연 중에 프로그램이 멈추면 최악입니다. 그래서 소리봄에는 <strong>“문제가 생겨도 버티는”</strong>
-    장치가 여러 곳에 있습니다. 이런 방어가 실제 데모의 안정성을 만듭니다.
-  </p>
-  <ul>
-    <li><strong>TTS GPU 실패 → CPU 자동 전환.</strong> 메모리가 부족해 GPU가 안 켜져도, 느리게나마
-      <strong>소리는 난다</strong>(6.4).</li>
-    <li><strong>안 만든 기능은 켤 때만 호출.</strong> 아직 안 만든 기능(비음성 소리 이벤트 등)의 빈자리를
-      잘못 부르면 프로그램이 죽는데, <strong>“켜져 있을 때만”</strong> 부르게 막았다(12부 함정⑤·⑦).</li>
-    <li><strong>조용할 때 화살표 안 돌기.</strong> 목소리가 있을 때만 방향을 갱신해, 아무도 말 안 하는데
-      화살표가 도는 걸 막았다(5.3).</li>
-    <li><strong>USB 읽기 실패는 건너뛰기.</strong> 방향 측정 중 간헐적 USB 오류가 나도 그 샘플만 버리고
-      계속 진행한다(측정 도구).</li>
-    <li><strong>화면은 한 곳에서만 수정.</strong> 여러 레인이 동시에 화면을 건드려 꼬이지 않도록
-      신호로만 넘긴다(10.2).</li>
-  </ul>
-  <div class="box good"><span class="box-t">🟩 방어적으로 짠다는 것</span>
-    “잘 될 때”만 생각하지 않고 <strong>“안 될 때 어떻게 버틸까”</strong>를 미리 정해 두는 것 —
-    이게 <strong>카메라 앞에서 확실히 동작하는</strong> 작품과, 시연 때 터지는 작품의 차이입니다.</div>
+summary:
+  autosave_seconds: 30
+  output_dir: "~/Desktop/소리봄 수업 기록"</code></pre><p>과목·목소리·테마는 화면에서 변경합니다. 설정 파일 전체를 실시간으로 다시 읽는 기능은 아니므로 저장 경로·모델 설정 변경에는 재시작이 필요합니다.</p>
 
-  <div class="box good"><span class="box-t">🟩 10부 정리</span>
-    프로그램 = <strong>기능별 방(폴더)</strong> + 그걸 <strong>동시에 지휘하는 main.py</strong> +
-    <strong>설정을 모은 config.yaml.</strong> 여러 일을 <strong>레인(스레드)</strong>으로 나눠 나란히 달리게
-    한 것이 핵심 구조입니다.</div>
+<h3>10.6 안 죽는 프로그램 — 곳곳의 안전장치</h3>
+<ul><li>마이크 녹음 프로세스는 하나로 관리하고 장치 수신 중단을 감지해 재시도합니다.</li><li>방향 오류는 자막과 분리하고 근거가 부족한 각도는 미확정으로 표시합니다.</li><li>발화·입력 큐와 최대 발화 길이를 제한해 메모리가 무제한 늘지 않게 합니다.</li><li>말하기 중복 실행 방지, 실패 입력 보존, 출력 시간 제한을 둡니다.</li><li>30초 자동 저장과 임시 파일 교체로 이전 저장본을 보호합니다.</li><li>진단은 메모리·지연·큐·오류 분류를 남기되 음성·자막 원문·비밀번호는 넣지 않습니다.</li></ul><div class="box warn"><span class="box-t">확인 범위와 한계</span>자동 테스트와 사용자 정상 확인이 있어도 모든 환경의 무중단·누수 없음·전원 장애 내구성을 보장하지는 않습니다.</div>
+
 </section>
 
 <!-- ==================== 11부 ==================== -->
@@ -1753,91 +1538,21 @@ tts:                     # 말하기(음성합성) 설정
     두 문장이 <strong>얼마나 다른지</strong>를, “몇 번 고치면 같아지나(글자를 바꾸기·넣기·빼기)”로
     재는 방법. WER·CER은 이 편집 횟수를 전체 길이로 나눠 %로 만든 것입니다.</div>
 
-  <h3>11.3 자막 지연 — 약 0.6초</h3>
-  <p>말 한 마디가 끝난 뒤 그걸 글자로 바꾸는 데 걸린 시간입니다.</p>
-  <div class="stat-row">
-    <div class="stat"><div class="num">0.62초</div><div class="lab">조용할 때(중앙값)</div></div>
-    <div class="stat"><div class="num">0.64초</div><div class="lab">시끄러울 때(중앙값)</div></div>
-    <div class="stat"><div class="num">~1초</div><div class="lab">체감 지연(구간 확정 포함)</div></div>
-  </div>
-  <p>말이 끝나면 대략 <strong>1초 안팎</strong>으로 자막이 뜹니다. 실시간 대화를 따라가기에 충분합니다.</p>
+  <h3>11.3 자막 지연 — 전사 시간과 전체 전달 시간 구분</h3>
+<p>2026년 7월의 전사 처리 중앙값은 조용한 녹음 0.62초, 잡음 녹음 0.64초였습니다. 이는 VAD의 끝 확정·큐 대기·화면 표시 전체 시간이 아닙니다. 2026-10-15 약 8분 55초 시험에서는 전사 중앙 0.567초/최대 0.776초, 발화 끝→UI 전달 최대 1.203초가 기록됐습니다. 입력 조건과 버전이 달라 같은 벤치마크의 개선율로 계산하지 않습니다.</p>
 
-  <h3>11.4 말하기 지연 — 약 1.8초, 문장이 길어도 비슷</h3>
-  <table>
-    <thead><tr><th>입력 문장</th><th>합성 시간</th><th>오디오 길이</th></tr></thead>
-    <tbody>
-      <tr><td>“네.”</td><td>1.65초</td><td>1.4초</td></tr>
-      <tr><td>“질문 있습니다.”</td><td>1.51초</td><td>1.6초</td></tr>
-      <tr><td>“선생님, 다시 한 번 설명해 주세요.”</td><td>1.79초</td><td>3.2초</td></tr>
-      <tr><td>“오늘 배운 광합성 내용 중에서…”(긴 문장)</td><td>1.98초</td><td>6.0초</td></tr>
-    </tbody>
-    <caption>합성은 GPU 32단계 기준. 문장이 길어도 지연은 거의 안 늘어난다.</caption>
-  </table>
-  <div class="box easy"><span class="box-t">🟦 흥미로운 점</span>
-    엔터를 누르면 <strong>문장 길이와 상관없이 약 1.8초</strong> 안에 말이 시작됩니다. 긴 문장일수록
-    <strong>실제 말하는 시간보다 훨씬 빨리</strong> 만들어 내서(6초 오디오를 2초에), 끊김 없이 들립니다.</div>
+<h3>11.4 말하기 지연 — 과거 합성 예시와 현재 체감 지연</h3>
+<p>과거 GPU 32스텝 예시의 합성 시간은 네 1.65초, 질문 있습니다 1.51초, 선생님 다시 한 번 설명해 주세요 1.79초, 긴 문장 1.98초였습니다. 이 값은 해당 문장의 파형 생성 시간입니다. <strong>문장 길이와 무관한 1.8초 보장이나 타이핑부터 첫 소리까지의 평균이 아닙니다.</strong> 현재는 GPU 대기·출력 준비·합성·재생 이벤트를 따로 진단하며 실제 첫 소리를 측정하려면 별도 동기화된 녹음이 필요합니다.</p>
 
-  <h3>11.5 STT와 TTS를 한 기기에 함께 올려도 괜찮은가</h3>
-  <p>
-    가장 큰 걱정은 “자막(GPU)과 말하기(GPU)를 <strong>동시에</strong> 올리면 메모리 8GB가 터지지
-    않을까”였습니다. 격리 시험을 해 보니:
-  </p>
-  <div class="box good"><span class="box-t">🟩 결과</span>
-    둘 다 GPU에 올린 상태에서 <strong>남은 메모리가 최소 3,666MB</strong>, 임시 저장 공간(스왑) 사용
-    0 — <strong>메모리 터짐(OOM) 없이 여유 있게</strong> 함께 돌았습니다. 최대 위험이 해소됐습니다.</div>
-  <div class="box warn"><span class="box-t">🟥 단, 데모 전 브라우저는 꼭 끄기</span>
-    이 기기는 CPU와 GPU가 <strong>메모리 8GB를 나눠</strong> 씁니다. 브라우저 등이 떠 있으면 여유가
-    줄어 GPU가 안 켜질 수 있습니다(실제로 겪음). <strong>시연 전엔 무거운 프로그램을 끄고 lean하게.</strong></div>
+<h3>11.5 STT와 TTS를 한 기기에 함께 올려도 괜찮은가</h3>
+<p>과거 lean 환경 스모크 시험에서 STT와 TTS를 함께 적재하고 OOM 없이 가용 메모리 3,666MB 이상을 관찰했습니다. 그러나 모델 상주는 장시간 병행 추론과 다릅니다. 이후 Codex 등 개발 도구가 메모리를 사용하면 GPU 초기화 OOM이 재현됐습니다. 현재는 시작 정리와 추론 게이트로 경합을 줄이지만 최대 위험이 해소됐다고 단정하지 않습니다. 최신 버전의 30~50분 통합 시험이 남아 있습니다.</p>
 
-  <h3>11.6 방향(DOA) 오차 — 평균 1.5°</h3>
-  <p>
-    방향 오차는 <strong>사람이 정해진 각도에서 실제로 소리를 내며</strong> 재야 합니다(자동 불가).
-    케이스를 조립하고 마이크를 고정한 뒤, 앞·오른쪽·뒤·왼쪽 네 방향에서 측정했습니다.
-  </p>
-  <table>
-    <thead><tr><th>방향</th><th>실제 각도</th><th>화면이 가리킨 각도</th><th>오차</th></tr></thead>
-    <tbody>
-      <tr><td>앞</td><td>0°</td><td>1°</td><td>1°</td></tr>
-      <tr><td>오른쪽</td><td>90°</td><td>92°</td><td>2°</td></tr>
-      <tr><td>뒤</td><td>180°</td><td>177°</td><td>3°</td></tr>
-      <tr><td>왼쪽</td><td>270°</td><td>270°</td><td>0°</td></tr>
-      <tr><td colspan="3"><strong>평균 절대 오차</strong></td><td><strong>1.5°</strong></td></tr>
-    </tbody>
-  </table>
-  <div class="box good"><span class="box-t">🟩 평균 1.5° — 화살표가 사실상 정확히 가리킨다</span>
-    네 방향 모두 오차 3° 이내로, <strong>화살표가 말하는 사람 쪽을 거의 정확히</strong> 가리킵니다.
-    “누가·어디서”가 실제로 쓸 만하다는 것을 숫자로 확인했습니다.</div>
-  <div class="box warn"><span class="box-t">🟥 여기서 큰 교훈 하나 — 문제는 ‘서는 위치’였다</span>
-    처음 측정에서는 오차가 <strong>28~64°</strong>로 크고 <strong>잴 때마다 값이 달랐습니다.</strong>
-    알고 보니 원인은 기계가 아니라 <strong>측정하는 학생이 정확한 각도에 서지 못한 것</strong>이었습니다.
-    눈대중으로 서니 실제 방향이 조금씩 어긋났던 것이죠. <strong>마이크 보드의 LED로 진짜 방향을
-    확인</strong>하고 그 자리에 정확히 서서 다시 재자 <strong>1.5°</strong>로 좁혀졌습니다.
-    → 그래서 마이크 윗면(구멍·LED)은 <strong>케이스 밖으로 보이게</strong> 두어야 합니다(LED 확인용). (5.7·8.5 참고)</div>
-  <div class="box easy"><span class="box-t">🟦 이 발견이 값진 이유</span>
-    “동작한다”에서 멈췄다면 <strong>데모 당일에야</strong> 방향이 엉키는 걸 알았을 것입니다.
-    <strong>미리 숫자로 재 봤기에</strong> 원인(서는 위치)을 찾아, <strong>LED를 기준으로 정확히 보정</strong>할 수
-    있었습니다. 측정이 곧 품질입니다.</div>
+<h3>11.6 방향 오차 — 과거 1.5° 기록의 평가 한계</h3>
+<p>2026년 7월의 LED 보조 위치 선정 4방향 기록은 앞 1°·오른쪽 2°·뒤 3°·왼쪽 0°, 평균 1.5°입니다. 그러나 독립적인 기준 각도와의 반복 비교가 아니며 케이스·위치에 대한 기록의 원인 해석도 일치하지 않습니다. 현재 통합 앱은 발화 시각에 방향을 연결하도록 바뀌었으므로 최신 정확도는 별도로 재평가해야 합니다. 5° 문단 기준은 UI 규칙이며 방향 오차를 보장하는 수치가 아닙니다.</p>
 
-  <h3>11.7 네 숫자를 한눈에 — 이게 무슨 뜻인가</h3>
-  <p>지금까지의 숫자를 <strong>사람 말로</strong> 풀면 이렇습니다.</p>
-  <table>
-    <thead><tr><th>지표</th><th>값</th><th>사람 말로</th></tr></thead>
-    <tbody>
-      <tr><td>자막 오류율(CER)</td><td>0.0~0.7% <span style="color:var(--muted)">(통제)</span> · 3.2% <span style="color:var(--muted)">(5과목 실사용)</span></td><td>“<strong>또박또박 말하면</strong> 사실상 다 맞고, 실제 낭독도 정확한 편이다.”</td></tr>
-      <tr><td>자막 지연</td><td>~0.6초</td><td>“말이 끝나면 <strong>거의 바로</strong> 자막이 뜬다.”</td></tr>
-      <tr><td>말하기 지연</td><td>~1.8초</td><td>“타이핑하면 <strong>약 1.8초 안에</strong> 스피커가 말한다.”</td></tr>
-      <tr><td>방향(DOA) 오차</td><td>1.5°</td><td>“화살표가 <strong>말하는 사람 쪽</strong>을 거의 정확히 가리킨다.”</td></tr>
-    </tbody>
-  </table>
-  <div class="box good"><span class="box-t">🟩 종합하면</span>
-    <strong>또박또박 말하면 정확하고 · 빠르고(약 1초) · 방향까지 맞다(1.5°).</strong> 세 기능이 “그냥 되는” 게
-    아니라 <strong>쓸 만한 수준으로 된다</strong>는 것을 숫자가 말해 줍니다. 다만 <strong>빠른 자연발화에선
-    자막 정확도가 떨어진다</strong>는 한계도 함께 잽니다(15부). 그리고 이 모든 게 <strong>인터넷 없이</strong>
-    이뤄집니다 — 그것이 소리봄의 자부심입니다.</div>
-  <div class="box easy"><span class="box-t">🟦 숫자를 볼 때의 태도</span>
-    숫자는 <strong>자랑</strong>이 아니라 <strong>약속</strong>입니다. “이만큼 된다”를 재서 보여 주면,
-    보는 사람이 <strong>믿을 수 있습니다.</strong> 그래서 우리는 잘 나온 값도, 아쉬운 값도(WER의 띄어쓰기,
-    케이스 문제) <strong>정직하게</strong> 남겼습니다.</div>
+<h3>11.7 숫자를 인용할 때 함께 말할 조건</h3>
+<table><thead><tr><th>항목</th><th>관찰과 한계</th></tr></thead><tbody><tr><td>과거 정확도</td><td>2026년 7월 6문장 통제 CER 0.0/0.7%, 5과목 낭독 평균 3.2%, 빠른 자연발화 15.3%. 전체 교실 성능 아님</td></tr><tr><td>전사·합성 시간</td><td>전사 약 0.6초·TTS 약 1.8초는 과거 처리 시간 예시. 종단 지연 보장 아님</td></tr><tr><td>방향 오차</td><td>과거 LED 보조 4방향 평균 1.5°. 독립 기준 재평가 필요</td></tr><tr><td>장시간 로그</td><td>10월 약 53분 낭독에서 누락 경로 발견 후 수정. 최신 STT+TTS+발열 종합 검증과 구분</td></tr><tr><td>자동 테스트</td><td>현재 187개 통과, 최신 기능 사용자 정상 확인. 일부 모의 환경으로 현장 성능 보장 아님</td></tr></tbody></table><p>근거: docs/phase_c_measurements.md, docs/22-reading-experiment-results.md, docs/25-speech-concurrency.md, 통합 개발 로그.</p>
+
 </section>
 
 <!-- ==================== 12부 ==================== -->
@@ -2088,28 +1803,9 @@ tts:                     # 말하기(음성합성) 설정
     뜨고, 타이핑하면 목소리가 나오는</strong> 전체 흐름을 눈으로 확인했습니다. 드디어 “세 기능이 한
     화면에서 함께 도는” 완료 조건(9부)을 충족했습니다.
   </p>
-  <h3>측정을 마치던 날 — 오차의 진짜 범인은 ‘서는 위치’</h3>
-  <p>
-    거의 다 왔다고 생각한 마지막 단계, <strong>방향(DOA) 오차를 재는 날</strong>에 예상 못 한 일이
-    생겼습니다. 재 보니 방향이 <strong>28~64°나 틀리고, 잴 때마다 값이 달랐습니다.</strong>
-  </p>
-  <p>
-    “도구가 잘못됐나?” 싶어 측정 프로그램을 더 튼튼하게(잡값 제거) 고쳤지만, 값은 여전히 흔들렸습니다.
-    그러다 깨달았습니다 — 문제는 기계가 아니라 <strong>측정하는 사람이 정확한 각도에 서지 못한 것</strong>
-    이었습니다. 눈대중으로 ‘여기가 오른쪽이겠지’ 하고 서면 실제로는 조금씩 비뚤어졌던 것이죠.
-    <strong>마이크 보드의 LED로 진짜 방향을 확인</strong>하고 그 자리에 정확히 서서 다시 재자,
-    <strong>즉시 평균 1.5°</strong>로 좁혀졌습니다.
-  </p>
-  <div class="box good"><span class="box-t">🟩 이 에피소드의 교훈</span>
-    <strong>“동작한다”에서 멈추지 않고 숫자로 재 본 덕분에</strong>, 데모 당일이 아니라 <strong>미리</strong>
-    문제를 찾았습니다. 그리고 <strong>측정은 ‘사람이 어떻게 재느냐’에 크게 좌우된다</strong>는 것,
-    <strong>LED 같은 기준을 눈으로 확인</strong>해 정확히 보정하는 것이 얼마나 중요한지 배웠습니다.
-    측정은 귀찮은 일이 아니라 <strong>품질을 지키는 안전망</strong>이었습니다.</div>
+  <h3>측정을 돌아보며 — 원인 해석과 정답 기준을 다시 확인하다</h3>
+<p>과거에는 LED를 보조로 위치를 맞춘 뒤 4방향 평균 1.5°를 얻었습니다. 당시 원인을 서는 위치로 해석한 기록과 케이스가 마이크를 덮은 문제로 해석한 기록이 함께 있습니다. 현재는 어느 한 원인을 확정하지 않고, 기기 자신의 LED를 정답 기준으로 쓰는 평가의 한계를 명시합니다. 독립적인 각도 표시·반복 측정이 필요합니다.</p>
 
-  <div class="box good"><span class="box-t">🟩 개발 일지가 보여 주는 것</span>
-    소리봄은 한 번에 뚝딱 나온 게 아니라, <strong>“작은 성공 → 합치기 → 재기 → 다듬기”</strong>를
-    매일 이어붙인 결과입니다. 막힌 날도, 다시 한 날도 많았습니다. 그 모든 과정이 이 작품을
-    <strong>우리 손으로 이해하며 만들었다</strong>는 증거입니다.</div>
 </section>
 
 <!-- ==================== 14부 ==================== -->
@@ -2125,50 +1821,14 @@ tts:                     # 말하기(음성합성) 설정
   </p>
 
   <h3>14.1 나머지 기능의 현재 상태</h3>
-  <table>
-    <thead><tr><th>기능</th><th>무엇</th><th>현재 상태</th></tr></thead>
-    <tbody>
-      <tr><td>③ 소리 이벤트 감지</td><td>이름 부름·종소리·질문 같은 신호를 알아채 알림</td><td><strong>일부 구현</strong> — <strong>이름 호명</strong>은 자막으로 감지해 알림(15부). 종소리 등 <strong>비음성 소리</strong>는 다음 단계(오디오 모델 필요)</td></tr>
-      <tr><td>④ 깨끗한 소리 전달</td><td>블루투스로 <strong>보청기·이어버드에 또렷한 소리</strong>를 직접 전달(안전 리미터 포함)</td><td><strong>다음 단계</strong> — 추가 하드웨어·안전 설계 필요</td></tr>
-      <tr><td>⑤ 수업 기록</td><td>수업의 <strong>모든 발화를 기록</strong>하고 저장(요약이 아니라 전체 기록)</td><td><strong>구현됨</strong>(15부) — LLM 요약은 기기 성능상 무리라 ‘있는 그대로 기록’으로</td></tr>
-    </tbody>
-  </table>
+<table><thead><tr><th>기능</th><th>현재 범위</th></tr></thead><tbody><tr><td>③ 이름 알림</td><td>STT 텍스트의 등록 이름·호격·경계 검사. 종소리·경보 분류는 미구현</td></tr><tr><td>④ 수업 음성 전달</td><td>보청기·이어버드로 교사 음성을 전달하는 기능은 미구현. TTS 스피커와 별개</td></tr><tr><td>⑤ 수업 기록</td><td>전체 전사·30초/종료 저장·현재 실행 기록 보기·선택적 이메일. 생성 요약·과거 파일 자동 복원은 미구현</td></tr></tbody></table>
 
-  <h3>14.1.1 아직 남은 부분을 조금 더 자세히</h3>
-  <p>표만으로는 감이 안 오니, <strong>아직 안 됐거나 부분만 된</strong> 것들을 그려 봅니다.</p>
-  <div class="box good"><span class="box-t">🟩 ③ 소리 이벤트 — ‘이름 호명’은 구현됨</span>
-    선생님이 학생 <strong>이름을 부르면</strong> 화면에 <strong>“○○ 학생을 불렀어요”</strong> 알림이 뜹니다(15부).
-    이름이 불렸는데 못 듣는 상황을 막아 줍니다. 다만 <strong>종소리·박수 같은 ‘말이 아닌 소리’</strong>는
-    별도 오디오 모델이 필요해 <strong>다음 단계</strong>로 남겼습니다.</div>
-  <div class="box us"><span class="box-t">🟧 ④ 깨끗한 소리 전달 — 다음 단계</span>
-    선생님 목소리를 <strong>블루투스로 학생의 보청기·이어버드에 직접</strong> 보내, 잡음 없이 또렷하게
-    듣게 합니다. 단, 귀에 직접 보내니 <strong>소리 크기 상한(안전 리미터)</strong>이 필수입니다(더 알아보기 ③).
-    추가 하드웨어·안전 설계가 필요해 아직 안 만들었습니다.</div>
-  <div class="box good"><span class="box-t">🟩 ⑤ 수업 기록 — 구현됨(요약이 아니라 전체 기록)</span>
-    수업의 <strong>모든 발화를 그대로 기록</strong>하고 저장합니다(15부). 원래는 핵심만 뽑는 요약을 만들려
-    했지만, 자연스러운 요약은 <strong>글을 새로 쓰는 LLM</strong>이 필요한데 기기 성능상 무리였고 지어낼
-    위험도 있어, <strong>있는 그대로 기록</strong>하는 쪽으로 정했습니다.</div>
-  <div class="box easy"><span class="box-t">🟦 ‘확실히 되는 것 먼저’의 결과</span>
-    세 기능을 먼저 튼튼히 만든 뒤, 시간이 남아 <strong>③(이름 호명)·⑤(수업 기록)까지 추가</strong>했습니다.
-    욕심으로 여섯 개를 어설프게 만들기보다, <strong>확실히 되는 것부터 하나씩 늘린</strong> 것입니다.</div>
+<h3>14.1.1 아직 남은 부분을 조금 더 자세히</h3>
+<p>이름 알림은 언급과 실제 호명을 의미로 구분하지 못하고 STT 오류에 의존합니다. 비음성 경보와 수업 음성의 보청기 직접 전달은 안전·하드웨어·처리 자원을 함께 설계할 다음 과제입니다. 기록은 인식된 텍스트이며 누락 없는 원문 녹음이 아닙니다.</p>
 
-  <h3>14.2 세 기능 안에서 남은 마무리</h3>
-  <ul>
-    <li><strong>마이크 LED 노출 유지.</strong> 방향 측정은 끝났고(평균 1.5°, 11.6), 그 과정에서
-      <strong>정확한 각도에 서서 LED로 보정해야 오차가 작다</strong>는 걸 배웠습니다. 최종 케이스에도
-      <strong>마이크 윗면(구멍·LED)이 보이게</strong> 두는 것이 좋습니다.</li>
-    <li><strong>스피커 최종 배선.</strong> 온보드(I2S) 스피커는 납땜·장착까지 했으나 제대로 동작하지 않아
-      지금은 <strong>블루투스 스피커</strong>로 잘 쓰고 있습니다(15부). 내장 스피커를 되살리면 완성도가 더 올라갑니다.</li>
-    <li><strong>수업 전 단어 힌트 갱신 편의화.</strong> ‘오늘의 단어’를 더 쉽게 바꾸도록 다듬으면
-      현장 사용성이 올라갑니다.</li>
-  </ul>
+<h3>14.2 세 기능 안에서 남은 마무리</h3>
+<ul><li>최신 코드로 30~50분 STT/TTS·재연결·온도·메모리 통합 검증</li><li>독립 기준 각도·다양한 거리와 화자에서 DOA 재평가</li><li>사전 밖 표현·자연발화·한영 혼용·무음의 정확도 회귀 시험</li><li>원 점수 최종 검산과 주제·순서 균형을 갖춘 후속 실험</li><li>실제 난청 학생의 사용성 평가, 보관·삭제 정책과 말하기 취소 UX 검토</li></ul>
 
-  <div class="box good"><span class="box-t">🟩 마치며</span>
-    소리봄은 <strong>완성된 제품</strong>이라기보다, <strong>“이렇게 하면 청각장애 학생이 교실에 더 잘
-    참여할 수 있다”는 것을 실제로 동작하는 기기로 보여 준 증명</strong>입니다. 세 기능이 한 화면에서
-    함께 돌고, 그 성능을 숫자로 확인했으며, 인터넷 없이 프라이버시를 지킵니다. 그리고 무엇보다,
-    <strong>필요한 사람의 목소리에서 출발</strong>했습니다. 그것이 소리봄이 가장 자랑스러워하는
-    점입니다.</div>
 </section>
 
 <!-- ==================== 15부 ==================== -->
@@ -2183,82 +1843,20 @@ tts:                     # 말하기(음성합성) 설정
   </p>
 
   <h3>15.1 화면을 실제 쓰기 좋게 — 밝은 테마와 과목 선택</h3>
-  <p>
-    초기 화면은 어두운 시제품이었지만, 지금은 <strong>밝고 깔끔한 화면</strong>으로 다듬었습니다(2.4의
-    실제 스크린샷). 헤더에 <strong>제목·과목 선택·수업 기록 보기</strong>가 있고, 왼쪽에 자막이
-    <strong>대화록처럼 쌓이며</strong>, 오른쪽 위에 방향 나침반, 아래에 소리 알림과 말하기 입력칸이 있습니다.
-  </p>
+<p>밝은·어두운 테마를 전환하고 상단에서 과목·남성/여성 목소리·수업 기록·이메일을 선택합니다. 왼쪽에는 36px 기본 자막, 오른쪽에는 발화 방향과 상태, 아래에는 말하기 입력이 있습니다. 자막은 5줄 고정이 아니라 화면 공간에 맞춰 표시하며 최근 200블록·약 4만 UTF-16 문자 범위에서 스크롤합니다. 과거 스크린샷은 최신 상단 버튼과 다를 수 있습니다.</p>
 
-  <h3>15.2 새로 만든 기능 ① — 이름 호명 알림</h3>
-  <p>
-    당사자가 말한 <strong>“말이 아닌 소리(이름 호명)를 놓친다”</strong>는 문제를, 자막을 활용해
-    가볍게 해결했습니다. 자막에 <strong>학생 이름</strong>이 잡히면 화면에 <strong>“○○ 학생을 불렀어요”</strong>
-    알림이 잠깐 뜹니다.
-  </p>
-  <div class="box us"><span class="box-t">🟧 어떻게 — 새 모델 없이</span>
-    별도 오디오 모델 없이, <strong>이미 만들어진 자막 텍스트에 이름이 들어 있는지</strong>만 봅니다.
-    새 계산·메모리 부담이 없고, 세 기능을 건드리지 않습니다. (종소리 같은 ‘비음성 소리’ 감지는 다음 단계)</div>
+<h3>15.2 새로 만든 기능 ① — 이름 호명 알림</h3>
+<p>이름 호명은 음성에 포함된 말이므로 비음성 경보 분류와 구분합니다. STT 텍스트에서 등록 이름의 단어 경계·호격·조사를 검사하고 실제 감지한 이름을 알립니다. 일반 단어 속 부분 일치는 피하지만 이름 언급과 직접 부름의 의미까지 구분하지 못하며 STT가 이름을 틀리면 알림도 실패할 수 있습니다.</p>
 
-  <h3>15.3 새로 만든 기능 ② — 수업 ‘기록’ (요약이 아니라 전체 기록)</h3>
-  <p>
-    처음엔 핵심 문장만 뽑는 <strong>요약</strong>을 만들려 했지만, 문장 몇 개짜리 추출 요약은 사실상
-    <strong>‘불완전한 스크립트’</strong>에 불과했습니다. 그래서 <strong>모든 발화를 그대로 남기는 전체
-    기록</strong>으로 바꿨습니다. 헤더 <strong>‘수업 기록 보기’</strong> 버튼으로 지금까지의 발화를 팝업으로 보고,
-    수업이 끝나면 <strong>파일로 저장</strong>됩니다.
-  </p>
-  <div class="box warn"><span class="box-t">🟥 왜 ‘AI 요약’을 안 했나 — 정직한 이유</span>
-    자연스러운 요약을 하려면 <strong>글을 새로 쓰는 언어모델(LLM)</strong>이 필요합니다. 그런데
-    소리봄 기기(Jetson)는 이미 자막·말하기 모델로 <strong>메모리가 빠듯</strong>해, LLM까지 올리는 건
-    <strong>성능상 무리</strong>였습니다. 또 생성 요약은 <strong>없는 말을 지어낼</strong> 위험도 있습니다.
-    그래서 <strong>지어내지 않고 있는 그대로 기록</strong>하는 쪽을 택했습니다. 한계를 인정한 정직한 선택입니다.</div>
+<h3>15.3 새로 만든 기능 ② — 수업 ‘기록’ (요약이 아니라 전체 기록)</h3>
+<p>현재 실행 중 전사를 메모리에 쌓고 <strong>30초마다 바탕화면의 소리봄 수업 기록 폴더</strong>에 자동 저장합니다. 정상 종료 시 마지막 내용도 저장하며 같은 수업은 같은 파일을 갱신합니다. 임시 파일·fsync·교체를 사용해 실패 시 이전 저장본을 보호합니다. 파일은 600 권한으로 저장하지만 암호화는 아닙니다. 날짜·요일·과목이 포함됩니다.</p><p>수업 기록 보기는 현재 실행의 메모리를 읽습니다. 과거 TXT 자동 불러오기는 없고 파일 관리자로 열어야 합니다. 노트 보내기는 미리보기·수신 주소 확인 후 현재 스냅샷을 본문/TXT로 전송하며 인터넷과 Gmail 설정이 필요합니다. 생성 요약이 아니며 STT 오류나 누락이 없는 원문 기록도 아닙니다.</p>
 
-  <h3>15.4 자막을 더 똑똑하게 — 과목별 용어 사전(hotwords)</h3>
-  <p>
-    4부에서 <strong>‘단어 힌트’</strong>가 교과 용어 인식을 크게 높인다고 했습니다. 이걸 제대로 키워,
-    <strong>과목별 용어 사전</strong>을 만들었습니다. <strong>공통 용어</strong>(발표·칠판·수행평가 등)에
-    <strong>과목 용어</strong>(예: 경제 = 수요·공급·탄력성)를 더해, 화면 <strong>드롭다운으로 과목을
-    고르면</strong> 그 과목에 맞춰 인식이 정확해집니다.
-  </p>
-  <div class="box term"><span class="box-t">⬛ 용어 — hotwords</span>
-    음성인식에게 <strong>“이런 단어가 나올 거야”</strong>라고 미리 귀띔하는 목록. 인식을 그 단어 쪽으로
-    <strong>기울여</strong> 줍니다. (초기엔 ‘프롬프트’ 방식이었는데, 소리가 불분명할 때 그 단어들을
-    <strong>그대로 뱉는 부작용</strong>이 있어, 부작용이 적은 <strong>hotwords</strong> 방식으로 바꿨습니다.)</div>
-  <div class="box us"><span class="box-t">🟧 환각(엉뚱한 출력) 막기</span>
-    소리가 뭉개질 때 모델이 <strong>용어를 죽 나열</strong>하거나(예: “이산화탄소, 포도당, 수행평가…”)
-    엉뚱한 걸 지어낼 수 있습니다. 그래서 <strong>‘용어 나열처럼 보이면 버리는’ 가드</strong>와
-    <strong>‘무음·저신뢰 구간을 버리는’ 필터</strong>를 넣어, 화면에 헛것이 뜨지 않게 했습니다.</div>
+<h3>15.4 자막을 더 똑똑하게 — 과목별 용어 사전(hotwords)</h3>
+<p>공통·과목·단원 어휘와 등록 이름·호칭을 hotwords 후보로 조합합니다. 이름 우선 및 과목/공통 배치로 제한된 토큰 예산을 사용하며 모든 후보가 반드시 포함되는 것은 아닙니다. 정상 용어 나열을 무조건 지우지 않고 신뢰 조건을 함께 검사합니다. 힌트는 정답 강제가 아니므로 과편향과 필터 오탈락이 남을 수 있습니다.</p>
 
-  <h3>15.5 불완전한 발화까지 — 우리 나름의 깐깐한 검증(rigorous testing)</h3>
-  <p>
-    실제 수업의 말은 <strong>또박또박 완벽하지 않습니다.</strong> 그래서 여러 상황을 일부러 만들어
-    <strong>정확도(CER)를 실제로 측정</strong>했습니다. 잘 나온 것만이 아니라 <strong>못 나온 것까지
-    정직하게</strong> 재려고 했습니다.
-  </p>
-  <table>
-    <thead><tr><th>테스트</th><th>무엇을 봤나</th><th>결과(문자 오류율)</th></tr></thead>
-    <tbody>
-      <tr><td>통제 녹음</td><td>정해둔 문장을 녹음해 반복 측정</td><td>조용 0.0% / 잡음 0.7%</td></tr>
-      <tr><td><strong>5과목 모의수업</strong></td><td>국어·수학·과학·영어·경제를 각각 낭독</td><td>평균 <strong>3.2%</strong> (표기·띄어쓰기 제외 시 ~1.5%)</td></tr>
-      <tr><td><strong>수식이 든 수업</strong></td><td>“엑스 제곱 더하기 오 엑스…” 같은 수학 수식 발화</td><td>내용은 정확(X·숫자로 변환), 표기 차이만</td></tr>
-      <tr><td><strong>자연스러운 반말</strong></td><td>성우처럼이 아니라 <strong>실제처럼 빠르고 편하게</strong></td><td><strong>~15%</strong> (정확도 하락)</td></tr>
-    </tbody>
-  </table>
-  <div class="box good"><span class="box-t">🟩 이 검증이 알려 준 것 (정직하게)</span>
-    <ul style="margin-bottom:0">
-      <li><strong>또박또박 말하면 사실상 완벽</strong>(실질 오류 1~2%). 과목 용어·수식도 정확히 잡습니다.</li>
-      <li><strong>매우 빠른 자연발화에선 정확도가 떨어진다</strong>(~15%). 작은 모델의 본질적 한계입니다.</li>
-      <li>용어 사전(hotwords)은 도움이 크지만 <strong>발음이 거의 같은 단어(사치품/사지품)</strong>는 놓치기도 합니다.</li>
-    </ul></div>
-  <div class="box easy"><span class="box-t">🟦 왜 이런 ‘한계’까지 적나</span>
-    좋게 나온 숫자만 보여 주는 건 쉽습니다. 하지만 <strong>불완전한 발화까지 재서 한계를 아는 것</strong>이
-    진짜 실력입니다. 실제 교실에서 선생님은 <strong>적당히 또박또박</strong> 말하므로 소리봄은 잘 작동하고,
-    그 경계(빠른 자연발화)에서 어떤지도 <strong>우리는 이미 알고 있습니다.</strong> 이것이 우리 나름의
-    <strong>깐깐한 검증</strong>이었습니다.</div>
+<h3>15.5 불완전한 발화까지 — 우리 나름의 깐깐한 검증(rigorous testing)</h3>
+<p>2026년 7월 통제 녹음과 5과목 낭독·빠른 자연발화는 당시 자료와 설정의 평가였습니다. 이후 10월에는 약 53분 문학 낭독 로그에서 큐 포화·입력 간격 오판·누락 후보를 발견하고 입력 연속성 판정과 VAD/STT 분리를 수정했습니다. 짧은 재시험은 누락·오류 감소를 보였지만 동일한 전체 시험의 전후 비교는 아닙니다. 정답 낭독과 원문이 완전히 일치하지 않아 잠정 CER을 최종 정확도로 쓰지 않습니다.</p><div class="box warn"><span class="box-t">확인 범위와 한계</span>공백 제거 CER은 띄어쓰기에 따른 의미 차이를 검출하지 못합니다. 숫자·단위·수식의 의미 오류도 별도로 확인해야 합니다. 정확도 수치는 날짜·발화 자료·정규화·제외 기준과 함께 제시합니다.</div>
 
-  <div class="box good"><span class="box-t">🟩 15부 정리</span>
-    세 기능 이후 <strong>화면 개선 · 이름 알림 · 수업 기록 · 과목별 용어 사전</strong>을 더했고,
-    <strong>5과목·수식·자연발화</strong>로 정확도를 깐깐히 쟀습니다. 잘 되는 것도, 안 되는 경계도
-    <strong>숫자로 정직하게</strong> 파악했습니다.</div>
 </section>
 
 <!-- ==================== 더 알아보기 1 ==================== -->
@@ -2353,104 +1951,14 @@ tts:                     # 말하기(음성합성) 설정
 <section class="sheet chapter">
   <span class="part-kicker">더 알아보기 ③</span>
   <h2 class="part">안전·프라이버시·윤리</h2>
-  <p class="part-sub">사람을 돕는 기기라면, 사람을 지키는 것이 먼저다</p>
-
-  <p>
-    소리봄은 <strong>미성년 학생</strong>이, <strong>민감할 수 있는 상황</strong>에서 쓰는 기기입니다.
-    그래서 “잘 작동한다”만큼 <strong>“안전하고 올바른가”</strong>를 중요하게 생각했습니다.
-  </p>
-
-  <h3>① 목소리는 기기 밖으로 나가지 않는다 (프라이버시)</h3>
-  <p>
-    교실 대화에는 학생들의 사적인 말이 섞입니다. 소리봄은 음성을 <strong>외부 서버로 보내지
-    않으므로</strong>(완전 오프라인, 7부), 그 대화가 <strong>어딘가에 저장되거나 새어 나갈 걱정이
-    없습니다.</strong> 이것은 편의보다 <strong>먼저</strong> 지켜야 할 원칙입니다.
-  </p>
-  <div class="box us"><span class="box-t">🟧 코드에서도 지킨다</span>
-    실험에 쓴 음성 파일이나 참가자 정보 같은 <strong>개인정보는 코드 저장소에 올리지 않습니다.</strong>
-    “기술로 안 새게” + “관리로 안 올리게” 이중으로 지킵니다.</div>
-
-  <h3>② 귀에 직접 보내는 소리는 ‘안전 상한’을 건다</h3>
-  <p>
-    다음 단계 기능(④ 블루투스 소리 전달)은 소리를 <strong>귀에 직접</strong> 보냅니다. 이때 소리가
-    갑자기 너무 커지면 <strong>청력에 해로울 수</strong> 있습니다. 그래서 <strong>“이보다 크게는 절대
-    안 나가게” 막는 안전장치(리미터)</strong>를 반드시 두기로 설계했습니다.
-  </p>
-  <div class="box term"><span class="box-t">⬛ 용어 — 세이프티 리미터</span>
-    소리 크기에 <strong>넘을 수 없는 상한선</strong>을 두는 안전장치. 갑작스러운 큰 소리로부터
-    <strong>귀를 보호</strong>합니다. 사람 몸에 닿는 기능일수록 이런 장치가 필수입니다.</div>
-
-  <h3>③ 수업 기록은 ‘없는 말을 지어내지 않는다’</h3>
-  <p>
-    수업 기록(⑤)은 그럴듯하게 <strong>새 문장을 지어내는</strong> 요약이 아니라, 실제로 나온
-    <strong>모든 발화를 있는 그대로 기록</strong>합니다(15부). 학습 자료는 <strong>사실이어야</strong> 하기
-    때문입니다. 없는 내용을 그럴듯하게 만들면, 편해 보여도 <strong>학생을 속이는</strong> 셈입니다.
-    (자연스러운 AI 요약은 기기 성능상 무리이기도 했습니다.)
-  </p>
-
-  <h3>④ 대체가 아니라 보완, 결정은 사람이</h3>
-  <p>
-    소리봄은 사람(선생님·친구·보조기기)을 <strong>대체</strong>하지 않습니다. 자막이 가끔 틀릴 수
-    있으니, <strong>중요한 판단은 사람이</strong> 하도록 돕는 역할에 머뭅니다. 기술은 <strong>보조</strong>일 때
-    가장 안전합니다.
-  </p>
-  <div class="box good"><span class="box-t">🟩 정리</span>
-    <strong>프라이버시(오프라인) · 청력 안전(리미터) · 사실성(있는 그대로 기록) · 사람 중심(보완)</strong> —
-    소리봄의 안전 원칙 네 가지입니다. 좋은 기술은 <strong>지킬 것을 먼저 정한 기술</strong>입니다.</div>
+<p class="part-sub">오프라인 처리와 로컬 기록의 위험은 별개입니다.</p><h3>음성 처리와 선택적 이메일</h3><p>핵심 음성 처리는 Jetson 안에서 수행합니다. 사용자가 노트 보내기에서 미리보기와 수신 주소를 확인하고 실행하면 전사 텍스트는 Gmail SMTP/TLS로 전송됩니다. 사용자의 명시적 선택 경로가 있으므로 어떤 데이터도 기기 밖으로 나가지 않는다고 설명하지 않습니다.</p><h3>기록·진단·권한</h3><p>바탕화면 TXT에는 사적 발화나 STT 오류가 포함될 수 있습니다. 600 권한은 파일 암호화가 아니고 같은 계정 사용자의 접근을 막지 못합니다. 진단 로그는 음성·전사 원문·비밀번호를 넣지 않습니다. 이메일 자격증명은 Git 제외 로컬 설정에 두며 보관 기간·삭제·동의 정책은 추가 과제입니다.</p><h3>음량과 보완 도구의 한계</h3><p>Bose 출력은 주변 사람이 듣는 일반 스피커이지만 과도한 음량의 위험이 없는 것은 아닙니다. 낮은 음량부터 확인합니다. 교사 음성을 보청기·인공와우로 직접 보내는 기능과 청력 보호용 리미터는 현재 구현·검증된 기능이 아닙니다. 자막·방향은 오류 가능한 보조 정보입니다.</p>
 </section>
 
 <!-- ==================== 더 알아보기 4 ==================== -->
 <section class="sheet chapter">
   <span class="part-kicker">더 알아보기 ④</span>
   <h2 class="part">심사·발표 대비 심화 Q&amp;A</h2>
-  <p class="part-sub">깊이 있는 질문에 어떻게 답할까 — 모범 답안 모음</p>
-
-  <p>
-    부록 B가 <strong>기본 FAQ</strong>였다면, 여기는 심사에서 나올 법한 <strong>날카로운 질문</strong>과
-    <strong>모범 답변</strong>입니다. 정직함과 이해도를 함께 보여 주는 것이 핵심입니다.
-  </p>
-
-  <h4>Q. 자막이 틀리면 오히려 학생을 혼란스럽게 하지 않나요?</h4>
-  <p><strong>A.</strong> 맞는 지적입니다. 그래서 우리는 <strong>정확도를 숫자로 측정</strong>했고(글자 오류
-    0.0~0.7%), <strong>단어 힌트</strong>로 교과 용어 오류를 줄였습니다. 또한 소리봄은 자막을
-    <strong>‘참고용 보조’</strong>로 두지, 유일한 정보원으로 강요하지 않습니다. 남은 오류(주로 띄어쓰기)는
-    의미 전달에 영향이 거의 없음을 확인했습니다.</p>
-
-  <h4>Q. 왜 더 크고 똑똑한 최신 AI를 안 썼나요?</h4>
-  <p><strong>A.</strong> 실제로 큰 모델(medium)을 시험했지만, 작은 기기 메모리를 넘겼고 정확도도 나아지지
-    않았습니다. 우리는 <strong>“문제의 원인이 모델 크기가 아니라 낯선 단어”</strong>임을 실측으로 밝히고,
-    <strong>더 싸고 빠른 방법(작은 모델 + 단어 힌트)</strong>으로 같은 목표를 달성했습니다.
-    자원이 한정된 실제 기기에서 <strong>올바른 공학적 선택</strong>이었다고 생각합니다.</p>
-
-  <h4>Q. 클라우드 AI를 쓰면 훨씬 쉬웠을 텐데, 왜 고생스러운 오프라인인가요?</h4>
-  <p><strong>A.</strong> 그게 바로 이 작품의 정체성입니다. 교실의 <strong>미성년자 음성</strong>을 외부로 보내지
-    않으려면 오프라인이어야 하고, <strong>인터넷이 불안정한 환경</strong>에서도 동작해야 합니다.
-    편의를 위해 클라우드를 쓰는 순간 <strong>소리봄의 존재 이유가 사라집니다.</strong></p>
-
-  <h4>Q. 방향(DOA) 오차는 얼마나 정확한가요?</h4>
-  <p><strong>A.</strong> 케이스 조립 후 네 방향에서 측정해 <strong>평균 1.5°</strong>(앞1·오2·뒤3·왼0°)를
-    얻었습니다. 화살표가 말하는 사람 쪽을 거의 정확히 가리킵니다. 처음엔 오차가 <strong>28~64°</strong>로
-    컸는데, 원인은 기계가 아니라 <strong>측정하는 학생이 정확한 각도에 서지 못한 것</strong>이었습니다.
-    <strong>마이크 보드의 LED로 실제 방향을 확인</strong>해 정확히 서서 보정하니 1.5°로 좁혀졌습니다(11.6).</p>
-
-  <h4>Q. 실제 청각장애 학생에게 검증했나요?</h4>
-  <p><strong>A.</strong> 이 프로젝트는 <strong>인공와우 사용 당사자의 자문</strong>에서 출발했고, 그 조언이
-    ‘방향 표시’를 핵심 기능으로 만든 결정적 계기였습니다(1.3). 더 넓은 현장 검증은 다음 단계의
-    과제로 남겨 두었습니다.</p>
-
-  <h4>Q. 세 명이 만들었는데, 각자 기여가 분명한가요?</h4>
-  <p><strong>A.</strong> 네. <strong>강주언(말하기·하드웨어·통합), 함도유(방향·화면·통합), 강구현(자막)</strong>으로
-    영역별 주도자가 분명하고, 코드 기록(커밋)에 <strong>누가 무엇을 했는지</strong> 작성자별로 남아
-    있습니다. 큰 방향과 조립은 <strong>함께</strong> 했습니다(13부).</p>
-
-  <h4>Q. 이 작품의 가장 독창적인 점 하나만 꼽는다면?</h4>
-  <p><strong>A.</strong> <strong>“모델을 키우는 대신 교실 단어를 미리 알려 준다”</strong>는, 우리가 직접 재서
-    알아낸 발견입니다. 값비싼 자원 대신 <strong>문제에 대한 이해</strong>로 더 좋은 결과를 낸,
-    작지만 분명한 우리만의 통찰입니다.</p>
-
-  <div class="box good"><span class="box-t">🟩 답변의 공통 태도</span>
-    ① <strong>숫자로</strong> 말한다. ② 한계는 <strong>솔직히</strong> 밝히고 <strong>계획</strong>을 덧붙인다.
-    ③ 선택마다 <strong>‘왜’</strong>를 댄다. 이 세 가지가 이해도와 신뢰를 만듭니다.</div>
+<p>최신 질의응답 108문항은 <a href="예상질문-답변.html">예상질문-답변.html</a>을 기준으로 준비합니다. 이 장의 과거 답변을 반복 인용하는 대신 다음을 함께 설명합니다.</p><ul><li>독창성: 공개 모델 자체가 아니라 발화·방향 연결, 자원 조정, 복구와 실제 사용 흐름 통합</li><li>과거 CER·DOA: 시험 시기·자료·정답 기준을 붙이고 최신 성능과 구분</li><li>기록: 인식된 전체 전사이며 원문 정답이나 생성 요약이 아님</li><li>실험: 평균 차이 +11.30점, p=0.004502지만 기기만의 인과 효과·실제 난청 학생 일반화 불가</li><li>도면: USB 충전과 Bluetooth 음성, 모니터 영상·터치·전원, 같은 small 모델의 언어 선택을 구분</li></ul>
 </section>
 
 <!-- ==================== 더 알아보기 5 ==================== -->
@@ -2527,31 +2035,8 @@ tts:                     # 말하기(음성합성) 설정
     줍니다.
   </p>
   <h3>다른 기기·운영체제에서도 돌아갈까 (이식성)</h3>
-  <p>
-    “이 프로그램을 <strong>윈도우 노트북이나 맥에서도</strong> 쓸 수 있나요?”는 자주 나오는 질문입니다.
-    답은 <strong>“원리적으론 되지만, 실시간 성능은 기기에 달려 있다”</strong>입니다.
-  </p>
-  <ul>
-    <li><strong>코드는 운영체제를 가리지 않습니다.</strong> 소리봄은 특정 OS에만 있는 코드를 쓰지
-      않고, 쓰는 부품(화면·오디오·음성인식 라이브러리)도 <strong>윈도우·맥·리눅스를 모두 지원</strong>합니다.
-      실제로 개발 초기엔 팀원들이 <strong>각자 노트북(맥/윈도우)</strong>에서 조각들을 시험했습니다.</li>
-    <li><strong>하지만 ‘실시간’은 GPU에 달려 있습니다.</strong> 자막·말하기를 빠르게 하려면 AI 계산에
-      강한 <strong>GPU(엔비디아)</strong>가 필요합니다. <strong>맥</strong>에는 그런 GPU가 없어
-      <strong>CPU로만 돌아 느려지고</strong>(특히 말하기), <strong>GPU가 있는 윈도우</strong>라면 설정을 맞춰
-      실시간도 가능합니다.</li>
-    <li><strong>그대로 복사만 하면 안 됩니다.</strong> 그 기기에 맞게 <strong>프로그램을 다시 설치</strong>하고,
-      설정을 <strong>GPU→CPU</strong>로 바꾸고(맥), 윈도우는 마이크용 <strong>USB 드라이버</strong>를 더 깔아야 합니다.</li>
-  </ul>
-  <div class="box us"><span class="box-t">🟧 그래서 왜 젯슨이었나 — 확장성의 핵심</span>
-    소리봄이 원한 것은 <strong>오프라인 · 실시간 · 휴대(교실에 두는 작은 기기)</strong>를 <strong>동시에</strong>
-    만족하는 것이었습니다. 맥·윈도우 노트북은 크고, 맥은 실시간이 안 되고, 일반 PC는 큽니다.
-    <strong>작고 저전력이면서 GPU가 있는</strong> 젯슨이 이 세 조건을 한 번에 채웠습니다(8.8).
-    즉 소리봄의 확장성은 <strong>“소프트웨어는 어디든 옮길 수 있게, 성능은 엣지 GPU 기기에서”</strong>가
-    정답입니다.</div>
+<p>현재 완성 구성은 Jetson Ubuntu에서 확인했습니다. 일반 음성 처리 원리는 옮길 수 있지만 CUDA 빌드, PulseAudio/PipeWire, Bluetooth·Wi-Fi 명령과 systemd 실행기가 환경에 의존합니다. 스마트폰·NPU·다른 OS로 파일을 복사하는 것만으로 같은 기능·성능을 얻을 수는 없습니다. 실제 이식과 정확도·지연·오디오 복구 검증은 후속 과제입니다.</p>
 
-  <div class="box good"><span class="box-t">🟩 정리</span>
-    소리봄의 뼈대(오프라인 · 자막 · 방향 · 양방향)는 교실을 넘어 회의·병원·가정·노년층까지
-    넓어질 수 있습니다. 커지더라도 <strong>프라이버시와 사람 중심</strong>이라는 원칙은 지킵니다.</div>
 </section>
 
 <!-- ==================== 더 알아보기 7 ==================== -->
@@ -2655,95 +2140,16 @@ tts:                     # 말하기(음성합성) 설정
 <section class="sheet chapter">
   <span class="part-kicker">APPENDIX B</span>
   <h2 class="part">자주 묻는 질문 (FAQ)</h2>
-  <p class="part-sub">심사·발표에서 나올 법한 질문과 답</p>
-
-  <h4>Q. 정말 인터넷 없이 다 되나요?</h4>
-  <p>네. 자막·방향·말하기 <strong>모두 기기 안</strong>에서 계산합니다. 시연 때 <strong>와이파이를 꺼도</strong>
-    똑같이 동작하며, 그 자체가 우리 주장의 증거입니다.</p>
-
-  <h4>Q. 그냥 있는 자막 앱을 쓰면 되지 않나요?</h4>
-  <p>대부분의 자막 앱은 <strong>인터넷 서버로 음성을 보내</strong> 처리하고, <strong>방향</strong>도,
-    <strong>학생이 말하도록 돕는 기능</strong>도 없습니다. 소리봄은 <strong>오프라인 + 방향 + 양방향</strong>이
-    다르며, 이는 당사자 자문에서 나온 실제 필요를 반영한 것입니다.</p>
-
-  <h4>Q. 자막이 얼마나 정확한가요?</h4>
-  <p><strong>또박또박 읽은 통제 조건</strong>에서 조용할 때 글자 오류 <strong>0.0%</strong>, 잡음에도 <strong>0.7%</strong>였습니다(11.2).
-    실제로 마이크에 대고 낭독한 <strong>5과목 실사용은 평균 3.2%</strong>였고, <strong>매우 빠른 자연발화에선 약 15%</strong>로
-    올라갑니다(15부). 즉 “적당히 또박또박”이면 매우 정확하고, 빠른 자연발화가 한계입니다.</p>
-
-  <h4>Q. 학생들의 목소리(개인정보)는 안전한가요?</h4>
-  <p>안전합니다. 음성이 <strong>기기 밖으로 나가지 않습니다</strong>(완전 오프라인). 저장소에도
-    개인정보가 담긴 파일은 올리지 않습니다.</p>
-
-  <h4>Q. 왜 스피커가 교실이 아니라 학생 자리에 있나요?</h4>
-  <p>소리가 <strong>그 학생 자리에서</strong> 나야, 반 친구들이 <strong>방향으로 누가 말했는지</strong>
-    자연스럽게 알기 때문입니다. 배려에서 나온 설계입니다(8.1).</p>
-
-  <h4>Q. 큰 AI 모델을 쓰면 더 정확하지 않나요?</h4>
-  <p>실측 결과 <strong>그렇지 않았습니다</strong>. 큰 모델은 메모리를 넘겼고 정확도도 안 좋아졌습니다.
-    문제는 크기가 아니라 <strong>낯선 단어</strong>였고, <strong>단어 힌트</strong>로 더 싸고 정확하게
-    풀었습니다(4.3).</p>
-
-  <h4>Q. 지금 못 하는 것은 무엇인가요?</h4>
-  <p>세 기능(자막·방향·말하기)에 <strong>이름 호명 알림·수업 기록·과목별 용어 사전</strong>까지 만들었고,
-    §8 지표 4종(방향 1.5° 포함)은 <strong>측정까지 완료</strong>했습니다. <strong>종소리 등 비음성 소리 감지</strong>와
-    <strong>블루투스로 보청기에 소리 전달</strong>은 다음 단계이고, <strong>매우 빠른 자연발화</strong>에선 자막
-    정확도가 떨어지는 한계가 있습니다. 한계를 아는 것도 이해도의 일부입니다.</p>
-
-  <h4>Q. 다른 언어나 다른 과목에도 쓸 수 있나요?</h4>
-  <p>음성인식 모델은 여러 언어를 알고, ‘오늘의 단어 힌트’만 바꾸면 과목이 달라져도 됩니다. 지금은
-    <strong>한국어·교실 상황</strong>에 맞춰 두었습니다.</p>
-
-  <h4>Q. 여러 사람이 동시에 말하면 어떻게 되나요?</h4>
-  <p>가장 크고 또렷한 소리(대개 지금 말하는 사람) 위주로 자막과 방향이 잡힙니다. 완벽히 여러 명을
-    <strong>동시에 분리</strong>하는 것은 어려운 문제라, 현재는 <strong>한 번에 한 화자</strong>를 잘 따라가는
-    데 집중했습니다. 화자 분리는 앞으로의 과제입니다.</p>
-
-  <h4>Q. 전기가 없거나 이동 중에도 쓸 수 있나요?</h4>
-  <p>지금은 <strong>전원 어댑터</strong>로 켜지는 탁상형입니다. 배터리로 들고 다니는 형태는 하드웨어를
-    더 다듬어야 하는 다음 단계입니다. 다만 <strong>인터넷은 어디서도 필요 없습니다.</strong></p>
-
-  <h4>Q. 왜 화면에 자막을 ‘아래쪽’, 방향을 ‘위쪽’에 두었나요?</h4>
-  <p>자막은 <strong>오래 읽는 정보</strong>라 눈이 편한 아래쪽·큰 글씨로, 방향은 <strong>흘긋 보는
-    신호</strong>라 위쪽 나침반으로 두었습니다. <strong>정보의 성격에 맞춘 배치</strong>입니다.</p>
-
-  <h4>Q. 만든 사람들이 고등학생이라는데, 어디까지 직접 했나요?</h4>
-  <p>공개된 오픈소스(음성인식·합성 엔진 등)는 <strong>가져다 썼고, 출처를 밝혔습니다</strong>(부록 D).
-    그러나 <strong>세 기능을 엮는 구조, 단어 힌트 방식, 방향의 화면 변환, 통합 UI, GPU 실시간화,
-    모든 측정</strong>은 직접 했습니다. AI 코딩 도구의 도움도 받았는데, 이는 대회 규정상 허용됩니다.</p>
-
-  <h4>Q. 자막이 늦게 뜨면 대화를 못 따라가지 않나요?</h4>
-  <p>말이 끝나고 <strong>약 0.6초~1초</strong>면 자막이 뜹니다(11.3). 사람이 다음 말을 준비하는 시간과
-    비슷해, 실제 대화 흐름을 따라가는 데 무리가 없었습니다.</p>
-
-  <h4>Q. 목소리(TTS)를 다른 사람 목소리로 바꿀 수 있나요?</h4>
-  <p>네. 쓰는 모델에는 <strong>목소리 10종</strong>이 있어, 설정에서 번호(<code>sid</code>) 하나만 바꾸면
-    됩니다. 청취 비교로 가장 또렷한 목소리를 골라 두었습니다.</p>
-
-  <h4>Q. 이 기기 하나가 비싸지 않나요?</h4>
-  <p>연구·전시용 부품 기준으로 약 100만 원 안팎입니다. 다만 <strong>클라우드 사용료가 계속 나가지
-    않고</strong>(오프라인), 한 대로 <strong>세 가지 기능</strong>을 하니, 용도를 생각하면 합리적입니다.
-    대량 생산 시 더 낮출 여지도 있습니다.</p>
-
-  <h4>Q. 방향(화살표)이 실제로 정확한가요?</h4>
-  <p>케이스 조립 후 측정에서 <strong>평균 1.5°</strong>였습니다(11.6). 앞·오·뒤·왼 모두 3° 이내라
-    화살표가 말하는 사람 쪽을 거의 정확히 가리킵니다. 이 정확도는 <strong>정확한 각도에 서서
-    마이크 보드의 LED로 확인·보정</strong>했기에 나온 값입니다.</p>
-
-  <h4>Q. 정전이 되거나 소리가 너무 크면 위험하지 않나요?</h4>
-  <p>내장 스피커는 공기로 소리를 내보내는 일반 스피커라 특별한 위험은 없습니다. 다만 다음 단계의
-    <strong>귀에 직접 보내는 기능(④)</strong>에는 <strong>소리 크기 상한(리미터)</strong>을 반드시 두어
-    청력을 보호하도록 설계했습니다(더 알아보기 ③).</p>
-
-  <h4>Q. 왜 자막을 흐리게 띄웠다 선명하게 바꾸지 않나요?</h4>
-  <p>원래 그런 2단계 자막을 계획했지만, 실측 결과 <strong>작은 모델 단일 패스</strong>가 더 빠르고
-    정확해서(4.3) 지금은 <strong>바로 선명한 자막</strong>을 띄웁니다. 계획을 실험으로 검증해 바꾼
-    사례입니다.</p>
-
-  <h4>Q. 이 작품에서 AI가 ‘생각’을 하나요?</h4>
-  <p>아니요. 소리봄의 AI는 <strong>‘소리↔글자’ 변환</strong>만 합니다. 스스로 판단하거나 새 내용을
-    지어내지 않도록 <strong>일부러 제한</strong>했습니다(4.8). 판단은 사람이 하고, 소리봄은 <strong>정보를
-    보여 주는 보조</strong>에 머뭅니다.</p>
+<p class="part-sub">현재 구현과 확인 범위를 함께 답합니다. 자세한 108문항은 예상질문-답변.html을 참고하세요.</p>
+<h4>인터넷 없이 동작하나요?</h4><p>자막·방향·한국어 말하기는 로컬 처리합니다. 사용자가 선택하는 이메일 전송만 인터넷이 필요합니다.</p>
+<h4>영어 수업에서는 어떻게 하나요?</h4><p>같은 다국어 small 모델에서 한국어·영어 확률을 비교하고 원어로 전사합니다. 다른 과목은 한국어 고정입니다.</p>
+<h4>남성 목소리도 있나요?</h4><p>상단 남성·여성 버튼으로 다음 발화부터 선택합니다. 재생 중에는 선택을 잠그고 다음 문장 타이핑은 유지합니다.</p>
+<h4>수업 기록은 어디에 있나요?</h4><p>바탕화면의 소리봄 수업 기록 폴더에 30초마다 저장합니다. 기록 보기는 현재 실행의 메모리이며 과거 TXT는 파일 관리자로 엽니다.</p>
+<h4>스피커 USB로 소리가 나가나요?</h4><p>아닙니다. USB는 충전, 합성 음성은 Bose Bluetooth로 나갑니다. 모니터는 DP–HDMI–mini HDMI 영상과 별도 터치 USB·USB-C 전원이 필요합니다.</p>
+<h4>말하기 중 마이크가 꺼지나요?</h4><p>수음·VAD는 계속하고 GPU 전사만 대기시킵니다. 말하기 뒤 보관 발화를 순서대로 처리하지만 큐 한도가 있어 모든 보존을 보장하지 않습니다.</p>
+<h4>5° 문단 변화는 다른 사람을 알아본 것인가요?</h4><p>방향 변화에 따른 UI 규칙이며 신원 식별이 아닙니다. 같은 방향이어도 실제 2초 무음이면 새 문단으로 나눕니다.</p>
+<h4>실험에서 효과가 증명됐나요?</h4><p>23명의 두 수업 점수 차이에서 양측 p=0.004502를 얻었습니다. 다만 주제·순서가 겹쳐 기기만의 인과 효과나 실제 난청 학생에게 일반화할 수 없습니다.</p>
+<h4>자막 0.7%·방향 1.5°가 보장되나요?</h4><p>아닙니다. 과거 특정 녹음·LED 보조 방향 평가의 결과이며 최신 전체 교실 성능은 별도로 검증해야 합니다.</p>
 </section>
 
 <!-- ==================== 부록 C ==================== -->
@@ -2754,25 +2160,25 @@ tts:                     # 말하기(음성합성) 설정
 
   <h3>C.1 폴더 구조 한눈에</h3>
 <pre><code>src/
-  main.py            진입점 — 여러 레인을 동시에 돌린다
-  config.yaml        모든 설정(마이크·단어 힌트·TTS 등)
-  audio/
-    capture.py       4채널 마이크 캡처
-    vad.py           말하는 구간만 잘라내기(VAD)
-    doa.py           마이크 칩에서 방향 각도 읽기
-  stt/
-    transcriber.py   음성인식(작은 모델 + 단어 힌트)
-  tts/
-    speaker.py       Supertonic 음성합성 → 스피커
-  ui/
-    app.py           화면(자막·방향 화살표·입력칸)
-  events/  summary/  ← 다음 단계(지금은 꺼 둠)
+  main.py               UI·모델·장치·기록 연결
+  startup.py            지정 개발 도구 정상 종료
+  inference.py          STT/TTS 추론 순서 조정
+  audio/capture.py      수음 자식 프로세스
+  audio/recovery.py     재연결·방향 시각 표본 관리
+  audio/output_recovery.py  로딩 중 Bose/Wi-Fi 오디오 준비
+  audio/vad.py          VAD·실제 발화 시각 보존
+  stt/transcriber.py    같은 small 모델의 과목별 ko/en 전사
+  stt/pipeline.py       유한 발화 큐·보관·삭제 진단
+  stt/vocab.py          힌트 선택과 토큰 예산
+  tts/speaker.py        목소리 선택·합성
+  tts/pulse_output.py   Bluetooth 시스템 출력 경로
+  summary/notes.py      현재 기록·자동 저장
+  summary/email_sender.py  미리보기 스냅샷 이메일
+  events/sound_events.py   이름 알림 (비음성 분류 미구현)
+  ui/app.py             자막·방향·과목·목소리·기록 UI
+  diagnostics.py        원문 없는 상태·지연·큐 로그</code></pre>
 
-docs/                설계·설명 문서(이 파일 포함)
-phase_c_eval.py      자막 정확도·지연 측정 도구
-integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도구</code></pre>
-
-  <h3>C.2 측정을 다시 재현하려면</h3>
+<h3>C.2 측정을 다시 재현하려면</h3>
   <p>(개발 환경이 준비된 기기에서) 아래처럼 실행하면 이 책 11부의 숫자를 다시 확인할 수 있습니다.</p>
   <table>
     <thead><tr><th>무엇을</th><th>명령</th></tr></thead>
@@ -2788,17 +2194,8 @@ integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도�
     힌트’를 <code>config.yaml</code>의 <code>stt.prompt</code>에 맞게 설정.</div>
 
   <h3>C.3 주요 설정값(config.yaml) 빠른 참조</h3>
-  <table>
-    <thead><tr><th>설정</th><th>지금 값</th><th>뜻</th></tr></thead>
-    <tbody>
-      <tr><td><code>audio.use_channel</code></td><td>0</td><td>칩이 다듬은 깨끗한 소리 줄을 자막에 사용</td></tr>
-      <tr><td><code>stt.model</code></td><td>small</td><td>작은 음성인식 모델</td></tr>
-      <tr><td><code>stt.prompt</code></td><td>수업 용어들</td><td>단어 힌트(오늘의 단어)</td></tr>
-      <tr><td><code>doa.front_offset</code></td><td>90</td><td>‘앞’ 방향 기준(케이스 후 재보정)</td></tr>
-      <tr><td><code>tts.sid</code> / <code>num_steps</code></td><td>0 / 32</td><td>목소리 번호 / 품질 단계</td></tr>
-      <tr><td><code>tts.provider</code></td><td>cuda</td><td>GPU 사용(실패 시 자동 CPU 폴백)</td></tr>
-    </tbody>
-  </table>
+<p>src/config.yaml이 최종 기준입니다.</p><table><thead><tr><th>설정</th><th>기본값·의미</th></tr></thead><tbody><tr><td>vad.min_speech_ms / min_silence_ms</td><td>250 / 400ms</td></tr><tr><td>stt.language / beam_size</td><td>auto(영어 과목만 ko/en 감지) / 1</td></tr><tr><td>stt.temperatures / best_of</td><td>[0.0,0.2] / 1</td></tr><tr><td>stt.queue_max_utterances / speech_queue_max_utterances</td><td>4 / 32발화, 시간 만료 기본 해제</td></tr><tr><td>doa.front_offset / min_consensus</td><td>90 / 0.7</td></tr><tr><td>ui.caption_direction_break_degrees / caption_pause_break_seconds</td><td>5° / 실제 2초 무음</td></tr><tr><td>tts.sid / num_steps</td><td>0(여성 F1), 남성 M1은 5 / 32</td></tr><tr><td>tts.startup_recovery</td><td>true</td></tr><tr><td>summary.output_dir / autosave_seconds</td><td>~/Desktop/소리봄 수업 기록 / 30초</td></tr></tbody></table>
+
 </section>
 
 <!-- ==================== 부록 E ==================== -->
@@ -2895,44 +2292,9 @@ integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도�
 
   <p>기술을 몰라도 소리봄을 <strong>쓰는 법</strong>은 간단합니다. 순서대로만 하면 됩니다.</p>
 
-  <h3>쓰기 전 (한 번만)</h3>
-  <ol>
-    <li><strong>무거운 프로그램 끄기.</strong> 브라우저 등을 닫아 메모리를 비웁니다(안 그러면 느려지거나
-      오류). — 왜 그런지는 11.5·12부 참고.</li>
-    <li><strong>스피커 연결 확인.</strong> 블루투스 스피커라면 페어링·볼륨을 확인합니다.</li>
-    <li><strong>‘오늘의 단어’ 넣기.</strong> 설정의 단어 힌트에 그날 수업 용어를 적으면 자막이 더
-      정확해집니다(4.3). 예: <code>광합성, 엽록체, 세포막</code>.</li>
-  </ol>
-
-  <h3>켜기</h3>
-  <ol>
-    <li>소리봄 프로그램을 실행하면, 잠시(모델 로딩 몇 초) 뒤 <strong>전체 화면</strong>이 뜹니다.</li>
-    <li>화면에 <strong>“말하면 자막이 나옵니다”</strong>가 보이면 준비 완료.</li>
-  </ol>
-
-  <h3>쓰기</h3>
-  <ul>
-    <li><strong>자막 보기.</strong> 누가 말하면 아래에 글자가, 위 나침반에 <strong>방향 화살표</strong>가 뜹니다.</li>
-    <li><strong>말하기.</strong> 맨 아래 입력칸에 문장을 타이핑하고 <strong>엔터</strong> → 약 1.8초 뒤
-      스피커가 대신 말합니다.</li>
-  </ul>
-
-  <h3>끄기</h3>
-  <ul>
-    <li>키보드의 <strong>ESC</strong> 키를 누르면 전체 화면에서 빠져나와 종료됩니다.</li>
-  </ul>
-
-  <div class="box warn"><span class="box-t">🟥 잘 안 될 때</span>
-    <ul style="margin-bottom:0">
-      <li><strong>소리가 안 나요</strong> → 스피커 연결·볼륨, 그리고 설정의 ‘소리 나갈 장치’ 확인.</li>
-      <li><strong>말하기가 느려요</strong> → 메모리가 부족해 GPU 대신 CPU로 동작(폴백)했을 수 있음.
-        무거운 프로그램을 끄고 다시 실행.</li>
-      <li><strong>자막이 이상해요</strong> → ‘오늘의 단어’를 수업 용어로 맞춰 넣었는지 확인.</li>
-      <li><strong>방향이 반대예요</strong> → 케이스 조립 후 ‘앞’ 기준값 보정이 필요(5.6).</li>
-    </ul></div>
-  <div class="box good"><span class="box-t">🟩 한 줄 요약</span>
-    <strong>무거운 프로그램 끄기 → 스피커·단어 확인 → 실행 → 말하면 자막·방향, 타이핑하면
-    발화 → ESC로 종료.</strong> 이게 전부입니다.</div>
+  <h3>연결·켜기</h3><ol><li>팬 통풍구를 위로 두고 마이크 USB·물리 키보드·영상·터치 USB·모니터 USB-C 전원을 연결합니다.</li><li>Bose 전원을 켜고 Bluetooth 연결을 확인합니다. 스피커 USB는 충전용입니다.</li><li>Jetson 동봉 전원을 마지막에 연결합니다. 저장 안 된 개발 작업은 저장한 뒤 바탕화면 소리봄을 실행합니다.</li><li>중앙 로딩의 모델·오디오 준비가 끝나면 상단 장치 상태를 확인합니다. 오류 시 안내의 재시도 경로를 사용합니다.</li></ol>
+<h3>쓰기</h3><ul><li>과목을 선택합니다. 영어 과목만 한국어/영어 감지이며 나머지는 한국어입니다.</li><li>물리 키보드로 말할 문장을 입력하고 상단 목소리를 선택한 뒤 Enter를 누릅니다.</li><li>기록 보기로 현재 전사를 확인하고 필요할 때만 미리보기·주소 확인 후 이메일로 보냅니다.</li><li>바탕화면 자동 저장 폴더의 TXT는 앱 종료 후에도 볼 수 있습니다.</li></ul>
+<h3>끄기</h3><p>ESC로 앱을 정상 종료해 마지막 기록을 저장합니다. 그 뒤 Ubuntu 우측 상단에서 전원을 끄고 케이블과 본체를 정리합니다. 갑작스러운 전원 차단은 마지막 저장 뒤 내용의 유실을 일으킬 수 있습니다.</p>
 </section>
 
 <!-- ==================== 부록 H ==================== -->
@@ -2993,20 +2355,9 @@ integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도�
   <p>본문 곳곳의 수치를 한 표에 모았습니다. 심사·질의응답에서 숫자를 물으면 여기만 보면 됩니다.</p>
 
   <h3>I.1 성능 측정값 (§8)</h3>
-  <table>
-    <thead><tr><th>지표</th><th>값</th><th>조건</th><th>본문</th></tr></thead>
-    <tbody>
-      <tr><td>자막 오류율 (CER)</td><td>0.0% / 0.7%</td><td><strong>통제 녹음</strong>(또박또박) 조용/잡음</td><td>11.2</td></tr>
-      <tr><td>자막 오류율 (CER)</td><td>평균 3.2%</td><td><strong>5과목 실사용</strong> 낭독(표기·띄어쓰기 제외 시 ~1.5%)</td><td>15부</td></tr>
-      <tr><td>자막 오류율 (CER)</td><td>~15%</td><td><strong>빠른 자연발화</strong>(정확도 하락, 작은 모델 한계)</td><td>15부</td></tr>
-      <tr><td>자막 지연</td><td>~0.6초</td><td>말 끝난 뒤 전사 시간(중앙값)</td><td>11.3</td></tr>
-      <tr><td>말하기(TTS) 지연</td><td>~1.8초</td><td>타이핑 완료→소리(문장 길이 무관)</td><td>11.4</td></tr>
-      <tr><td>방향(DOA) 오차</td><td>1.5°</td><td>케이스 후, LED로 정확히 서서 보정, 4방향 평균</td><td>11.6</td></tr>
-      <tr><td>STT+TTS 동시 상주 여유메모리</td><td>≥3,666MB</td><td>둘 다 GPU, OOM 없음</td><td>11.5</td></tr>
-    </tbody>
-  </table>
+<table><thead><tr><th>지표</th><th>값</th><th>인용 조건</th></tr></thead><tbody><tr><td>통제 CER</td><td>0.0% / 0.7%</td><td>2026년 7월 6문장 조용/잡음</td></tr><tr><td>5과목 낭독 CER</td><td>평균 3.2%</td><td>과거 소규모 낭독, 일반 교실 성능 아님</td></tr><tr><td>빠른 자연발화 CER</td><td>15.3%</td><td>과거 특정 발화 조건</td></tr><tr><td>전사 중앙값</td><td>0.62초 / 0.64초</td><td>과거 처리 시간. 전체 화면 지연 아님</td></tr><tr><td>TTS 합성 예시</td><td>약 1.8초</td><td>과거 GPU 32스텝. 문장 길이 무관 보장 아님</td></tr><tr><td>DOA 평균 오차</td><td>1.5°</td><td>과거 LED 보조 4방향. 독립 정답 기준 아님</td></tr><tr><td>수정 실험 점수</td><td>57.39 / 46.09점</td><td>동일 23명, 기기·주제·순서가 함께 바뀜</td></tr><tr><td>양측 대응 t검정</td><td>p=0.004502</td><td>평균 차이 +11.30점, 95% CI 3.89~18.71점</td></tr><tr><td>자동 검사</td><td>187개 통과</td><td>현장 정확도·장시간 안정성 보장 아님</td></tr></tbody></table>
 
-  <h3>I.2 주요 사양</h3>
+<h3>I.2 주요 사양</h3>
   <table>
     <thead><tr><th>항목</th><th>값</th></tr></thead>
     <tbody>
@@ -3033,7 +2384,7 @@ integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도�
     </tbody>
   </table>
   <div class="box good"><span class="box-t">🟩 한 줄로</span>
-    <strong>또박또박이면 정확(통제 0%대·실사용 3.2%)·빠름(~1초)·방향(1.5°), 전부 인터넷 없이.</strong>
+    <strong>과거 수치는 조건을 붙여 인용하고, 현재 자막·방향·말하기는 로컬 처리합니다. 이메일만 사용자가 선택해 전송합니다.</strong>
     빠른 자연발화 한계(~15%)까지 재서 아는 것이 이 표의 정직함입니다.</div>
 </section>
 
@@ -3109,7 +2460,7 @@ integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도�
   <h3>이 설명서에 대하여</h3>
   <p>
     이 설명서는 <strong>소리봄을 전혀 모르는 사람도 이해할 수 있도록</strong>, 실제 코드·측정값·개발
-    기록을 바탕으로 작성했습니다. 본문의 모든 <strong>기술 수치는 실제 기기에서 측정</strong>한 것이고,
+    기록을 바탕으로 작성했습니다. 과거 측정 예시와 현재 코드 설정을 <strong>날짜·조건·출처로 구분</strong>했고,
     <strong>사람 이름과 역할</strong>은 저장소의 기여 기록과 팀의 확인을 거쳤습니다. 어려운 개념은
     <strong>비유와 예시</strong>로 풀되, “정확히는 조금 다르다”는 점도 함께 밝혀 <strong>쉬우면서도 정직한</strong>
     설명이 되도록 했습니다.
@@ -3139,7 +2490,7 @@ integration_smoketest.py   자막+말하기 동시 상주(메모리) 확인 도�
     <strong>소리봄 (SoundSight)</strong> · 팀 제주 BTS<br>
     강주언 · 함도유 · 강구현<br>
     2026 제8회 한국코드페어 SW공모전<br>
-    — 교실의 모든 소리를, 눈으로 보고 목소리로 전한다 —
+    — 교실의 말을 자막으로, 발화 방향을 화살표로, 입력을 목소리로 —
   </p>
 </section>
 
