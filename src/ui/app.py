@@ -451,9 +451,17 @@ class SoribomUI(QObject):
         self.theme_button.setStyleSheet(style["theme_button"])
         self.theme_button.clicked.connect(self._toggle_theme)
 
+        self.clear_button = QPushButton("자막 지우기")
+        self.clear_button.setMinimumHeight(44)
+        self.clear_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.clear_button.setToolTip("화면의 자막만 지웁니다. 수업 기록은 유지됩니다.")
+        self.clear_button.setStyleSheet(style["theme_button"])
+        self.clear_button.clicked.connect(self._clear_captions)
+
         right = QVBoxLayout()
         right.setSpacing(8)
         right.addWidget(self.dial_box)
+        right.addWidget(self.clear_button, alignment=Qt.AlignmentFlag.AlignRight)
         right.addWidget(self.theme_button, alignment=Qt.AlignmentFlag.AlignRight)
         right.addStretch()
         body.addLayout(right)
@@ -592,11 +600,20 @@ class SoribomUI(QObject):
         self.dial_box.setStyleSheet(style["dial_box"])
         self.dial_title.setStyleSheet(style["dial_title"])
         self.theme_button.setStyleSheet(style["theme_button"])
+        self.clear_button.setStyleSheet(style["theme_button"])
         self.speak_title.setStyleSheet(style["speak_title"])
         self.input_box.setStyleSheet(style["input"])
         self.speak_button.setStyleSheet(style["speak_button"])
         self._render_operation_status()
         self.dial.update()      # 다이얼은 직접 그리는 위젯이라 '다시 그려라'만 알려주면 된다
+
+    @Slot()
+    def _clear_captions(self) -> None:
+        # 다음 발화를 이전 문단에 붙이지 않도록 화면의 문단 기준도 초기화한다.
+        self.caption_label.clear()
+        self._lines.clear()
+        self._last_caption_at = None
+        self._last_caption_angle = None
 
     @Slot(str, object)
     def _update(self, text: str, angle) -> None:
