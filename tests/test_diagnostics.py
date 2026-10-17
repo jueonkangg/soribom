@@ -32,6 +32,7 @@ class DiagnosticsTests(unittest.TestCase):
         recorder = self.recorder()
         recorder.start()
         recorder.record("caption", duration_s=0.5, has_text=True,
+                        repetition_removed=44,
                         text="비공개 수업 내용", password="비밀번호", exception="민감한 오류",
                         error_type="RuntimeError", microphone="개인정보")
         recorder.close()
@@ -40,6 +41,7 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(rows[-1]["event"], "session_end")
         caption = next(row for row in rows if row["event"] == "caption")
         self.assertEqual(caption["duration_s"], 0.5)
+        self.assertEqual(caption["repetition_removed"], 44)
         content = recorder.path.read_text()
         for value in ["비공개", "비밀번호", "민감한", "개인정보"]:
             self.assertNotIn(value, content)

@@ -167,6 +167,10 @@ class Transcriber:
             if t:
                 parts.append(t)
         text = " ".join(parts).strip()
+        from stt.repetition import trim_repetition_loops
+        # 입력은 16kHz mono다. TTS 재수음 등 짧은 음성의 반복 생성이 화면·기록에 퍼지지 않게 한다.
+        text, removed = trim_repetition_loops(text, len(chunk) / 16000)
+        self.last_filter_counts["repetition_removed"] = removed
 
         self.last_sec = time.monotonic() - start
         self.last_decode_stats = {"language_detection_s": detection_seconds}

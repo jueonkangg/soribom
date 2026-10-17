@@ -40,6 +40,7 @@ def summarize(rows):
             lines.append(f"{key}: {max(values)}")
     for key in ["no_speech_filtered", "low_confidence_filtered", "echo_filtered"]:
         lines.append(f"{key}: {sum(row.get(key, 0) for row in captions)} 세그먼트")
+    lines.append(f"repetition_removed: {sum(row.get('repetition_removed', 0) for row in captions)} 중복 구절")
     for key in ["decode_calls", "decode_sampling_calls", "decode_duration_s", "language_detection_s"]:
         values = [row[key] for row in captions if isinstance(row.get(key), (int, float))]
         if values:

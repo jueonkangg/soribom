@@ -4,6 +4,9 @@ from pathlib import Path
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 
 class TranscriberFilterTests(unittest.TestCase):
@@ -34,6 +37,15 @@ class TranscriberFilterTests(unittest.TestCase):
         for text in ["이산화탄소, 포도당", "이산화탄소 포도당 광합성"]:
             with self.subTest(text=text):
                 self.assertEqual(self.transcribe(self.segment(text)), text)
+
+    def test_short_audio_repetition_is_cleaned_before_caption_and_record_consumers(self):
+        text = "질문입니다. " + "말하고 있을 때, " * 45 + "다음 설명입니다."
+        self.stt.model.transcribe.return_value = (iter([self.segment(text)]), None)
+        result = self.stt.transcribe([0.0] * (3 * 16000))
+        self.assertEqual(result, "질문입니다. 말하고 있을 때, 다음 설명입니다.")
+        self.assertEqual(self.stt.last_filter_counts["repetition_removed"], 44)
+        self.assertEqual(self.transcribe(self.segment("다음 정상 문장")), "다음 정상 문장")
+        self.assertEqual(self.stt.last_filter_counts["repetition_removed"], 0)
 
     def test_default_retry_budget_and_legacy_settings_can_be_restored(self):
         self.transcribe(self.segment("함도유 학생, 질문이 있나요?"))
