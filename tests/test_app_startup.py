@@ -22,12 +22,15 @@ class AppStartupTests(unittest.TestCase):
         # 이전 시험의 Qt 객체 정리는 새 모델 워커를 시작하기 전에 GUI 스레드에서 한다.
         gc.collect()
 
-    def run_startup(self, close_early, save_notes=False):
+    def run_startup(self, close_early, save_notes=False, audio_recovery=False):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         cfg = {"audio": {}, "doa": {"enabled": False}, "vad": {}, "stt": {},
                "tts": {}, "summary": {"enabled": save_notes, "output_dir": directory.name}, "events": {"enabled": False}}
         notes = NoteBuilder(cfg["summary"])
+        if audio_recovery:
+            cfg["tts"].update(startup_recovery=True, output_backend="pulse")
+        recovery = Mock(side_effect=RuntimeError("비공개 장치 오류"))
         self.addCleanup(notes.stop_autosave)
         ui = SoribomUI(cfg)
         started = threading.Event()
@@ -36,6 +39,8 @@ class AppStartupTests(unittest.TestCase):
         device = Mock()
         device.start.side_effect = lambda: ui.show_device_status("waiting", "disabled")
         def load_stt(*_):
+            if audio_recovery:
+                recovery.assert_called_once()
             started.set()
             release.wait(3)
             return Mock()
@@ -62,6 +67,8 @@ class AppStartupTests(unittest.TestCase):
             wait_for(lambda: ui._models_ready and device.start.called)
             self.assertTrue(ui.speak_button.isEnabled())
             self.assertTrue(ui.summary_button.isEnabled())
+            if audio_recovery:
+                wait_for(lambda: "스피커 연결" in ui.alert_label.text())
             self.assertIn("마이크 연결", ui.connection_label.text())
             ui.subject_box.setCurrentIndex(ui.subject_box.findData("math"))
             notes.add("과목 변경 연결 확인", 0)
@@ -74,6 +81,7 @@ class AppStartupTests(unittest.TestCase):
                  patch("audio.vad.VoiceActivityDetector", return_value=vad), \
                  patch("audio.recovery.DeviceController", return_value=device), \
                  patch("summary.notes.NoteBuilder", return_value=notes), \
+                 patch("audio.output_recovery.prepare_system_output", recovery), \
                  patch.object(ui, "run", side_effect=run_screen):
                 main.main()
                 release.set()
@@ -97,6 +105,9 @@ class AppStartupTests(unittest.TestCase):
     def test_ui_available_during_model_loading_and_without_microphone(self):
         self.run_startup(close_early=False)
 
+    def test_output_recovery_failure_does_not_stop_models_or_caption_startup(self):
+        self.run_startup(close_early=False, audio_recovery=True)
+
     def test_close_during_loading_never_opens_microphone_later(self):
         self.run_startup(close_early=True)
 
@@ -107,7 +118,8 @@ class AppStartupTests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         cfg = {"audio": {}, "doa": {"enabled": False}, "vad": {},
-               "stt": {"warmup": fail_warmup}, "tts": {},
+               "stt": {"warmup": fail_warmup},
+               "tts": {"startup_recovery": True, "output_backend": "pulse"},
                "summary": {"enabled": False, "output_dir": directory.name},
                "events": {"enabled": False}}
         ui = SoribomUI(cfg)
@@ -133,6 +145,8 @@ class AppStartupTests(unittest.TestCase):
         vad = Mock()
         vad.stream.return_value = iter(())
         speaker = Mock()
+        recovery = Mock(return_value={"speaker_ready": True, "wifi_checked": True,
+                                      "wifi_power_save_off": True, "audio_profile_reset": True})
         def wait_for(predicate):
             deadline = time.monotonic() + 3
             while not predicate() and time.monotonic() < deadline:
@@ -167,9 +181,11 @@ class AppStartupTests(unittest.TestCase):
              patch("ui.app.SoribomUI", return_value=ui), \
              patch("audio.vad.VoiceActivityDetector", return_value=vad), \
              patch("audio.recovery.DeviceController", return_value=device), \
+             patch("audio.output_recovery.prepare_system_output", recovery), \
              patch.object(ui, "run", side_effect=run_screen):
             main.main()
         self.assertEqual(len(calls), 2)
+        recovery.assert_called_once()
         device.start.assert_called_once()
         speaker.assert_called_once()
 

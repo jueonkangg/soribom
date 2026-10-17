@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="504pt" height="345.6pt" viewBox="0 0 504 345.6" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-17T02:41:19.433406</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 345.6 
+L 504 345.6 
+L 504 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 12.852 100.0441 
+L 143.388 100.0441 
+Q 146.916 100.0441 146.916 103.572104 
+L 146.916 158.508159 
+Q 146.916 162.036162 143.388 162.036162 
+L 12.852 162.036162 
+Q 9.324 162.036162 9.324 158.508159 
+L 9.324 103.572104 
+Q 9.324 100.0441 12.852 100.0441 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #ffffff; stroke: #333333; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 179.172 120.20412 
+L 314.748 120.20412 
+Q 318.276 120.20412 318.276 123.732124 
+L 318.276 208.908209 
+Q 318.276 212.436212 314.748 212.436212 
+L 179.172 212.436212 
+Q 175.644 212.436212 175.644 208.908209 
+L 175.644 123.732124 
+Q 175.644 120.20412 179.172 120.20412 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #eeeeee; stroke: #333333; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 340.452 9.324009 
+L 491.148 9.324009 
+Q 494.676 9.324009 494.676 12.852013 
+L 494.676 72.828073 
+Q 494.676 76.356076 491.148 76.356076 
+L 340.452 76.356076 
+Q 336.924 76.356076 336.924 72.828073 
+L 336.924 12.852013 
+Q 336.924 9.324009 340.452 9.324009 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #ffffff; stroke: #333333; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 350.532 145.404145 
+L 491.148 145.404145 
+Q 494.676 145.404145 494.676 148.932149 
+L 494.676 203.868204 
+Q 494.676 207.396207 491.148 207.396207 
+L 350.532 207.396207 
+Q 347.004 207.396207 347.004 203.868204 
+L 347.004 148.932149 
+Q 347.004 145.404145 350.532 145.404145 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #ffffff; stroke: #333333; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 12.852 236.124236 
+L 143.388 236.124236 
+Q 146.916 236.124236 146.916 239.65224 
+L 146.916 284.508285 
+Q 146.916 288.036288 143.388 288.036288 
+L 12.852 288.036288 
+Q 9.324 288.036288 9.324 284.508285 
+L 9.324 239.65224 
+Q 9.324 236.124236 12.852 236.124236 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #ffffff; stroke: #333333; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 179.172 276.444276 
+L 314.748 276.444276 
+Q 318.276 276.444276 318.276 279.97228 
+L 318.276 324.828325 
+Q 318.276 328.356328 314.748 328.356328 
+L 179.172 328.356328 
+Q 175.644 328.356328 175.644 324.828325 
+L 175.644 279.97228 
+Q 175.644 276.444276 179.172 276.444276 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #ffffff; stroke: #333333; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 350.532 266.364266 
+L 491.148 266.364266 
+Q 494.676 266.364266 494.676 269.89227 
+L 494.676 324.828325 
+Q 494.676 328.356328 491.148 328.356328 
+L 350.532 328.356328 
+Q 347.004 328.356328 347.004 324.828325 
+L 347.004 269.89227 
+Q 347.004 266.364266 350.532 266.364266 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #ffffff; stroke: #333333; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 148.157051 131.040131 
+Q 161.27699 131.040131 173.278896 131.040131 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke: #444444; stroke-linecap: round"/>
+    <path d="M 168.878896 128.840131 
+L 173.278896 131.040131 
+L 168.878896 133.240131 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #444444; stroke: #444444; stroke-linecap: round"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 248.961665 40.32004 
+Q 292.320423 40.32004 334.561147 40.32004 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke: #444444; stroke-linecap: round"/>
+    <path d="M 330.161147 38.12004 
+L 334.561147 40.32004 
+L 330.161147 42.52004 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #444444; stroke: #444444; stroke-linecap: round"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 319.517051 176.400176 
+Q 332.63699 176.400176 344.638896 176.400176 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke: #444444; stroke-linecap: round"/>
+    <path d="M 340.238896 174.200176 
+L 344.638896 176.400176 
+L 340.238896 178.600176 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #444444; stroke: #444444; stroke-linecap: round"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 173.363203 201.600202 
+Q 173.880704 201.600202 173.280171 201.600202 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke: #444444; stroke-linecap: round"/>
+    <path d="M 168.880171 199.400202 
+L 173.280171 201.600202 
+L 168.880171 203.800202 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #444444; stroke: #444444; stroke-linecap: round"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 246.96 275.196764 
+Q 246.96 244.436749 246.96 214.794768 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke: #444444; stroke-linecap: round"/>
+    <path d="M 244.76 219.194768 
+L 246.96 214.794768 
+L 249.16 219.194768 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #444444; stroke: #444444; stroke-linecap: round"/>
+   </g>
+   <g id="patch_14">
+    <path d="M 458.64 78.636876 
+Q 458.64 78.119374 458.64 78.719906 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #444444; stroke-linecap: round"/>
+    <path d="M 456.44 83.119906 
+L 458.64 78.719906 
+L 460.84 83.119906 
+z
+" clip-path="url(#p30fecd3182)" style="fill: #444444; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #444444; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_1">
+    <path d="M 246.96 120.960121 
+L 246.96 40.32004 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke: #444444; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 146.16 262.080262 
+L 171.36 262.080262 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke: #444444; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_3">
+    <path d="M 171.36 262.080262 
+L 171.36 201.600202 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke: #444444; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_4">
+    <path d="M 488.88 267.120267 
+L 498.96 267.120267 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #444444"/>
+   </g>
+   <g id="line2d_5">
+    <path d="M 498.96 267.120267 
+L 498.96 80.640081 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #444444"/>
+   </g>
+   <g id="line2d_6">
+    <path d="M 498.96 80.640081 
+L 458.64 80.640081 
+" clip-path="url(#p30fecd3182)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #444444"/>
+   </g>
+   <g id="text_1">
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(43.109359 125.861037)">reSpeaker v3.0</text>
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(37.016844 143.130756)">수음 + 방향 추정</text>
+   </g>
+   <g id="text_2">
+    <text style="font-weight: 700; font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(202.530266 154.356244)">Jetson Orin Nano</text>
+    <text style="font-weight: 700; font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(208.183047 170.450026)">음성 인식 · 합성</text>
+    <text style="font-weight: 700; font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(206.782688 186.280463)">내부 SSD에 기록</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(377.519922 38.95034)">15.6인치 모니터</text>
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(377.250781 54.85034)">자막 · 터치 조작</text>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(391.677578 172.510473)">Bose 스피커</text>
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(380.013437 188.410473)">입력한 질문 재생</text>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(49.756719 258.190559)">물리 키보드</text>
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(55.056719 274.090559)">질문 입력</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'; text-anchor: middle" x="246.96" y="306.460599" transform="rotate(-0 246.96 306.460599)">동봉 전원 어댑터</text>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(387.844187 293.512)">USB-C 충전기</text>
+    <text style="font-size: 10.6px; font-family: 'Malgun Gothic'" transform="translate(392.476719 309.370594)">모니터 전원</text>
+   </g>
+   <g id="text_8">
+    <g id="patch_15">
+     <path d="M 150.528234 107.365101 
+L 172.031766 107.365101 
+L 172.031766 94.235101 
+L 150.528234 94.235101 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 10.1px; font-family: 'Malgun Gothic'; text-anchor: middle" x="161.28" y="103.828128" transform="rotate(-0 161.28 103.828128)">USB</text>
+   </g>
+   <g id="text_9">
+    <g id="patch_16">
+     <path d="M 193.810875 87.215076 
+L 259.789125 87.215076 
+L 259.789125 63.985076 
+L 193.810875 63.985076 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 10.1px; font-family: 'Malgun Gothic'" transform="translate(198.669133 73.578103)">DP → HDMI</text>
+    <text style="font-size: 10.1px; font-family: 'Malgun Gothic'" transform="translate(195.325875 83.678103)">→ mini HDMI</text>
+   </g>
+   <g id="text_10">
+    <g id="patch_17">
+     <path d="M 374.421844 127.525121 
+L 421.898156 127.525121 
+L 421.898156 114.395121 
+L 374.421844 114.395121 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 10.1px; font-family: 'Malgun Gothic'; text-anchor: middle" x="398.16" y="123.988148" transform="rotate(-0 398.16 123.988148)">Bluetooth</text>
+   </g>
+   <g id="text_11">
+    <g id="patch_18">
+     <path d="M 235.345 248.759244 
+L 258.575 248.759244 
+L 258.575 235.08124 
+L 235.345 235.08124 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 10.1px; font-family: 'Malgun Gothic'; text-anchor: middle" x="246.96" y="245.222271" transform="rotate(-0 246.96 245.222271)">전원</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 10px; font-family: 'Malgun Gothic'; text-anchor: middle" x="378" y="231.840232" transform="rotate(-0 378 231.840232)">스피커 USB 연결은 충전용</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p30fecd3182">
+   <rect x="0" y="0" width="504" height="345.6"/>
+  </clipPath>
+ </defs>
+</svg>

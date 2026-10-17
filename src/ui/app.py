@@ -19,7 +19,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QObject, QPointF, QRectF, QTimer, Signal, Slot, QEvent
 from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QShortcut, QTextCursor
 from PySide6.QtWidgets import (
-    QApplication, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
+    QApplication, QButtonGroup, QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QTextEdit, QPlainTextEdit, QVBoxLayout, QWidget,
 )
 
@@ -284,7 +284,7 @@ class CaptionView(QPlainTextEdit):
 
 class SoribomUI(QObject):
     # 워커 스레드 → 메인 스레드로 (자막, 방향)을 안전하게 넘기는 통로.
-    _caption_arrived = Signal(str, object)   # (text, angle 또는 None)
+    _caption_arrived = Signal(str, object, object)   # text, angle, 발화 시각 또는 None
     _alert_arrived = Signal(str)             # 소리 이벤트 알림(이름 호명 등)
     _devices_changed = Signal(str, str, str)
     _models_changed = Signal(bool, str)
@@ -299,6 +299,7 @@ class SoribomUI(QObject):
         self.on_summarize = lambda: "요약 기능이 연결되지 않았습니다."
         # 과목 드롭다운이 부를 콜백. main 에서 Transcriber.set_subject 로 연결.
         self.on_subject_change = lambda subject: None
+        self.on_voice_change = lambda sid: None
         self.on_note_snapshot = lambda: ""
         self.on_send_note = self._email_not_connected
         self._email_dialog = None
@@ -324,7 +325,9 @@ class SoribomUI(QObject):
         # (엔터를 두 번 친 것과 같은 간격) 쉬는 시간과 수업이 한 덩어리로 붙어 보이면
         # 어디까지가 방금 대화인지 알기 어렵다. 묶음을 눈으로 나눠 준다.
         self.gap_seconds = ui.get("gap_seconds", 30)
+        self.caption_pause_break_seconds = max(0.1, float(ui.get("caption_pause_break_seconds", 2)))
         self._last_caption_at = None        # 마지막 자막이 뜬 시각 (없으면 아직 첫 자막)
+        self._last_speech_timing = None     # (음성 끝 시각, 연결 세대)
         self._last_caption_angle = None
         self.caption_direction_break_degrees = max(
             0.1, min(180.0, float(ui.get("caption_direction_break_degrees", 5))))
@@ -376,6 +379,25 @@ class SoribomUI(QObject):
         self.subject_box.setStyleSheet(style["subject_box"])
         self.subject_box.currentIndexChanged.connect(self._on_subject_changed)
         header_row.addWidget(self.subject_box)
+
+        self.voice_label = QLabel("말하기 목소리")
+        self.voice_label.setStyleSheet(style["subj_label"])
+        header_row.addWidget(self.voice_label)
+        self.voice_group = QButtonGroup(self.window)
+        self.voice_group.setExclusive(True)
+        self.voice_buttons = []
+        initial_sid = cfg.get("tts", {}).get("sid", 0)
+        for label, sid in (("남성 목소리", 5), ("여성 목소리", 0)):
+            button = QPushButton(label)
+            button.setCheckable(True)
+            button.setChecked((sid == 5) == (initial_sid >= 5))
+            button.setAccessibleName(label)
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.setStyleSheet(style["voice_button"])
+            self.voice_group.addButton(button, sid)
+            self.voice_buttons.append(button)
+            header_row.addWidget(button)
+        self.voice_group.idClicked.connect(self._on_voice_changed)
 
         self.summary_button = QPushButton("수업 기록 보기")
         self.summary_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -538,6 +560,13 @@ class SoribomUI(QObject):
                 f"background: {PILL_BG}; color: {PILL_INK}; border: none; border-radius: 13px; "
                 f"padding: 8px 18px; font-size: {int(f * 0.42)}px; font-weight: 700;"
             ),
+            "voice_button": (
+                f"QPushButton {{ background: transparent; color: #FFFFFF; border: 1px solid #CBD5E1; "
+                f"border-radius: 8px; padding: 8px 12px; font-size: {int(f * 0.42)}px; }}"
+                f"QPushButton:checked {{ background: {PILL_BG}; color: {PILL_INK}; "
+                f"border: 2px solid {PILL_BG}; font-weight: 700; }}"
+                "QPushButton:disabled { color: #94A3B8; border-color: #64748B; }"
+            ),
             "caption": f"color: {INK}; font-size: {f}px; font-weight: 600; background: transparent; border: none; padding: 0;",
             "alert": (
                 f"background: {ALERT_BG}; color: {INK}; border: 1px solid {ALERT_LINE}; "
@@ -592,6 +621,9 @@ class SoribomUI(QObject):
         self.title.setStyleSheet(style["title"])
         self.subj_label.setStyleSheet(style["subj_label"])
         self.subject_box.setStyleSheet(style["subject_box"])
+        self.voice_label.setStyleSheet(style["subj_label"])
+        for button in self.voice_buttons:
+            button.setStyleSheet(style["voice_button"])
         self.summary_button.setStyleSheet(style["summary_button"])
         self.email_button.setStyleSheet(style["summary_button"])
         self._render_connection()
@@ -614,9 +646,10 @@ class SoribomUI(QObject):
         self._lines.clear()
         self._last_caption_at = None
         self._last_caption_angle = None
+        self._last_speech_timing = None
 
-    @Slot(str, object)
-    def _update(self, text: str, angle) -> None:
+    @Slot(str, object, object)
+    def _update(self, text: str, angle, timing=None) -> None:
         """메인 스레드에서 실행: 자막과 방향을 화면에 반영한다."""
         # 장치가 끊겼거나 방향 표본이 없으면 이전 화자의 문단에 묶지 않는다.
         if (self._device_state[:2] != ("ready", "ready")
@@ -624,26 +657,48 @@ class SoribomUI(QObject):
             angle = None
         else:
             angle %= 360
+        now = time.monotonic()
+        pause_seconds = None
+        pause_source = "unknown"
+        generation_changed = False
+        if timing is not None:
+            begin, end, generation = timing
+            if self._last_speech_timing is not None:
+                previous_end, previous_generation = self._last_speech_timing
+                generation_changed = generation != previous_generation
+                if not generation_changed:
+                    pause_seconds = max(0.0, begin - previous_end)
+                    pause_source = "audio"
+                    end = max(end, previous_end)
+            # 필터 뒤 빈 자막도 실제 음성이 있었던 시각으로 취급한다.
+            self._last_speech_timing = (end, generation)
+        else:
+            # 시각이 없는 데모 호출만 표시 간격을 사용하며 음성 시각과 섞지 않는다.
+            if self._last_speech_timing is None and self._last_caption_at is not None:
+                pause_seconds = max(0.0, now - self._last_caption_at)
+                pause_source = "display"
+            self._last_speech_timing = None
         if text:
-            now = time.monotonic()
             first_caption = not self._lines
             if not self._lines:
                 self.caption_label.clear()
             # 앞 자막과 gap_seconds 이상 떨어져 있으면 빈 줄로 묶음을 나눈다.
-            gap = (self._last_caption_at is not None
-                   and now - self._last_caption_at >= self.gap_seconds)
+            gap = pause_seconds is not None and pause_seconds >= self.gap_seconds
+            pause_break = (gap or pause_seconds is not None
+                           and pause_seconds >= self.caption_pause_break_seconds)
             difference = None
-            if angle is not None and self._last_caption_angle is not None:
+            if not generation_changed and angle is not None and self._last_caption_angle is not None:
                 difference = abs((angle - self._last_caption_angle + 180) % 360 - 180)
-            continue_paragraph = (not gap and difference is not None
+            continue_paragraph = (not pause_break and difference is not None
                                   and difference < self.caption_direction_break_degrees)
-            reason = ("first" if first_caption else "pause" if gap else
+            reason = ("first" if first_caption else "pause" if pause_break else
                       "unknown" if difference is None else
                       "same_direction" if continue_paragraph else "direction_change")
             self.on_caption_layout(
                 direction_angle=angle, direction_difference=difference,
                 direction_threshold=self.caption_direction_break_degrees,
-                paragraph_break=not continue_paragraph, layout_reason=reason)
+                paragraph_break=not continue_paragraph, layout_reason=reason,
+                pause_s=pause_seconds, pause_source=pause_source)
             if gap:
                 self._lines.append("")
             self._last_caption_at = now
@@ -671,6 +726,7 @@ class SoribomUI(QObject):
         if microphone != "ready" or direction != "ready":
             self.dial.set_angle(None)
             self._last_caption_angle = None
+            self._last_speech_timing = None
         if not self._lines:
             self.caption_label.setText(
                 "소리봄 준비 완료 — 말하면 자막이 나옵니다."
@@ -738,18 +794,27 @@ class SoribomUI(QObject):
         self.speak_button.setEnabled(ready and not self._speaking)
         self.input_box.setEnabled(ready)
         self.subject_box.setEnabled(ready)
+        for button in self.voice_buttons:
+            button.setEnabled(ready and not self._speaking)
         if not ready:
             self._update_devices("preparing", "waiting", message)
         elif self.startup_window is not None and self._running:
             self.window.showFullScreen()
             self.startup_window.finish()
 
-    def show_caption(self, text: str, angle: float = None, tentative: bool = False) -> None:
+    def show_caption(self, text: str, angle: float = None, tentative: bool = False,
+                     *, speech_ranges=None, generation=None) -> None:
         """자막과 화자 방향을 화면에 띄운다. (tentative는 단일패스라 안 씀)
 
         어느 스레드에서 불려도 안전하도록 시그널로만 넘긴다.
         """
-        self._caption_arrived.emit(text, angle)
+        timing = None
+        if speech_ranges:
+            begin, end = speech_ranges[0][0], speech_ranges[-1][1]
+            if (isinstance(begin, (int, float)) and isinstance(end, (int, float))
+                    and math.isfinite(begin) and math.isfinite(end) and end >= begin):
+                timing = (begin, end, generation)
+        self._caption_arrived.emit(text, angle, timing)
 
     @Slot(str)
     def _show_alert(self, text: str) -> None:
@@ -858,6 +923,10 @@ class SoribomUI(QObject):
         self.note_status.setText(message)
         self._render_operation_status()
 
+    def _on_voice_changed(self, sid: int) -> None:
+        self.on_voice_change(sid)
+        self.input_box.setFocus()
+
     def _on_enter(self) -> None:
         """합성·재생은 한 번에 하나만. 성공한 문장만 입력칸에서 지운다."""
         if not self._models_ready or self._speaking:
@@ -875,6 +944,8 @@ class SoribomUI(QObject):
         self._speech_text = text
         self._speech_failed = False
         self.speak_button.setEnabled(False)
+        for button in self.voice_buttons:
+            button.setEnabled(False)
         self.input_box.setEnabled(True)
         self.speak_button.setText("말하는 중…")
         self.speech_status.setText("말하기가 끝나면 보관한 음성을 인식합니다. 다음 문장을 입력할 수 있습니다.")
@@ -903,6 +974,8 @@ class SoribomUI(QObject):
             self.input_box.clear()
         self.speak_button.setText("말하기 ▶")
         self.speak_button.setEnabled(self._models_ready)
+        for button in self.voice_buttons:
+            button.setEnabled(self._models_ready)
         self.input_box.setEnabled(self._models_ready)
         self.speech_status.setText(message)
         self._render_operation_status()

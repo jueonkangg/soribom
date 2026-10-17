@@ -79,6 +79,7 @@ class DirectionPipelineTests(unittest.TestCase):
                     time.sleep(0.01)
                 self.assertIn("첫 화자의 문장", ui.caption_label.text())
                 self.assertAlmostEqual(ui.dial._angle, 90)
+                self.assertAlmostEqual(ui._last_speech_timing[0], ranges[-1][1])
                 self.assertAlmostEqual(notes.lines[0]["angle"], 90)
                 self.assertEqual(holder["devices"].current_angle(), 270)
 

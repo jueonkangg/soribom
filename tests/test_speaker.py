@@ -49,6 +49,45 @@ class SpeakerTests(unittest.TestCase):
         np.testing.assert_array_equal(output[10:, 0], np.zeros(6))
         self.speaker._playback_done.set()
 
+    def test_voice_selection_reaches_generation_without_reloading_model(self):
+        speaker = self.speaker
+        speaker.tts = Mock()
+        speaker.tts.generate.return_value = SimpleNamespace(samples=[0.1] * 10, sample_rate=44100)
+        speaker.speed, speaker.num_steps, speaker.language = 1.0, 32, "ko"
+        self.module.sherpa_onnx.GenerationConfig = lambda: SimpleNamespace(extra={})
+        for sid in (5, 0):
+            speaker.set_voice(sid)
+            self.module.Speaker._synthesize(speaker, "질문이 있습니다")
+            generation = speaker.tts.generate.call_args.args[1]
+            self.assertEqual(generation.sid, sid)
+            self.assertEqual(generation.num_steps, 32)
+            self.assertEqual(generation.extra["lang"], "ko")
+        for invalid in (-1, 10, "5", True):
+            with self.assertRaises(ValueError):
+                speaker.set_voice(invalid)
+        self.assertEqual(speaker.sid, 0)
+
+    def test_voice_cannot_change_during_playback(self):
+        started, release = threading.Event(), threading.Event()
+        self.speaker.sid = 0
+        def playback():
+            started.set()
+            release.wait(3)
+            self.play_to_completion()
+        self.stream.start.side_effect = playback
+        worker = threading.Thread(target=self.speaker.say, args=("질문",))
+        worker.start()
+        try:
+            self.assertTrue(started.wait(1))
+            with self.assertRaises(RuntimeError):
+                self.speaker.set_voice(5)
+            self.assertEqual(self.speaker.sid, 0)
+        finally:
+            release.set()
+            worker.join(3)
+        self.speaker.set_voice(5)
+        self.assertEqual(self.speaker.sid, 5)
+
     def test_output_error_closes_stream_and_next_request_succeeds(self):
         self.stream.start.side_effect = RuntimeError("disconnected")
         with self.assertRaises(RuntimeError):

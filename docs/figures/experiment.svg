@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" font-family="Malgun Gothic, NanumGothic, sans-serif">
 <rect x="0" y="0" width="1000" height="560" fill="#FFFFFF"/>
 <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"/></marker><marker id="ahd" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/></marker></defs>
-<text x="34" y="36" font-size="20" font-weight="700" fill="#13315C">[그림 4] 이해도 실험 설계</text>
+<text x="34" y="36" font-size="20" font-weight="700" fill="#13315C">[과거 계획도] 실제 실시와 다름 — 현재는 experiment-final26.svg 참조</text>
 <text x="34" y="58" font-size="13" fill="#64748B">같은 조건에서 ‘단말 사용’과 ‘미사용’의 수업 이해도(퀴즈 점수)를 비교</text>
 <rect x="360" y="80" width="280" height="64" rx="10" fill="#E8EDF4" stroke="#13315C" stroke-width="2"/>
 <text x="500.0" y="108.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1F2937">동급생 참가자 (예: 24명)</text>

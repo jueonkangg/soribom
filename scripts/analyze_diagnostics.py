@@ -46,6 +46,12 @@ def summarize(rows):
             lines.append(f"{key}: 합계 {sum(values):.3f}, 최대 {max(values):.3f}")
     lines.append(f"마이크 장애 {events['mic_failure']}건, 수동 재시도 {events['retry']}건")
     for row in rows:
+        if row['event'] == 'audio_startup':
+            lines.append(f"시작 오디오 점검: {row.get('duration_s', 0):.3f}초, "
+                         f"스피커 준비 {row.get('speaker_ready')}, "
+                         f"출력 재준비 {row.get('audio_profile_reset')}, "
+                         f"Wi-Fi 절전 해제 {row.get('wifi_power_save_off')}, "
+                         f"초기화 생략 {row.get('audio_recovery_skipped')}")
         if row['event'] != 'startup_cleanup':
             continue
         lines.append(f"개발 도구 정리: {row.get('duration_s', 0):.3f}초, 미종료 {row.get('remaining_tools', 0)}개")

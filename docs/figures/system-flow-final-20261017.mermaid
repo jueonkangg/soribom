@@ -1,0 +1,21 @@
+flowchart TD
+ MIC[USB 마이크 음성 수집] --> VAD[Silero VAD 발화 분리와 실제 시각 보존]
+ VAD --> Q[발화 대기 큐]
+ Q --> LANG{영어 과목인가}
+ LANG -->|예| AUTO[한국어와 영어 확률 비교]
+ LANG -->|아니오| KO[한국어 고정]
+ AUTO --> STT[같은 다국어 small 모델로 원문 전사]
+ KO --> STT
+ VOCAB[과목별 hotwords와 등록 이름] --> STT
+ DOA[마이크 방향 표본과 시각] --> ALIGN[발화 시간대의 방향 연결]
+ VAD --> ALIGN
+ STT --> UI[자막과 이름 알림 표시]
+ ALIGN --> UI
+ UI --> PARA[실제 무음 및 방향 변화로 문단 구분]
+ UI --> LOG[30초 자동 저장과 정상 종료 저장]
+ LOG --> VIEW[기록 다시 보기]
+ LOG --> EMAIL[인터넷 연결 시 미리보기 후 이메일 전송]
+ INPUT[질문 입력과 목소리 선택] --> TTS[Supertonic 음성 합성]
+ TTS --> SPK[Bluetooth 스피커로 질문 출력]
+ GATE[STT와 TTS의 GPU 사용 순서 조정] -.-> STT
+ GATE -.-> TTS

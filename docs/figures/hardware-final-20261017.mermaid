@@ -1,0 +1,10 @@
+flowchart LR
+ MIC[reSpeaker v3.0] -->|USB 음성과 방향| PC[Jetson Orin Nano]
+ KEY[물리 키보드] -->|질문 입력| PC
+ PC -->|DP HDMI 젠더와 HDMI mini HDMI 케이블| MON[15.6인치 모니터]
+ MON -->|터치 입력| PC
+ PC -->|Bluetooth 음성| SPK[Bose SoundLink Mini]
+ PC -->|내부 저장| SSD[NVMe SSD]
+ ADAPTER[동봉 전원 어댑터] --> PC
+ CHARGER[USB C 충전기] --> MON
+ PC -. USB 충전 .-> SPK
