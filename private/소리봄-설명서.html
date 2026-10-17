@@ -161,21 +161,52 @@ hr{ border:none; border-top:1px solid var(--line); margin:22pt 0; }
 </section>
 <section class="sheet chapter" id="latest-20261017">
 <span class="part-kicker">CURRENT · 2026-10-17</span><h2 class="part">본선 자료 반영 — 현재 구성과 실험 해석</h2>
-<p class="part-sub">main 36922d2와 사용자 제공 본선 수정 도면 기준. 공유 링크 본문은 접근할 수 없어 인용하지 않았습니다.</p>
+<p class="part-sub">구현 기준 main dd94261 · 통계는 2026-10-17 최종 26명 자료 기준. 본선 수정 도면을 반영했으며 공유 링크 본문은 접근하지 못해 인용하지 않았습니다.</p>
 <h3>최신 구현을 읽는 기준</h3><p>본문의 개발 일화·과거 측정은 이력입니다. 현재 구성은 <strong>USB 수음/방향 → VAD → 발화 큐 → 같은 다국어 small 모델 → 자막·이름 알림</strong>입니다. 방향 표본은 해당 발화 시각에 맞추고 5° 방향 변화 또는 실제 2초 무음으로 새 문단을 만듭니다. 30초 이상 무음은 빈 줄을 추가합니다.</p>
 <h3>수음·추론·화면을 구분하기</h3><p>Enter 시 이미 진행 중인 전사를 마친 뒤 말하기를 수행하고 새 전사는 잠시 대기합니다. 마이크와 VAD는 계속되며 보관 발화는 순서대로 전사합니다. 일반 4발화/말하기 보관 32발화 제한이 있어 용량 초과·재연결 누락은 진단합니다. 화면이 하나라고 모든 GPU 추론이 동시에 실행되는 것은 아닙니다.</p>
 <h3>기록 보기는 파일 불러오기가 아닙니다</h3><p>수업 기록 보기·이메일 미리보기는 현재 실행 중의 메모리 스냅샷을 사용합니다. 30초 저장과 정상 종료 저장은 별도 경로입니다. 자동 저장 파일은 내부 SSD의 사용자 바탕화면 폴더에 있으며 이전 TXT를 자동으로 앱에 복원하지 않습니다. 이메일은 사용자가 확인한 뒤 선택적으로 전송합니다.</p>
-<h3>수정 실험 v2 — 현재 인용할 결과</h3>
-<table><thead><tr><th>항목</th><th>실제 실시·결과</th></tr></thead><tbody><tr><td>참가자</td><td>동일 23명, 두 시험 모두 100점 만점</td></tr><tr><td>1차</td><td>소리봄 사용·재정정책·먼저</td></tr><tr><td>2차</td><td>미사용·통화정책·나중</td></tr><tr><td>평균</td><td>57.39점 / 46.09점</td></tr><tr><td>대응 평균 차이</td><td>+11.30점, 95% CI 3.89~18.71점</td></tr><tr><td>양측 대응 t검정</td><td>t(22)=3.1636, p=0.004502</td></tr><tr><td>개인별 차이</td><td>14명 높음, 4명 같음, 5명 낮음</td></tr><tr><td>실험 역할</td><td>수업 함도유 / 데이터 정리 강구현 / 분석 강주언</td></tr></tbody></table><p>자료 정정으로 1차 점수 11개 행이 바뀌었습니다. 수정 전 +27.83점·p≈4.84×10⁻¹²는 인용하지 않습니다. 분석은 대학 1학년 수준의 기술통계·대응 t검정·신뢰구간으로 제한합니다.</p>
-<div class="box warn"><span class="box-t">유의한 차이와 인과 효과의 차이</span>주제·시험·순서·기기 조건이 겹쳐 기기만의 인과 효과를 분리할 수 없습니다. 대부분 3M 이어플러그, 일부 ANC 이어폰으로 조건도 통일되지 않았고 실제 난청 학생 표본이 아닙니다. 편의표집·기대/채점 편향·같은 수업의 공통 영향도 남습니다. 기기를 먼저 쓴 것이 학습 편향 제거를 보장하지 않습니다.</div>
-<h3>다음 검증</h3><p>원 시험지·채점표를 수정 점수와 대조하고, 주제·순서를 균형 배치한 후속 실험을 설계해야 합니다. 최신 코드의 30~50분 STT/TTS 통합·온도·클럭 시험, 독립 기준 각도의 DOA 평가, 실제 대상자의 사용성 평가가 필요합니다.</p>
-<h3>출처와 적용 범위</h3><p>사용자 제공 소리봄_하드웨어_구성도_본선수정 및 소리봄_시스템_플로우차트_본선수정의 Mermaid·PNG·SVG 원본 6개를 docs/figures의 *-final-20261017.*로 보존했습니다. 본문 그림은 HTML에 포함했습니다. 코드는 src/main.py, src/stt/transcriber.py, src/audio/recovery.py, src/inference.py, src/stt/pipeline.py, src/summary/notes.py, src/tts/speaker.py, src/ui/app.py를 대조했습니다. 통계 근거는 docs/04-experiment.md v2, 측정의 한계는 docs/phase_c_measurements.md와 docs/25-speech-concurrency.md입니다.</p>
+<h3 id="experiment-final26">최종 실험 — 26명 기준으로 갱신</h3>
+<p>2026-10-17 사용자가 제공한 <code>소리봄_실험결과_통계분석_26명_2026-10-17.md</code>를 현재 인용 기준으로 삼습니다. 기존 23쌍에 누락 대학생 1명과 학부모 지인 2명의 점수를 더한 <strong>최종 26쌍</strong>입니다. 이전 23명·잠정 25명 분석 대신 아래 결과를 사용합니다.</p>
+<table><thead><tr><th>항목</th><th>최종 26명 기준</th></tr></thead><tbody><tr><td>대상·표집</td><td>청각장애가 없는 성인 26명. 대학생 24명, 학부모 지인 2명. 지인 기반 편의표집</td></tr><tr><td>날짜·장소</td><td>2026-09-09 제주대학교 공과대학 강의실 24명 / 2026-10-03 아파트 커뮤니티 도서관 2명. 각 집단은 함께 참여</td></tr><tr><td>사전 청취 조절</td><td>퀴즈 1 → 청취 상태 조절 → 퀴즈 2 확인 안내. 목표 정답률 40~70%이며 모든 참가자의 도달을 개별 검증한 결과는 아님</td></tr><tr><td>1차 조건</td><td>소리봄 사용·재정정책 현장 강의 → 객관식 이해도 평가. 공용 TV로 자막 제시</td></tr><tr><td>휴식·2차 조건</td><td>첫 강의·문제 풀이 후 5분 휴식 → 소리봄 미사용·통화정책 현장 강의 → 이해도 평가. 전원 같은 순서</td></tr><tr><td>평가</td><td>강의별 객관식 10문항 × 10점 = 100점. 부분 점수·사후 채점 정정 없음</td></tr><tr><td>강의 길이</td><td>스크립트 목표 약 5분. 실제 진행 시간의 정밀 측정 기록은 없음</td></tr><tr><td>사용 평균·표본 SD</td><td>55.3846점 · 18.3806점</td></tr><tr><td>미사용 평균·표본 SD</td><td>46.1538점 · 16.7516점</td></tr><tr><td>개인별 점수 차이</td><td>사용 − 미사용의 평균 +9.2308점. 14명 높음, 5명 같음, 7명 낮음</td></tr><tr><td>양측 대응 t검정</td><td>t(25)=2.7386128, p=0.0112074</td></tr><tr><td>95% 신뢰구간</td><td>평균 대응 차이 [2.2888879, 16.1726506]점</td></tr><tr><td>발표용 반올림</td><td>사용 55.38점 / 미사용 46.15점, 차이 +9.23점, t(25)=2.739, p=0.0112, 95% CI [2.29,16.17]</td></tr><tr><td>실험 역할</td><td>수업 함도유 / 데이터 정리 강구현 / 분석 강주언</td></tr></tbody></table>
+<h3>어떻게 계산하고 해석했나</h3>
+<p>같은 참가자가 두 조건에 참여했으므로 개인별 차이 dᵢ=사용 점수ᵢ−미사용 점수ᵢ를 계산했습니다. 귀무가설은 평균 차이 0, 대립가설은 평균 차이 0이 아님입니다. <strong>양측 대응표본 t검정</strong>으로 t=평균(d)/[표본 SD(d)/√26], 자유도 25를 사용했습니다. 동점도 포함합니다. 별도 정규성·이상치 진단이나 비모수 민감도 분석을 수행했다고 주장하지 않습니다.</p>
+<p>검정 가정 아래 유의수준 5%에서 두 조건의 점수 차이는 유의합니다. p=0.0112는 기기가 효과 있을 확률이 98.88%라는 뜻이 아니며, 평균 차이 9.23점도 인식 정확도 9.23% 향상이나 모든 참가자의 개선을 뜻하지 않습니다. 95% 신뢰구간은 평균 차이 추정의 불확실성이고 개인별 차이의 95% 범위가 아닙니다.</p>
+<div class="box warn"><span class="box-t">통계적 유의성과 기기만의 인과 효과는 다릅니다</span>
+<ul><li><strong>대상·대표성:</strong> 청각장애가 없는 성인의 지인 기반 편의표집이므로 실제 난청 학생에게 일반화할 수 없습니다.</li>
+<li><strong>주제·난이도·순서:</strong> 사용 조건은 재정정책·먼저, 미사용은 통화정책·나중입니다. 기기 조건과 겹쳐 분리되지 않으며 학습·피로·적응의 영향을 제거했다고 볼 수 없습니다.</li>
+<li><strong>청취 조건:</strong> 40~70%는 사전 퀴즈의 안내 목표이며 본 강의 점수가 아닙니다. 개인별 차음 도구·차음 정도를 충분히 기록하지 않아 같은 청취 상태로 표준화했다고 보기 어렵습니다.</li>
+<li><strong>공유 환경:</strong> 공용 TV를 본 실험으로, 개인 책상에서 기기를 사용하는 방식과 다릅니다. 두 날짜·장소의 음향·좌석·가시성이 다를 수 있고 같은 집단이 강의를 함께 경험했습니다.</li>
+<li><strong>측정 범위:</strong> 이해도 점수 비교이며 STT 오류율·지연·방향 정확도나 이후 추가된 영어 전사·저장·이메일·목소리 선택 전체의 효과 검증이 아닙니다.</li></ul></div>
+<h3>심사에서 말할 수 있는 결론</h3>
+<div class="box good"><span class="box-t">발표 답변 예시</span>“청각장애가 없는 성인 26명의 두 강의 조건을 비교했을 때 소리봄 사용 조건이 평균 9.23점 높았고, 양측 대응표본 t검정 p값은 0.0112였습니다. 다만 주제와 순서가 함께 달라 기기만의 효과로 단정할 수 없으며, 실제 난청 학생의 효과를 검증한 실험도 아닙니다.”</div>
+<h3>다음 검증</h3><p>주제·문항 난이도와 순서를 균형 배치한 후속 실험을 설계하고 청취 도구·사전 퀴즈·좌석·거리·소음을 기록해야 합니다. 실제 난청 당사자의 요구를 반영해 개인 책상 배치에서 가독성·질문 입력·기록 확인을 평가해야 합니다. 인식 정확도·지연·방향 오차와 장시간 안정성은 별도 시험으로 확인합니다.</p>
+<h3>출처와 적용 범위</h3><p>사용자 제공 소리봄_하드웨어_구성도_본선수정 및 소리봄_시스템_플로우차트_본선수정의 Mermaid·PNG·SVG 원본 6개를 docs/figures의 *-final-20261017.*로 보존했습니다. 본문 그림은 HTML에 포함했습니다. 코드는 src/main.py, src/stt/transcriber.py, src/audio/recovery.py, src/inference.py, src/stt/pipeline.py, src/summary/notes.py, src/tts/speaker.py, src/ui/app.py를 대조했습니다. 통계 근거는 사용자 제공 소리봄_실험결과_통계분석_26명_2026-10-17.md와 이를 반영한 docs/04-experiment.md의 최종 26명 결과입니다. 측정의 한계는 docs/phase_c_measurements.md와 docs/25-speech-concurrency.md입니다.</p>
 </section>
 
+<section class="sheet chapter" id="judge-code-guide">
+<span class="part-kicker">심사 대비 · 코드 지도</span><h2 class="part">핵심 기능 3개 — 어떤 코드가 무슨 일을 하나</h2>
+<p class="part-sub">프로젝트 루트 /data2/code/soribom 기준. 현재 main dd94261의 파일·함수명을 확인했습니다. 줄 번호는 이후 코드 수정에 따라 달라질 수 있습니다.</p>
+<h3>① 실시간 자막 — 교실의 말을 큰 글자로</h3>
+<p><strong>핵심 파일:</strong> <a href="../src/stt/transcriber.py"><code>src/stt/transcriber.py</code></a>, <code>Transcriber.transcribe()</code>(117행). 모델 생성은 <code>Transcriber.__init__()</code>, 어휘 갱신은 <code>_apply_vocab()</code>에 있습니다.</p>
+<p><strong>흐름:</strong> <code>src/audio/capture.py</code> 수음 → <code>src/audio/vad.py</code>의 <code>VoiceActivityDetector.stream()</code>(51행)에서 Silero VAD로 발화와 실제 시각 분리 → <code>src/stt/pipeline.py</code>의 유한 발화 큐 → <code>Transcriber.transcribe()</code> → <code>src/ui/app.py</code>의 <code>SoribomUI.show_caption()</code>(787행)·<code>_update()</code>(634행)로 표시합니다. 이 연결은 <code>src/main.py</code>의 <code>vad_lane()</code>(193행)·<code>caption_lane()</code>(199행)에서 확인합니다.</p>
+<p><strong>핵심 처리:</strong> 같은 다국어 small 모델을 사용하고 영어 과목만 ko/en 확률을 비교합니다. <code>task="transcribe"</code>로 번역 대신 원문 전사합니다. <code>src/stt/vocab.py</code>가 과목·공통·이름 힌트를 토큰 예산 안에서 선택합니다. <code>transcriber.py</code>는 저신뢰·무음 결과를 필터링합니다.</p>
+<div class="box us"><span class="box-t">심사 답변 예시</span>“음성은 먼저 VAD로 발화 구간을 자르고, transcriber.py에서 로컬 small 모델로 전사합니다. 과목별 힌트와 한국어·영어 선택을 적용하며 실제 시각을 보존해 화면에 연결했습니다. Whisper 모델 자체를 새로 학습한 것은 아닙니다.”</div>
+<h3>② 발화 방향 표시 — 이 문장이 어디서 나왔는지 연결하기</h3>
+<p><strong>핵심 파일:</strong> <a href="../src/audio/recovery.py"><code>src/audio/recovery.py</code></a>의 <code>DeviceController.direction_for()</code>(198행). 각도 읽기는 <a href="../src/audio/doa.py"><code>src/audio/doa.py</code></a>의 <code>DoaTracker.raw_angle()</code>(52행)·<code>_read_int()</code>(37행)입니다.</p>
+<p><strong>흐름:</strong> ReSpeaker 칩이 계산한 원본 각도를 USB로 읽고 시각·연결 세대와 함께 보관합니다. <code>direction_for()</code>가 해당 발화 구간 안의 표본만 골라 <code>_robust_center()</code>(doa.py 102행)로 원형 중심·합의도를 확인합니다. <code>src/main.py</code>(228행)에서 이 각도를 전사와 묶어 전달하고 UI의 <code>DirectionDial</code>(106행)이 그립니다.</p>
+<p><strong>핵심 처리:</strong> 기본 표본 2개 미만 또는 합의도 70% 미만이면 미확정입니다. 전사가 늦어도 완료 시점의 다른 화자 각도를 붙이지 않습니다. UI의 <code>SoribomUI._update()</code>는 기본 5° 변화·실제 2초 무음으로 문단을 구분합니다. 방향은 신원 식별이나 5° 측정 정확도 보장이 아닙니다.</p>
+<div class="box us"><span class="box-t">심사 답변 예시</span>“방향 추정 자체는 ReSpeaker 칩이 하고, 저희 코드는 그 표본을 실제 발화 시각과 연결합니다. 표본이 부족하면 추측하지 않고 미확정으로 표시합니다. 핵심은 현재 각도를 읽는 것뿐 아니라 이 문장을 말한 시점의 방향을 자막에 맞추는 것입니다.”</div>
+<h3>③ 타이핑 말하기 — 사용자가 고른 목소리로 질문 전달하기</h3>
+<p><strong>핵심 파일:</strong> <a href="../src/tts/speaker.py"><code>src/tts/speaker.py</code></a>의 <code>Speaker.say()</code>(214행)·<code>_synthesize()</code>(194행)·<code>set_voice()</code>(117행)입니다.</p>
+<p><strong>흐름:</strong> <code>src/ui/app.py</code>의 <code>SoribomUI._on_enter()</code>(912행)가 입력·중복 요청을 확인하고 별도 워커에서 말하기를 요청합니다. <code>src/main.py</code>(186행)가 <code>ui.on_speak = speaker.say</code>로 연결합니다. <code>_synthesize()</code>가 Supertonic으로 파형을 만들고 <a href="../src/tts/pulse_output.py"><code>src/tts/pulse_output.py</code></a>의 <code>PulseOutput.play()</code>(48행)가 시스템 Bluetooth 출력으로 재생합니다.</p>
+<p><strong>핵심 처리:</strong> 여성 F1·남성 M1의 sid와 32스텝을 사용합니다. <a href="../src/inference.py"><code>src/inference.py</code></a>의 <code>InferenceGate.run()</code>(12행)은 진행 중 STT 뒤에 대기 TTS를 우선하고 새 STT와 겹치지 않게 합니다. 수음·VAD는 계속하며 유한 큐에 보관합니다. <code>_finish_speech()</code>(UI 952행)는 성공 시 제출한 입력이 그대로인 경우에만 지워 다음 타이핑을 보존합니다.</p>
+<div class="box us"><span class="box-t">심사 답변 예시</span>“Enter를 누르면 speaker.py에서 로컬 Supertonic으로 합성해 Bluetooth로 읽습니다. 남성·여성 목소리를 고를 수 있고, 진행 중 전사를 마친 뒤 말하기를 우선하도록 GPU 순서를 조정했습니다. 음성 합성 모델 자체는 공개 모델이고, 입력 보존·추론 순서·출력 복구를 통합한 부분이 저희 구현입니다.”</div>
+<h3>코드를 보여 달라고 하면</h3><ol><li><code>src/main.py</code>에서 세 기능을 연결하는 부분을 먼저 보여 줍니다.</li><li>위 핵심 파일의 함수 이름으로 이동해 입력→처리→출력을 설명합니다.</li><li>공개 모델·칩이 하는 일과 팀이 작성한 연결·필터·복구·UI 코드를 구분합니다.</li><li>통계 실험은 자막을 공용 TV로 보는 조건의 이해도 비교입니다. 현재 세 기능 전체의 효과를 이 실험이 검증했다고 답하지 않습니다.</li></ol>
+</section>
 <!-- ==================== 일러두기 ==================== -->
 <section class="sheet chapter">
   <span class="part-kicker">읽기 전에</span>
-  <h2 class="part">이 책을 어떻게 읽으면 되나요</h2><p><strong>현재 구현은 앞의 본선 업데이트 장을 먼저 확인하세요.</strong> 아래 개발 일화와 과거 측정은 이력이며 현재 성능 보장이 아닙니다. <a href="#latest-20261017">최신 정리</a> · <a href="#final-hardware">현재 하드웨어</a> · <a href="#final-flow">현재 처리 흐름</a></p>
+  <h2 class="part">이 책을 어떻게 읽으면 되나요</h2><p><strong>현재 구현은 앞의 본선 업데이트 장을 먼저 확인하세요.</strong> 아래 개발 일화와 과거 측정은 이력이며 현재 성능 보장이 아닙니다. <a href="#latest-20261017">최신 정리</a> · <a href="#experiment-final26">최종 26명 실험</a> · <a href="#judge-code-guide">핵심 기능 코드 지도</a> · <a href="#final-hardware">현재 하드웨어</a> · <a href="#final-flow">현재 처리 흐름</a></p>
   <p class="part-sub">— 컴퓨터·프로그래밍을 한 번도 안 해본 사람을 위한 안내</p>
 
   <p class="lead">
@@ -1958,7 +1989,7 @@ summary:
 <section class="sheet chapter">
   <span class="part-kicker">더 알아보기 ④</span>
   <h2 class="part">심사·발표 대비 심화 Q&amp;A</h2>
-<p>최신 질의응답 108문항은 <a href="예상질문-답변.html">예상질문-답변.html</a>을 기준으로 준비합니다. 이 장의 과거 답변을 반복 인용하는 대신 다음을 함께 설명합니다.</p><ul><li>독창성: 공개 모델 자체가 아니라 발화·방향 연결, 자원 조정, 복구와 실제 사용 흐름 통합</li><li>과거 CER·DOA: 시험 시기·자료·정답 기준을 붙이고 최신 성능과 구분</li><li>기록: 인식된 전체 전사이며 원문 정답이나 생성 요약이 아님</li><li>실험: 평균 차이 +11.30점, p=0.004502지만 기기만의 인과 효과·실제 난청 학생 일반화 불가</li><li>도면: USB 충전과 Bluetooth 음성, 모니터 영상·터치·전원, 같은 small 모델의 언어 선택을 구분</li></ul>
+<p>기능 질의응답 108문항은 <a href="예상질문-답변.html">예상질문-답변.html</a>을 참고합니다. 해당 파일과 README·실험 안내도 <strong>최종 26명 결과로 동기화</strong>했습니다. 이 장의 과거 답변을 반복 인용하는 대신 다음을 함께 설명합니다.</p><ul><li>독창성: 공개 모델 자체가 아니라 발화·방향 연결, 자원 조정, 복구와 실제 사용 흐름 통합</li><li>과거 CER·DOA: 시험 시기·자료·정답 기준을 붙이고 최신 성능과 구분</li><li>기록: 인식된 전체 전사이며 원문 정답이나 생성 요약이 아님</li><li>실험: 평균 차이 +9.23점, p=0.0112지만 기기만의 인과 효과·실제 난청 학생 일반화 불가</li><li>도면: USB 충전과 Bluetooth 음성, 모니터 영상·터치·전원, 같은 small 모델의 언어 선택을 구분</li></ul>
 </section>
 
 <!-- ==================== 더 알아보기 5 ==================== -->
@@ -2148,7 +2179,7 @@ summary:
 <h4>스피커 USB로 소리가 나가나요?</h4><p>아닙니다. USB는 충전, 합성 음성은 Bose Bluetooth로 나갑니다. 모니터는 DP–HDMI–mini HDMI 영상과 별도 터치 USB·USB-C 전원이 필요합니다.</p>
 <h4>말하기 중 마이크가 꺼지나요?</h4><p>수음·VAD는 계속하고 GPU 전사만 대기시킵니다. 말하기 뒤 보관 발화를 순서대로 처리하지만 큐 한도가 있어 모든 보존을 보장하지 않습니다.</p>
 <h4>5° 문단 변화는 다른 사람을 알아본 것인가요?</h4><p>방향 변화에 따른 UI 규칙이며 신원 식별이 아닙니다. 같은 방향이어도 실제 2초 무음이면 새 문단으로 나눕니다.</p>
-<h4>실험에서 효과가 증명됐나요?</h4><p>23명의 두 수업 점수 차이에서 양측 p=0.004502를 얻었습니다. 다만 주제·순서가 겹쳐 기기만의 인과 효과나 실제 난청 학생에게 일반화할 수 없습니다.</p>
+<h4>실험에서 효과가 증명됐나요?</h4><p>청각장애가 없는 성인 26명의 두 수업 점수 차이에서 양측 p=0.0112를 얻었습니다. 다만 주제·순서가 겹쳐 기기만의 인과 효과나 실제 난청 학생에게 일반화할 수 없습니다.</p>
 <h4>자막 0.7%·방향 1.5°가 보장되나요?</h4><p>아닙니다. 과거 특정 녹음·LED 보조 방향 평가의 결과이며 최신 전체 교실 성능은 별도로 검증해야 합니다.</p>
 </section>
 
@@ -2355,7 +2386,7 @@ summary:
   <p>본문 곳곳의 수치를 한 표에 모았습니다. 심사·질의응답에서 숫자를 물으면 여기만 보면 됩니다.</p>
 
   <h3>I.1 성능 측정값 (§8)</h3>
-<table><thead><tr><th>지표</th><th>값</th><th>인용 조건</th></tr></thead><tbody><tr><td>통제 CER</td><td>0.0% / 0.7%</td><td>2026년 7월 6문장 조용/잡음</td></tr><tr><td>5과목 낭독 CER</td><td>평균 3.2%</td><td>과거 소규모 낭독, 일반 교실 성능 아님</td></tr><tr><td>빠른 자연발화 CER</td><td>15.3%</td><td>과거 특정 발화 조건</td></tr><tr><td>전사 중앙값</td><td>0.62초 / 0.64초</td><td>과거 처리 시간. 전체 화면 지연 아님</td></tr><tr><td>TTS 합성 예시</td><td>약 1.8초</td><td>과거 GPU 32스텝. 문장 길이 무관 보장 아님</td></tr><tr><td>DOA 평균 오차</td><td>1.5°</td><td>과거 LED 보조 4방향. 독립 정답 기준 아님</td></tr><tr><td>수정 실험 점수</td><td>57.39 / 46.09점</td><td>동일 23명, 기기·주제·순서가 함께 바뀜</td></tr><tr><td>양측 대응 t검정</td><td>p=0.004502</td><td>평균 차이 +11.30점, 95% CI 3.89~18.71점</td></tr><tr><td>자동 검사</td><td>187개 통과</td><td>현장 정확도·장시간 안정성 보장 아님</td></tr></tbody></table>
+<table><thead><tr><th>지표</th><th>값</th><th>인용 조건</th></tr></thead><tbody><tr><td>통제 CER</td><td>0.0% / 0.7%</td><td>2026년 7월 6문장 조용/잡음</td></tr><tr><td>5과목 낭독 CER</td><td>평균 3.2%</td><td>과거 소규모 낭독, 일반 교실 성능 아님</td></tr><tr><td>빠른 자연발화 CER</td><td>15.3%</td><td>과거 특정 발화 조건</td></tr><tr><td>전사 중앙값</td><td>0.62초 / 0.64초</td><td>과거 처리 시간. 전체 화면 지연 아님</td></tr><tr><td>TTS 합성 예시</td><td>약 1.8초</td><td>과거 GPU 32스텝. 문장 길이 무관 보장 아님</td></tr><tr><td>DOA 평균 오차</td><td>1.5°</td><td>과거 LED 보조 4방향. 독립 정답 기준 아님</td></tr><tr><td>수정 실험 점수</td><td>55.38 / 46.15점</td><td>성인 26명, 공용 TV, 기기·주제·고정 순서가 겹침</td></tr><tr><td>양측 대응 t검정</td><td>t(25)=2.739, p=0.0112</td><td>평균 차이 +9.23점, 95% CI [2.29,16.17]점</td></tr><tr><td>자동 검사</td><td>187개 통과</td><td>현장 정확도·장시간 안정성 보장 아님</td></tr></tbody></table>
 
 <h3>I.2 주요 사양</h3>
   <table>

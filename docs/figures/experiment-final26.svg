@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" font-family="Noto Sans CJK KR, sans-serif">
+<rect width="1200" height="900" fill="white"/>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8Z" fill="#526780"/></marker></defs>
+<text x="600" y="45" text-anchor="middle" font-size="30" font-weight="700" fill="#13315C">실제 이해도 실험 — 최종 성인 26명</text>
+<text x="600" y="77" text-anchor="middle" font-size="18" font-weight="400" fill="#13315C">2026-10-17 최종 보고 기준 · 초기 무작위 배정 계획과 구분</text>
+<rect x="160" y="100" width="880" height="92" rx="12" fill="#EFF5FA" stroke="#A9BDD5"/>
+<text x="600" y="136" text-anchor="middle" font-size="21" font-weight="700" fill="#13315C">청각장애가 없는 성인 26명 · 지인 기반 편의표집</text>
+<text x="600" y="167" text-anchor="middle" font-size="21" font-weight="400" fill="#13315C">대학생 24명(9/9) + 학부모 지인 2명(10/3), 집단별 실시</text>
+<rect x="160" y="220" width="880" height="92" rx="12" fill="#EFF5FA" stroke="#A9BDD5"/>
+<text x="600" y="256" text-anchor="middle" font-size="21" font-weight="700" fill="#13315C">사전 퀴즈 → 청취 상태 조절 → 퀴즈 확인 안내</text>
+<text x="600" y="287" text-anchor="middle" font-size="21" font-weight="400" fill="#13315C">목표 정답률 40~70% · 전원의 개별 달성·동일 차음 검증 아님</text>
+<rect x="160" y="340" width="880" height="92" rx="12" fill="#E9F5EE" stroke="#A9BDD5"/>
+<text x="600" y="376" text-anchor="middle" font-size="21" font-weight="700" fill="#13315C">1차: 소리봄 사용 · 재정정책 현장 강의 · 공용 TV 자막</text>
+<text x="600" y="407" text-anchor="middle" font-size="21" font-weight="400" fill="#13315C">객관식 10문항 × 10점 = 100점</text>
+<rect x="160" y="460" width="880" height="92" rx="12" fill="#EFF5FA" stroke="#A9BDD5"/>
+<text x="600" y="496" text-anchor="middle" font-size="21" font-weight="700" fill="#13315C">첫 강의·문제 풀이 뒤 5분 휴식</text>
+<text x="600" y="527" text-anchor="middle" font-size="21" font-weight="400" fill="#13315C">전원 사용 조건을 먼저 경험: 무작위·순서 교차 배치 아님</text>
+<rect x="160" y="580" width="880" height="92" rx="12" fill="#EFF5FA" stroke="#A9BDD5"/>
+<text x="600" y="616" text-anchor="middle" font-size="21" font-weight="700" fill="#13315C">2차: 소리봄 미사용 · 통화정책 현장 강의</text>
+<text x="600" y="647" text-anchor="middle" font-size="21" font-weight="400" fill="#13315C">객관식 10문항 × 10점 = 100점</text>
+<path d="M600 192 L600 217" stroke="#526780" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M600 312 L600 337" stroke="#526780" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M600 432 L600 457" stroke="#526780" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M600 552 L600 577" stroke="#526780" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="160" y="700" width="880" height="92" rx="12" fill="#EFF5FA" stroke="#A9BDD5"/>
+<text x="600" y="736" text-anchor="middle" font-size="21" font-weight="700" fill="#13315C">동일 참가자의 26쌍 점수 · 양측 대응 t검정</text>
+<text x="600" y="767" text-anchor="middle" font-size="21" font-weight="400" fill="#13315C">55.38 / 46.15점 · 차이 9.23점 · p=0.0112 · 95% CI [2.29,16.17]</text>
+<path d="M600 672 L600 697" stroke="#526780" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="600" y="835" text-anchor="middle" font-size="20" font-weight="700" fill="#13315C">주제·난이도·순서·청취·공유 환경이 겹쳐 기기만의 인과 효과로 단정할 수 없음</text>
+<text x="600" y="870" text-anchor="middle" font-size="18" font-weight="400" fill="#13315C">실제 난청 학생·개인 책상 배치·최신 기능 전체의 효과 검증이 아님</text>
+</svg>
